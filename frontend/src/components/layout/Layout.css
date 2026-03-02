@@ -1,0 +1,23 @@
+.layout {
+  background-color: var(--bg-app);
+  overflow: hidden;
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+}
+
+/* Envuelve TopBar y main */
+.content-area {
+  flex-direction: column;
+  height: 100vh;
+  display: flex;
+  flex: 1;
+}
+
+.main-content {
+  background-color: var(--bg-contenido);
+  margin-left: calc(3.5rem + 200px);
+  flex: 1;
+  padding: 1rem;
+}
+

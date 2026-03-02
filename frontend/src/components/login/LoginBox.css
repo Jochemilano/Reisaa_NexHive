@@ -1,0 +1,68 @@
+/* CONTENEDOR */
+
+.login-container {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--bg-app);
+
+  --color-error: #ff0000dc;
+  --estado-activo: green;
+}
+
+/* CAJA */
+.center-box {
+  background-color: var(--bg-centerbox);
+  padding: 45px 35px;
+  border-radius: 16px;
+  width: 340px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+
+  display: flex;
+  flex-direction: column;
+}
+
+/* TÍTULO */
+.center-box h2 {
+  text-align: center;
+  margin-bottom: 30px;
+  color: var(--texto-centerbox);
+}
+
+/* FORM */
+.center-box form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* BOTÓN */
+.center-box button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  background-color: #0f4c6e;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.25s ease;
+}
+
+.center-box button:hover {
+  background-color: #0c3c57;
+}
+
+/* MENSAJES */
+.error-message {
+  color: var(--color-error);
+  font-size: 13px;
+}
+
+.success-message {
+  color: var(--estado-activo);
+  font-size: 13px;
+}

@@ -1,0 +1,23 @@
+:root {
+  --radiuscircle: 50%;
+  --radiuspill: 40rem;
+  --radius-centerbox: 10px;
+  --radius-search: 8px;
+  --input-border-radius: 6px;
+
+  --text: #444444;
+  --blanco: #fff;
+
+  --bg-app: #f5f5f5;
+  --bg-contenido: var(--blanco);
+  --bg-centerbox: var(--blanco);
+  --shadow-centerbox: 0 0 10px rgba(0,0,0,0.1);
+  --texto-centerbox: var(--text);
+
+  --input-border: 1px solid #ccc;
+  --input-border-focus: #007bff;
+  
+  --separator-color: black;
+  --separator-thickness: 2px;
+  --separator-style: dashed;
+}

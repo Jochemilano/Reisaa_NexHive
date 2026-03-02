@@ -1,0 +1,185 @@
+/* ======================================================
+   STYLES.CSS – GLOBAL STYLES
+   ====================================================== */
+
+/* -------------------- VARIABLES GLOBALES -------------------- */
+:root {
+  /* Tipografía */
+  --font-primary: 'Inter', Arial, sans-serif;
+  --font-code: 'Source Code Pro', Menlo, Monaco, Consolas, 'Courier New', monospace;
+
+  /* Colores principales de tu paleta */
+  --color-bg1: #e0eafc; /* gradiente azul claro */
+  --color-bg2: #cfdef3;
+  --color-bg3: #b8d3f5;
+  --color-text: #444444;
+  --color-white: #ffffff;
+
+  /* Colores de acento */
+  --color-accent: #3b82f6; /* azul vivo */
+  --color-accent-hover: #2563eb;
+
+  /* Colores de alerta/estado */
+  --color-error: #ef4444;
+  --color-error-hover: #dc2626;
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-muted: #888888;
+
+  /* Bordes y radios */
+  --radius-circle: 50%;
+  --radius-pill: 40rem;
+  --radius-box: 10px;
+  --radius-search: 8px;
+  --radius-input: 6px;
+
+  /* Sombras */
+  --shadow-light: 0 0 10px rgba(0,0,0,0.1);
+  --shadow-medium: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+/* -------------------- ESTILOS GLOBALES -------------------- */
+body {
+  margin: 0;
+  font-family: var(--font-primary);
+  background: linear-gradient(135deg, var(--color-bg1), var(--color-bg2), var(--color-bg3));
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: var(--font-code);
+}
+
+a {
+  color: var(--color-accent);
+  text-decoration: none;
+  transition: 0.2s ease;
+}
+
+a:hover {
+  color: var(--color-accent-hover);
+}
+
+/* -------------------- CONTENEDORES -------------------- */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.card {
+  background-color: var(--color-white);
+  border-radius: var(--radius-box);
+  box-shadow: var(--shadow-light);
+  padding: 1rem;
+  transition: 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-medium);
+}
+
+/* -------------------- BOTONES GLOBALES -------------------- */
+.button {
+  padding: 0.6rem 1.2rem;
+  border-radius: var(--radius-pill);
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: 0.2s ease;
+}
+
+.button-primary {
+  background-color: var(--color-accent);
+  color: var(--color-white);
+}
+
+.button-primary:hover {
+  background-color: var(--color-accent-hover);
+}
+
+.button-error {
+  background-color: var(--color-error);
+  color: var(--color-white);
+}
+
+.button-error:hover {
+  background-color: var(--color-error-hover);
+}
+
+.button-success {
+  background-color: var(--color-success);
+  color: var(--color-white);
+}
+
+.button-warning {
+  background-color: var(--color-warning);
+  color: var(--color-white);
+}
+
+/* -------------------- INPUTS GLOBALES -------------------- */
+input,
+textarea,
+select {
+  font-family: var(--font-primary);
+  font-size: 0.875rem;
+  border: 1px solid #ccc;
+  border-radius: var(--radius-input);
+  padding: 0.5rem 0.75rem;
+  box-sizing: border-box;
+  transition: 0.2s;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 5px var(--color-accent);
+  background-color: var(--color-white);
+}
+
+/* -------------------- MODALES -------------------- */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: var(--color-white);
+  border-radius: var(--radius-box);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-medium);
+  max-width: 90%;
+}
+
+/* -------------------- UTILIDADES -------------------- */
+.text-center {
+  text-align: center;
+}
+
+.flex {
+  display: flex;
+}
+
+.flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.mt-1 { margin-top: 1rem; }
+.mb-1 { margin-bottom: 1rem; }
+.p-1 { padding: 1rem; }
+
+.hidden { display: none; }

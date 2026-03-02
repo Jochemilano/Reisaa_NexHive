@@ -1,0 +1,30 @@
+.input-container {
+  flex-direction: column;
+  margin-bottom: 16px;
+  display: flex;
+  overflow: hidden;
+
+  --input-label-color: #333;
+}
+
+.input-label {
+  margin-left: 0.2rem;
+  font-size: 14px;
+  color: var(--input-label-color);
+  font-weight: 700;
+}
+
+.input-field {
+  border: var(--input-border);
+  border-radius: var(--input-border-radius);
+  font-size: 14px;
+  padding: 10px;
+
+  min-width: 100%;
+  box-sizing: border-box;
+}
+
+.input-field:focus {
+  outline: none;
+  border: 2px solid black;
+}

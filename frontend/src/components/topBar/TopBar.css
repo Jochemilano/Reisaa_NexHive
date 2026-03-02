@@ -1,0 +1,94 @@
+.topbar {
+  display: flex;
+  align-items: center;
+  height: 2rem;
+
+  --bg-topbar: gray;
+  --hover-button: #ffffff20;
+  --hover-label: #eeeeee;
+  --color-error: #ff0000dc;
+  --estado-activo: green;
+  --estado-desactivado: red;
+  --estado-no-molestar: orange;
+  --estado-desconocido: gray;
+
+  background-color: var(--bg-topbar);
+}
+
+.topbar .button-general,
+.topbar .modal-button {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: var(--radiuscircle);
+  cursor: pointer;
+  margin: 0 0.3rem;
+  border: none;
+}
+
+.topbar .button-general:hover {
+  background-color: var(--hover-button);
+}
+.topbar .search-container{
+  height: 1.5rem;
+  width: 50%;
+  margin: 0 auto;
+}
+.topbar .modal-overlay{
+  background-color: transparent;
+}
+
+.topbar .modal-content{
+  position: absolute;
+  right: 1rem;
+  top:3rem;
+  width: 20rem;
+}
+
+/*labels*/
+.topbar .modal-content .modal-body p{
+  border-radius: var(--radiuspill);
+  margin: 0.3rem;
+  padding: 0.3rem;
+}
+.topbar .modal-content .modal-body p:hover{
+  background-color: var(--hover-label);
+}
+/*log out*/
+.topbar .modal-body .log-out{
+  border-radius: var(--radiuspill);
+  background-color: transparent;
+  background-color: var(--color-error);
+  margin: 0.5rem;
+  padding: 0.3rem;
+  border: none;
+  transition: 0.3s ease;
+}
+.topbar .modal-body .log-out:hover{
+  transform: scale(1.1);
+}
+
+/*Status*/
+.status-container {
+  display: flex;
+  align-items: center;
+}
+.icon {
+  transform: scale(0.5);
+}
+
+/* Colores por estado */
+.activo {
+  color: var(--estado-activo);
+}
+
+.desactivado {
+  color: var(--estado-desactivado);
+}
+
+.no-molestar {
+  color: var(--estado-no-molestar);
+}
+
+.desconocido {
+  color: var(--estado-desconocido);
+}

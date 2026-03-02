@@ -1,0 +1,23 @@
+.search-container {
+  position: relative;
+
+  --color-search-icon: #888;
+}
+
+.search-input {
+  height: 100%;
+  width: 100%;
+  border-radius: var(--radius-search);
+  outline: none;
+  padding: 0.5rem 1rem 0.5rem 2rem;
+  border: none;
+}
+
+.search-icon {
+  position: absolute;
+  top: 50%;
+  left: 0.5rem;
+  transform: translateY(-50%);
+  color: var(--color-search-icon);
+  pointer-events: none;
+}
