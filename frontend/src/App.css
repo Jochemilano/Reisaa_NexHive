@@ -1,23 +1,53 @@
 :root {
   --radiuscircle: 50%;
   --radiuspill: 40rem;
-  --radius-centerbox: 10px;
   --radius-search: 8px;
-  --input-border-radius: 6px;
 
   --text: #444444;
   --blanco: #fff;
+}
 
-  --bg-app: #f5f5f5;
-  --bg-contenido: var(--blanco);
-  --bg-centerbox: var(--blanco);
-  --shadow-centerbox: 0 0 10px rgba(0,0,0,0.1);
-  --texto-centerbox: var(--text);
+/* Tema Blanco */
+.theme-blanco {
+  --color-base: #FFFFFF;
+  --color-gris-claro: #F5F5F5;
+  --color-gris-medio: #E0E0E0;
+  --color-gris-oscuro: #BDBDBD;
+  --color-acento: #1E3A8A;
+}
 
-  --input-border: 1px solid #ccc;
-  --input-border-focus: #007bff;
-  
-  --separator-color: black;
-  --separator-thickness: 2px;
-  --separator-style: dashed;
+/* Tema Negro */
+.theme-negro {
+  --color-base: #1E1E1E;
+  --color-gris-oscuro: #333333;
+  --color-gris-medio: #555555;
+  --color-gris-claro: #777777;
+  --color-acento: #F5F5F5;
+}
+
+/* Tema Azul */
+.theme-azul {
+  --color-base: #1E3A8A;
+  --color-medio: #355377;
+  --color-claro: #7EA3D5;
+  --color-muy-claro: #DBE1EF;
+  --color-acento: #FBBF24;
+}
+
+/* Tema Rojo */
+.theme-rojo {
+  --color-base: #B91C1C;
+  --color-medio: #F87171;
+  --color-claro: #FCA5A5;
+  --color-rosado-suave: #FEE2E2;
+  --color-acento: #1E3A8A;
+}
+
+/* Tema Naranja */
+.theme-naranja {
+  --color-base: #C2410C;
+  --color-medio: #F97316;
+  --color-claro: #FDBA74;
+  --color-amarillo-suave: #FEF3C7;
+  --color-acento: #1E3A8A;
 }

@@ -12,7 +12,7 @@ import Call from "pages/Call";
 export default function AppRouter() {
   return (
     <Routes>
-      <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+      <Route element={/*<ProtectedRoute>*/<Layout />/*</ProtectedRoute>*/}>
         <Route path="/home" element={<Home />} />
         <Route path="/saved" element={<Saved />} />
         <Route path="/call" element={<Call />} />

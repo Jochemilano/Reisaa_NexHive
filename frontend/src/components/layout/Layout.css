@@ -15,7 +15,7 @@
 }
 
 .main-content {
-  background-color: var(--bg-contenido);
+  background-color: #fff;
   margin-left: calc(3.5rem + 200px);
   flex: 1;
   padding: 1rem;
