@@ -1,7 +1,5 @@
 .search-container {
   position: relative;
-
-  --color-search-icon: #888;
 }
 
 .search-input {
@@ -11,6 +9,19 @@
   outline: none;
   padding: 0.5rem 1rem 0.5rem 2rem;
   border: none;
+
+  background-color: var(--bg-soft);
+  color: var(--text-primary);
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.search-input::placeholder {
+  color: var(--text-secondary);
+}
+
+.search-input:focus {
+  background-color: var(--bg-base);
+  box-shadow: 0 0 0 1px var(--primary);
 }
 
 .search-icon {
@@ -18,6 +29,6 @@
   top: 50%;
   left: 0.5rem;
   transform: translateY(-50%);
-  color: var(--color-search-icon);
+  color: var(--text-secondary);
   pointer-events: none;
 }

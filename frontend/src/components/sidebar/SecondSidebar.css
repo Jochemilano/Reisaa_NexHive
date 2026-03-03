@@ -5,16 +5,13 @@
   width: 200px;
   height: calc(100vh - 2rem);
   
-  background-color: var(--bg-second-sidebar);
-  color: var(--texto-second-sidebar);
+  background-color: var(--bg-soft);
+  color: var(--text-primary);
   padding: 10px;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
   z-index: 10;
-
-   --bg-second-sidebar: #313131;
-  --texto-second-sidebar: white;
 }
 
 /*conetendor separador*/
@@ -28,7 +25,7 @@
   width: 1.5rem;
   border: none;
   background: none;
-  color: var(--texto-second-sidebar);
+  color: var(--texto-primary);
   cursor: pointer;
   transition: 0.3s ease;
 }
@@ -50,7 +47,7 @@
   border: none;
   background: none;
   width: 1.5rem;
-  color: var(--texto-second-sidebar);
+  color: var(--texto-primary);
   cursor: pointer;
   transition: 0.3s ease;
 }

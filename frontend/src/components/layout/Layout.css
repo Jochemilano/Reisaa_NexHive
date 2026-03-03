@@ -1,5 +1,6 @@
 .layout {
-  background-color: var(--bg-app);
+  background-color: var(--bg-base);
+  color: var(--text-primary);
   overflow: hidden;
   display: flex;
   height: 100vh;
@@ -15,7 +16,7 @@
 }
 
 .main-content {
-  background-color: #fff;
+  background-color: var(--bg-base);
   margin-left: calc(3.5rem + 200px);
   flex: 1;
   padding: 1rem;

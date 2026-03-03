@@ -1,20 +1,16 @@
 /* CONTENEDOR */
-
 .login-container {
   width: 100%;
   height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #f5f5f5;
-
-  --color-error: #ff0000dc;
-  --estado-activo: green;
+  background-color:  var(--bg-soft);
 }
 
 /* CAJA */
 .center-box {
-  background-color: #fff;
+  background-color: var(--bg-base);
   padding: 45px 35px;
   border-radius: 16px;
   width: 340px;
@@ -28,14 +24,29 @@
 .center-box h2 {
   text-align: center;
   margin-bottom: 30px;
-  color: #444444;
+  color: var(--text-primary);
 }
 
-/* FORM */
-.center-box form {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+/* INPUTS */
+.center-box input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.7rem 0.9rem;
+  border-radius: var(--radius-search);
+  border: none;
+  background-color: var(--bg-soft);
+  color: var(--text-primary);
+  outline: none;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.center-box input::placeholder {
+  color: var(--text-secondary);
+}
+
+.center-box input:focus {
+  background-color: var(--bg-base);
+  box-shadow: 0 0 0 0.01px var(--primary);
 }
 
 /* BOTÓN */
@@ -43,26 +54,27 @@
   width: 100%;
   padding: 12px;
   margin-top: 10px;
-  background-color: #0f4c6e;
-  color: #fff;
+  background-color: var(--primary);
+  color: var(--bg-base);
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-search);
   font-weight: 600;
   cursor: pointer;
   transition: 0.25s ease;
 }
 
 .center-box button:hover {
-  background-color: #0c3c57;
+  background-color: var(--primary-hover);
+  transform: translateY(-2px);
 }
 
 /* MENSAJES */
 .error-message {
-  color: var(--color-error);
+  color: var(--error);
   font-size: 13px;
 }
 
 .success-message {
-  color: var(--estado-activo);
+  color: var(--success);
   font-size: 13px;
 }

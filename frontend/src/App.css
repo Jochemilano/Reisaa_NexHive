@@ -1,53 +1,65 @@
 :root {
-  --radiuscircle: 50%;
-  --radiuspill: 40rem;
+  /* Bordes y radios */
+  --radius-circle: 50%;
+  --radius-pill: 40rem;
   --radius-search: 8px;
 
-  --text: #444444;
-  --blanco: #fff;
+  /* Texto */
+  --text-primary: #2b2b2b;
+  --text-secondary: #6b7280;
+
+  /* Fondos */
+  --bg-base: #ffffff;
+  --bg-soft: #f5f5f5;
+
+  /* Marca */
+  --primary: #1e3a8a;
+  --primary-hover: #1e40af;
+
+  /* Estados */
+  --success: #16a34a;
+  --error: #dc2626;
 }
 
-/* Tema Blanco */
-.theme-blanco {
-  --color-base: #FFFFFF;
-  --color-gris-claro: #F5F5F5;
-  --color-gris-medio: #E0E0E0;
-  --color-gris-oscuro: #BDBDBD;
-  --color-acento: #1E3A8A;
+.theme-dark {
+  /* Texto */
+  --text-primary: #f9fafb;
+  /*texto primario paara probar#D4D4D4*/
+  --text-secondary: #9ca3af;
+
+  /* Fondos */
+  --bg-base: #111827;
+  --bg-soft: #1f2937;
+
+  /* Marca */
+  --primary: #3b82f6;
+  --primary-hover: #2563eb;
 }
 
-/* Tema Negro */
-.theme-negro {
-  --color-base: #1E1E1E;
-  --color-gris-oscuro: #333333;
-  --color-gris-medio: #555555;
-  --color-gris-claro: #777777;
-  --color-acento: #F5F5F5;
+.theme-black {
+  /* Texto */
+  --text-primary: #ffffff;
+  --text-secondary: #a1a1aa;
+
+  /* Fondos */
+  --bg-base: #000000;
+  --bg-soft: #18181b;
+
+  /* Marca */
+  --primary: #e5e5e5;
+  --primary-hover: #ffffff;
 }
 
-/* Tema Azul */
-.theme-azul {
-  --color-base: #1E3A8A;
-  --color-medio: #355377;
-  --color-claro: #7EA3D5;
-  --color-muy-claro: #DBE1EF;
-  --color-acento: #FBBF24;
-}
+.theme-purple {
+  /* Texto */
+  --text-primary: #f5f3ff;
+  --text-secondary: #c4b5fd;
 
-/* Tema Rojo */
-.theme-rojo {
-  --color-base: #B91C1C;
-  --color-medio: #F87171;
-  --color-claro: #FCA5A5;
-  --color-rosado-suave: #FEE2E2;
-  --color-acento: #1E3A8A;
-}
+  /* Fondos */
+  --bg-base: #140f2d;
+  --bg-soft: #1e1b4b;
 
-/* Tema Naranja */
-.theme-naranja {
-  --color-base: #C2410C;
-  --color-medio: #F97316;
-  --color-claro: #FDBA74;
-  --color-amarillo-suave: #FEF3C7;
-  --color-acento: #1E3A8A;
+  /* Marca */
+  --primary: #7c3aed;
+  --primary-hover: #6d28d9;
 }

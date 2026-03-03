@@ -1,5 +1,5 @@
 .sidebar {
-  background-color: #4e4e4e;
+  background-color: var(--bg-soft);
   height: calc(100vh - 1.75rem);
   margin-top: 1.75rem;
   position: absolute;
@@ -10,14 +10,18 @@
 
 .sidebar .button-general,
 .modal-button {
+  background-color: var(--bg-base);
+  color: var(--text-primary);
   border-radius: 10px;
-    margin: 0.25rem;
-    cursor: pointer;
-    height: 3rem;
-    border: none;
-    width: 3rem;
+  margin: 0.25rem;
+  cursor: pointer;
+  height: 3rem;
+  border: none;
+  width: 3rem;
+  transition: 0.3s ease;
 }
 .sidebar .button-general:hover,
 .modal-button:hover{
   transform: translateY(-1px);
+  background-color: var(--primary-hover);
 }

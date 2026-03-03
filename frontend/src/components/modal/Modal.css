@@ -21,8 +21,8 @@
 
 /*Floating content*/
 .modal-content {
-  background-color: var(--blanco);
-  color: var(--text);
+  background-color: var(--bg-base);
+  color: var(--text-primary);
   border-radius: 15px;
   width: 500px;
   max-width: 90%;
@@ -37,24 +37,26 @@
   align-items: center;
   display: flex;
 }
+.modal-header h2{
+  margin: 0;
+}
 
 .modal-close-btn {
-  position: relative;
-  top: -1rem;
   background: none;
   border: none;
   font-size: 1.5rem;
   cursor: pointer;
-  color: gray;
+  color: var(--text-secondary);
   transition: 0.3s ease;
 }
 .modal-close-btn:hover{
-  color: black;
+  color: var(--text-primary);
 }
 
 /*Body*/
 .modal-body {
   margin: 1rem;
+
 }
 
 /*FOOTER: container and buttons cancel-acept*/
@@ -66,18 +68,20 @@
 }
 
 .modal-cancel{
-  border-radius: var(--radiuspill);
+  border-radius: var(--radius-pill);
   height: 2rem;
   width: 5rem;
-  border: 1px solid gray;
+  border: 1px solid var(--text-secondary);
+  color: var(--text-primary);
   transition: 0.3s ease;
 }
 .modal-accept{
-  border-radius: var(--radiuspill);
+  border-radius: var(--radius-pill);
   height: 2rem;
   width: 5rem;
   border: none;
-  background-color: gray;
+  background-color: var(--primary);
+  color: var(--bg-base);
   transition: 0.3s ease;
 }
 .modal-accept:hover,

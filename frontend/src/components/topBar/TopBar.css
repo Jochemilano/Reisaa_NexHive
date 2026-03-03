@@ -2,31 +2,17 @@
   display: flex;
   align-items: center;
   height: 2rem;
-
-  --bg-topbar: gray;
-  --hover-button: #ffffff20;
-  --hover-label: #eeeeee;
-  --color-error: #ff0000dc;
-  --estado-activo: green;
-  --estado-desactivado: red;
-  --estado-no-molestar: orange;
-  --estado-desconocido: gray;
-
-  background-color: var(--bg-topbar);
+  background-color: var(--bg-soft);
 }
 
 .topbar .button-general,
 .topbar .modal-button {
   width: 1.5rem;
   height: 1.5rem;
-  border-radius: var(--radiuscircle);
+  border-radius: var(--radius-circle);
   cursor: pointer;
   margin: 0 0.3rem;
   border: none;
-}
-
-.topbar .button-general:hover {
-  background-color: var(--hover-button);
 }
 .topbar .search-container{
   height: 1.5rem;
@@ -46,18 +32,17 @@
 
 /*labels*/
 .topbar .modal-content .modal-body p{
-  border-radius: var(--radiuspill);
+  border-radius: var(--radius-pill);
   margin: 0.3rem;
   padding: 0.3rem;
 }
 .topbar .modal-content .modal-body p:hover{
-  background-color: var(--hover-label);
+  background-color: var(--bg-soft);
 }
 /*log out*/
 .topbar .modal-body .log-out{
-  border-radius: var(--radiuspill);
-  background-color: transparent;
-  background-color: var(--color-error);
+  border-radius: var(--radius-pill);
+  background-color: var(--primary-hover);
   margin: 0.5rem;
   padding: 0.3rem;
   border: none;
@@ -78,17 +63,17 @@
 
 /* Colores por estado */
 .activo {
-  color: var(--estado-activo);
+  color: green;
 }
 
 .desactivado {
-  color: var(--estado-desactivado);
+  color: red;
 }
 
 .no-molestar {
-  color: var(--estado-no-molestar);
+  color: orange;
 }
 
 .desconocido {
-  color: var(--estado-desconocido);
+  color: gray;
 }

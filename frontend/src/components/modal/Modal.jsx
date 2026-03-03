@@ -1,5 +1,6 @@
 import React from "react";
 import "./Modal.css";
+import Separator from "components/separator/Separator";
 
 export const ModalButton = ({ children, text, onClick, type = "button" }) => {
   return (
@@ -28,14 +29,17 @@ export const Modal = ({ isOpen, onClose, children, className = "" }) => {
 
 // Subcomponentes
 export const ModalHeader = ({ children, onClose }) => (
-  <div className="modal-header">
-    <h2>{children}</h2>
-    {onClose && (
-      <button className="modal-close-btn" onClick={onClose}>
-        &times;
-      </button>
-    )}
-  </div>
+  <>
+    <div className="modal-header">
+      <h2>{children}</h2>
+      {onClose && (
+        <button className="modal-close-btn" onClick={onClose}>
+          &times;
+        </button>
+      )}
+    </div>
+    <Separator></Separator>
+  </>
 );
 
 export const ModalBody = ({ children }) => (
@@ -43,16 +47,19 @@ export const ModalBody = ({ children }) => (
 );
 
 export const ModalFooter = ({ children, onClose, onAccept }) => (
-  <div className="modal-footer">
-    
-    <button
-      className="modal-cancel"
-      onClick={onClose}
-    >
-      Cancelar
-    </button>
-    <div>{children}</div>
-  </div>
+  <>
+    <Separator></Separator>
+    <div className="modal-footer">
+      <button
+        className="modal-cancel"
+        onClick={onClose}
+      >
+        Cancelar
+      </button>
+      <div>{children}</div>
+    </div>
+  </>
+  
 );
 
 export const ModalAcceptButton = ({ type, children, onClick }) =>(

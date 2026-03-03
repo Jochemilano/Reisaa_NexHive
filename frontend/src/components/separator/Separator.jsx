@@ -1,7 +1,7 @@
 import "./Separator.css";
 
-const SidebarSeparator = () => {
-  return <div className="sidebar-separator"></div>;
+const Separator = () => {
+  return <div className="separator"></div>;
 };
 
-export default SidebarSeparator;
+export default Separator;
