@@ -75,8 +75,8 @@ const EditPersonalEventModal = ({ isOpen, onClose, event, onUpdated, onDeleted }
           onChange={e => setEndDate(e.target.value)}
         />
       </Modal.Body>
-      <Modal.Footer>
-        <button onClick={handleDelete}>
+      <Modal.Footer onClose={onClose}>
+        <button className='calendar-delete-btn' onClick={handleDelete}>
           Eliminar
         </button>
 

@@ -77,16 +77,19 @@ const Calendar = () => {
 
   return (
     <div>
-      <button onClick={() => setIsCreateOpen(true)}>Crear evento</button>
       <CalendarComponent
         events={events}
-        onSelectSlot={(slotInfo) => console.log('Seleccionaste un día', slotInfo)}
+        onSelectSlot={(slotInfo) => {
+        setInitialDate(slotInfo.start);
+        setIsCreateOpen(true);
+      }}
         onSelectEvent={handleSelectEvent} // ahora abre modal
       />
       <CreateEventModal
         isOpen={isCreateOpen}
         onClose={() => setIsCreateOpen(false)}
         onSave={handleSaveEvent}
+        initialDate={initialDate}
       />
       <EditPersonalEventModal
         isOpen={isPersonalModalOpen}

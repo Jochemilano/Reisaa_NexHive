@@ -6,6 +6,8 @@
   width: 3.5rem;
   top: 0;
   left: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
 }
 
 .sidebar .button-general,

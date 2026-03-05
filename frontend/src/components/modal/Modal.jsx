@@ -56,7 +56,8 @@ export const ModalFooter = ({ children, onClose, onAccept }) => (
       >
         Cancelar
       </button>
-      <div>{children}</div>
+      {children}
+      <div></div>
     </div>
   </>
   

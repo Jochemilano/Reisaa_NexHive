@@ -73,11 +73,9 @@ const Call = ({ userId, targetUserId, onClose }) => {
   const callUser = () => {
     if (!targetUserId) return;
 
-    setCallAccepted(true);
-
     const peer = new Peer({
       initiator: true,
-      trickle: false,
+      trickle: false,           // para simplificar ICE
       stream: localStreamRef.current
     });
 
@@ -95,7 +93,7 @@ const Call = ({ userId, targetUserId, onClose }) => {
 
   // Recibir answer
   const handleCallAccepted = ({ fromUserId, answer }) => {
-    if (peerRef.current && fromUserId === targetUserId) {
+    if (peerRef.current) {
       peerRef.current.signal(answer);
     }
   };

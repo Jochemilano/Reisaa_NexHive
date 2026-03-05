@@ -1,4 +1,18 @@
 .calendar-container{
     height: 80vh;
-    margin: 0;
+    margin-top: 1.5rem;
+}
+
+.calendar-delete-btn{
+    border-radius: var(--radius-pill);
+    height: 2rem;
+    width: 5rem;
+    border: 1px solid var(--text-secondary);
+    color: var(--bg-base);
+    transition: 0.3s ease;
+    background-color: var(--error);
+}
+
+.calendar-delete-btn:hover{
+    transform: scale(1.1);
 }

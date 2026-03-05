@@ -3,6 +3,8 @@
   align-items: center;
   height: 2rem;
   background-color: var(--bg-soft);
+  position: absolute;
+  width: 100%;
 }
 
 .topbar .button-general,
@@ -42,7 +44,8 @@
 /*log out*/
 .topbar .modal-body .log-out{
   border-radius: var(--radius-pill);
-  background-color: var(--primary-hover);
+  background-color: var(--error);
+  color: var(--bg-base);
   margin: 0.5rem;
   padding: 0.3rem;
   border: none;
