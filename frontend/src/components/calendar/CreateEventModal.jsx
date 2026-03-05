@@ -7,21 +7,29 @@ const CreateEventModal = ({ isOpen, onClose, onSave, initialDate }) => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
-  // Si cambia initialDate, actualizar los campos de fecha
+  // Prellenar fechas cuando cambia initialDate
   useEffect(() => {
     if (initialDate) {
-      const iso = initialDate.toISOString().slice(0, 16);
-      setStartDate(iso);
-      setEndDate(iso);
+      const startIso = initialDate.toISOString().slice(0, 16); // Fecha y hora
+      const endIso = initialDate.toISOString().slice(0, 10);   // Solo fecha
+
+      setStartDate(startIso);
+      setEndDate(endIso);
     }
   }, [initialDate]);
 
+  // Guardar evento
   const handleSave = () => {
     if (!eventName.trim() || !startDate || !endDate) {
       alert('Todos los campos son obligatorios');
       return;
     }
-    if (new Date(startDate) >= new Date(endDate)) {
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999); // Ajustar fin al final del día
+
+    if (start >= end) {
       alert('La fecha de inicio debe ser menor que la de fin');
       return;
     }
@@ -29,8 +37,8 @@ const CreateEventModal = ({ isOpen, onClose, onSave, initialDate }) => {
     // Guardar el evento
     onSave({
       title: eventName.trim(),
-      start: new Date(startDate),
-      end: new Date(endDate),
+      start,
+      end,
     });
 
     // Limpiar campos y cerrar modal
@@ -39,9 +47,8 @@ const CreateEventModal = ({ isOpen, onClose, onSave, initialDate }) => {
     setEndDate('');
     onClose();
   };
-
+    // Cancelar y limpiar
   const handleCancel = () => {
-    // Limpiar campos y cerrar modal
     setEventName('');
     setStartDate('');
     setEndDate('');

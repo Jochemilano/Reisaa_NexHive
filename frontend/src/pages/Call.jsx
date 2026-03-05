@@ -46,14 +46,11 @@ const CallPage = ({ currentUserId }) => {
           </li>
         ))}
       </ul>
-
-      {targetUserId && (
-        <Call 
-          userId={currentUserId} 
-          targetUserId={targetUserId} 
-          onClose={() => setTargetUserId(null)} 
-        />
-      )}
+      <Call 
+        userId={currentUserId} 
+        targetUserId={targetUserId} 
+        onClose={() => setTargetUserId(null)} 
+      />
     </div>
   );
 };

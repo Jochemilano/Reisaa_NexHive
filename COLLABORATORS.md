@@ -21,8 +21,6 @@ Páginas y componentes (Home.css,Login.css,Navbar.css)
 
 #frontend
 npm install react-router-dom
-----
-npm install 
 ---
 npm install react-big-calendar date-fns
 ---
@@ -30,12 +28,12 @@ npm install react-icons
 ---
 npm install socket.io-client
 ---
-npm install simple-peer
+npm install simple-peer@latest
+---
+npm install process
 
 #backend
-crear /backend en raiz
 npm init -y
-dir(debe estar package.json)
 npm install express mysql2 
 npm list mysql2
 ---

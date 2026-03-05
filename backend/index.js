@@ -763,20 +763,33 @@ io.on("connection", (socket) => {
 
   // ---------------------------------------------
   // LLAMADAS SIMPLE-PEER
-  socket.on("call-user", ({ toUserId, offer }) => {
+  socket.on("call-user", async ({ toUserId, offer }) => {
     console.log("call-user recibido:", toUserId, "de", socket.userId);
     const targetSocketId = connectedUsers.get(toUserId);
     console.log("socket.id objetivo:", targetSocketId);
     if (!targetSocketId) return console.log("Usuario no conectado");
-    io.to(targetSocketId).emit("incoming-call", {
-      fromUserId: socket.userId,
-      offer
-    });
+
+    try {
+      const [user] = await query("SELECT name FROM users WHERE id=?", [socket.userId]);
+
+      io.to(targetSocketId).emit("incoming-call", {
+        fromUserId: socket.userId,
+        fromUserName: user?.name || "Usuario",
+        offer
+      });
+    } catch (err) {
+      console.error("Error obteniendo nombre de usuario:", err);
+    }
   });
 
   socket.on("call-accepted", ({ toUserId, answer }) => {
+    console.log("✅ call-accepted recibido. De:", socket.userId, "→ Para:", toUserId);
     const targetSocketId = connectedUsers.get(toUserId);
-    if (!targetSocketId) return;
+    if (!targetSocketId) {
+      console.log("❌ Usuario", toUserId, "no está conectado");
+      return;
+    }
+    console.log("📨 Reenviando answer a socket:", targetSocketId);
     io.to(targetSocketId).emit("call-accepted", {
       fromUserId: socket.userId,
       answer
