@@ -46,7 +46,6 @@ const CalendarComponent = ({ events, onSelectSlot, onSelectEvent }) => {
         selectable
         onSelectSlot={onSelectSlot}
         onSelectEvent={onSelectEvent}
-        culture="es"
         messages={messages}
         style={{ height: '100%' }}
       />

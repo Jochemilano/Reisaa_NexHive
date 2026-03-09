@@ -36,7 +36,7 @@ const Calendar = () => {
     fetchEvents();
   }, []);
 
-  // ⚡ Guardar evento nuevo
+  //Guardar evento nuevo
   const handleSaveEvent = async (newEvent) => {
     try {
       const savedEvent = await createPersonalEvent(newEvent);

@@ -11,6 +11,7 @@ const projectsController = require("./controllers/projects");
 const eventsController = require("./controllers/events");
 const roomsController = require("./controllers/rooms");
 const genericController = require("./controllers/generic");
+const activitiesController = require("./controllers/activities");
 
 // DB
 const db = require("./db");
@@ -34,6 +35,7 @@ app.use("/api", projectsController);
 app.use("/api", eventsController);
 app.use("/api", roomsController);
 app.use("/api", genericController);
+app.use("/api", activitiesController);
 
 // ----------------------------------
 // Servidor + Socket.io

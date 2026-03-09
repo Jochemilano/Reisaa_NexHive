@@ -1,14 +1,14 @@
 const express = require("express");
 const router = express.Router();
-const { query } = require("../db"); // asegúrate que tu db.js exporte query correctamente
+const db = require("../db");
 const verifyToken = require("../middleware/verifyToken");
 
 // Traer detalles de actividad
-router.get("/:id", verifyToken, async (req, res) => {
+router.get("/activities/:id", verifyToken, async (req, res) => {
   const activityId = req.params.id;
 
   try {
-    const [activity] = await query(
+    const [rows] = await db.query(
       `SELECT a.id, a.name, a.description, a.status, a.start_date, a.deadline, a.project_id,
               p.group_id
        FROM activities a
@@ -17,14 +17,18 @@ router.get("/:id", verifyToken, async (req, res) => {
       [activityId]
     );
 
-    if (!activity) return res.status(404).json({ message: "Actividad no encontrada" });
+    const activity = rows[0];
 
-    const check = await query(
+    if (!activity)
+      return res.status(404).json({ message: "Actividad no encontrada" });
+
+    const [check] = await db.query(
       "SELECT * FROM user_groups WHERE user_id=? AND group_id=?",
       [req.userId, activity.group_id]
     );
 
-    if (check.length === 0) return res.status(403).json({ message: "No tiene acceso a esta actividad" });
+    if (check.length === 0)
+      return res.status(403).json({ message: "No tiene acceso a esta actividad" });
 
     res.json({
       id: activity.id,
@@ -43,14 +47,15 @@ router.get("/:id", verifyToken, async (req, res) => {
 });
 
 // Editar actividad
-router.put("/:id", verifyToken, async (req, res) => {
+router.put("/activities/:id", verifyToken, async (req, res) => {
   const activityId = req.params.id;
   const { name, description, status, start_date, deadline } = req.body;
 
-  if (!name) return res.status(400).json({ message: "Nombre requerido" });
+  if (!name)
+    return res.status(400).json({ message: "Nombre requerido" });
 
   try {
-    const [activity] = await query(
+    const [rows] = await db.query(
       `SELECT a.id, a.project_id, p.group_id
        FROM activities a
        JOIN projects p ON a.project_id = p.id
@@ -58,23 +63,27 @@ router.put("/:id", verifyToken, async (req, res) => {
       [activityId]
     );
 
-    if (!activity) return res.status(404).json({ message: "Actividad no encontrada" });
+    const activity = rows[0];
 
-    const check = await query(
+    if (!activity)
+      return res.status(404).json({ message: "Actividad no encontrada" });
+
+    const [check] = await db.query(
       "SELECT * FROM user_groups WHERE user_id=? AND group_id=?",
       [req.userId, activity.group_id]
     );
 
-    if (check.length === 0) return res.status(403).json({ message: "No tiene acceso a esta actividad" });
+    if (check.length === 0)
+      return res.status(403).json({ message: "No tiene acceso a esta actividad" });
 
-    await query(
+    await db.query(
       `UPDATE activities
        SET name=?, description=?, status=?, start_date=?, deadline=?
        WHERE id=?`,
       [name, description || "", status || "pending", start_date || null, deadline || null, activityId]
     );
 
-    await query(
+    await db.query(
       `UPDATE calendar_events e
        JOIN calendar_event_activities cea ON e.id = cea.event_id
        SET e.title=?, e.description=?, e.start_datetime=?, e.end_datetime=?

@@ -16,3 +16,7 @@
 .calendar-delete-btn:hover{
     transform: scale(1.1);
 }
+
+.rbc-off-range-bg {
+    background: var(--bg-soft);
+}
