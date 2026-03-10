@@ -1,6 +1,6 @@
 // src/components/CalendarComponent.jsx
 import "./CalendarComponent.css";
-import React from 'react';
+import React, { useState } from 'react'; // ✅ Importar useState
 import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
 import { format, parse, getDay } from 'date-fns';
 import { startOfWeek as dateFnsStartOfWeek } from 'date-fns';
@@ -9,7 +9,6 @@ import 'react-big-calendar/lib/css/react-big-calendar.css';
 
 const locales = { es };
 
-// Localizador
 const localizer = dateFnsLocalizer({
   format,
   parse,
@@ -18,7 +17,6 @@ const localizer = dateFnsLocalizer({
   locales
 });
 
-// Traducción de botones y textos
 const messages = {
   allDay: 'Todo el día',
   previous: 'Atrás',
@@ -36,6 +34,10 @@ const messages = {
 };
 
 const CalendarComponent = ({ events, onSelectSlot, onSelectEvent }) => {
+  // ✅ Estados para controlar vista y fecha
+  const [view, setView] = useState('month');
+  const [date, setDate] = useState(new Date());
+
   return (
     <div className='calendar-container'>
       <Calendar
@@ -47,7 +49,11 @@ const CalendarComponent = ({ events, onSelectSlot, onSelectEvent }) => {
         onSelectSlot={onSelectSlot}
         onSelectEvent={onSelectEvent}
         messages={messages}
-        style={{ height: '100%' }}
+        view={view}
+        onView={setView}
+        date={date}
+        onNavigate={setDate}
+        style={{ height: '80vh' }}
       />
     </div>
   );
