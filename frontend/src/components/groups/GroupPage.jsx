@@ -85,16 +85,18 @@ const GroupPage = () => {
   const activities = selectedProject?.activities || [];
 
   const filteredActivities = useMemo(() => {
-    return activities.filter((a) => {
-      const matchesSearch =
-        normalizeText(a.name).includes(normalizeText(searchTerm)) ||
-        normalizeText(a.created_by_name).includes(normalizeText(searchTerm));
+  const result = activities.filter((a) => {
+    const matchesSearch =
+      normalizeText(a.name).includes(normalizeText(searchTerm)) ||
+      normalizeText(a.created_by_name).includes(normalizeText(searchTerm));
 
-      const matchesStatus = statusFilter === "all" || a.status === statusFilter;
+    const matchesStatus = statusFilter === "all" || a.status === statusFilter;
 
-      return matchesSearch && matchesStatus;
-    });
-  }, [activities, searchTerm, statusFilter]);
+    return matchesSearch && matchesStatus;
+  });
+
+  return [...result].sort((a, b) => b.id - a.id);
+}, [activities, searchTerm, statusFilter]);
 
   const handleDelete = (activity) => {
     const confirmed = window.confirm(`¿Eliminar la actividad "${activity.name}"?`);
@@ -248,20 +250,23 @@ const GroupPage = () => {
         )}
       </div>
 
-      <CreateActivityModal
+        <CreateActivityModal
         isOpen={createModal}
         onClose={() => setCreateModal(false)}
         currentProjectId={selectedProjectId}
         onCreated={(newActivity) => {
-          setProjects((prev) =>
-            prev.map((p) =>
-              p.id === selectedProjectId
-                ? { ...p, activities: [...(p.activities || []), newActivity] }
-                : p
-            )
-          );
-        }}
-      />
+        setProjects((prev) =>
+        prev.map((p) =>
+        p.id === selectedProjectId
+          ? { 
+              ...p, 
+              activities: [newActivity, ...(p.activities || [])] 
+            }
+              : p
+              )
+            );
+          }}
+        />
 
       <EditActivityModal
         isOpen={editModal.open}

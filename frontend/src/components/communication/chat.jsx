@@ -394,6 +394,7 @@ const Chat = ({ roomId, userId, targetUserId, targetUserName, targetUserAvatar }
             messages={messages}
             onClose={() => setShowMediaPanel(false)}
             onImageClick={setModalImage}
+            onGoToMessage={handleScrollToOriginal}
           />
         )}
 

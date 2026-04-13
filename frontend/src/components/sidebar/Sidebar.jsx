@@ -13,7 +13,7 @@ import UserPreferencesModal from '@/components/profile/UserPreferencesModal';
 import { preferencesApi } from "@/utils/preferences";
 import ProfileModal from '@/components/profile/ProfileModal';
 import { getProfile } from "@/utils/profile";
-import { createGroup, fetchGroups } from "@/utils/groups";
+import { createGroup, fetchGroups, fetchGroupUsers } from "@/utils/groups";
 import { getAvatarUrl } from "@/utils/media";
 import { addLongPress } from "@/utils/longPress";
 import { FaComments, FaStar, FaCalendarAlt } from "react-icons/fa";
@@ -270,7 +270,7 @@ const Sidebar = () => {
         isOpen={!!editingGroup}
         group={editingGroup}
         handleClose={() => setEditingGroup(null)}
-        onUpdate={fetchGroups}
+        onUpdate={() => fetchGroups()}
       />
 
       <UserPreferencesModal
