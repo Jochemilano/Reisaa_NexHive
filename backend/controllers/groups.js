@@ -193,35 +193,50 @@ router.get("/groups/:groupId/users", verifyToken, async (req, res) => {
 //Editar gpo
 router.patch("/groups/:groupId", verifyToken, async (req, res) => {
   const { groupId } = req.params;
-  const { name, collaborators = [], avatar = null } = req.body;
+  const { name, avatar, collaborators } = req.body;
   const userId = req.userId;
 
   try {
     // Verificar que el usuario es admin del grupo
-    const group = await query("SELECT * FROM groups WHERE id=? AND admin_id=?", [groupId, userId]);
-    if (group.length === 0) return res.status(403).json({ message: "No eres admin del grupo" });
+    const group = await query(
+      "SELECT * FROM groups WHERE id=? AND admin_id=?",
+      [groupId, userId]
+    );
 
-    // Actualizar nombre y avatar si vienen
-    if (name || avatar) {
-      await query(
-        "UPDATE groups SET name = COALESCE(?, name), avatar = COALESCE(?, avatar) WHERE id = ?",
-        [name, avatar, groupId]
-      );
+    if (group.length === 0) {
+      return res.status(403).json({ message: "No eres admin del grupo" });
     }
 
-    // Actualizar colaboradores
-    if (collaborators) {
-      // Eliminar existentes excepto el admin
-      await query("DELETE FROM user_groups WHERE group_id=? AND user_id != ?", [groupId, userId]);
+    // ACTUALIZAR GRUPO
+    await query(
+      `UPDATE groups 
+       SET name = COALESCE(?, name),
+           avatar = COALESCE(?, avatar)
+       WHERE id = ?`,
+      [name ?? null, avatar ?? null, groupId]
+    );
 
-      // Insertar los nuevos
+    // ACTUALIZAR COLABORADORES
+    if (Array.isArray(collaborators)) {
+      // eliminar todos excepto admin
+      await query(
+        "DELETE FROM user_groups WHERE group_id=? AND user_id != ?",
+        [groupId, userId]
+      );
+
+      // insertar nuevos
       if (collaborators.length > 0) {
-        const values = collaborators.map(userId => [userId, groupId]);
-        await query("INSERT INTO user_groups (user_id, group_id) VALUES ?", [values]);
+        const values = collaborators.map(id => [id, groupId]);
+
+        await query(
+          "INSERT INTO user_groups (user_id, group_id) VALUES ?",
+          [values]
+        );
       }
     }
 
     res.json({ message: "Grupo actualizado" });
+
   } catch (err) {
     console.error("ERROR DB UPDATE GROUP:", err);
     res.status(500).json({ message: "Error al actualizar grupo" });

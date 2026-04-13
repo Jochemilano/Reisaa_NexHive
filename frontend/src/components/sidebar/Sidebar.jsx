@@ -201,10 +201,6 @@ const Sidebar = () => {
     };
     fetchPrefs();
   }, []);
-  const refreshGroups = async () => {
-    const data = await fetchGroups();
-    setGroups(data);
-  };
 
   return (
     <aside className="sidebar">

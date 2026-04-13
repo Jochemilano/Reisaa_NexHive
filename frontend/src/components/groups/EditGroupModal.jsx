@@ -46,7 +46,10 @@ const EditGroupModal = ({
     <Modal isOpen={isOpen} onClose={handleClose}>
       <Modal.Header onClose={handleClose}>Editar grupo</Modal.Header>
       <Modal.Body>
-        <AvatarInput onFileChange={setAvatarFile} currentAvatar={getAvatarUrl(group?.avatar)} />
+        <AvatarInput 
+          handleFile={setAvatarFile} 
+          currentAvatar={getAvatarUrl(group?.avatar)} 
+        />
         <Input
           label="Nombre del grupo"
           type="text"

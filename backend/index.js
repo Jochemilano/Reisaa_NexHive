@@ -62,7 +62,11 @@ const corsHandler = (origin, callback) => {
 // ============================================================
 const app = express();
 
-app.use(cors({ origin: corsHandler, methods: ["GET", "POST", "PUT", "DELETE"], credentials: true }));
+app.use(cors({ 
+  origin: corsHandler, 
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"], 
+  credentials: true 
+}));
 app.use(express.json());
 
 // ============================================================
