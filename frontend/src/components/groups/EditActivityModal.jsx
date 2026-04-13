@@ -1,26 +1,24 @@
-// components/groups/EditActivityModal
 import React, { useEffect, useState } from "react";
 import Modal from "@/components/modal/Modal";
-import { Input, Textarea, Select, DateInput } from "@/components/input/Input";
+import { Input, Textarea, Select } from "@/components/input/Input";
+import CollaboratorPicker from "@/components/input/CollaboratorPicker";
 import { getActivityDetails, updateActivity } from "@/utils/activities";
+import { fetchProjectUsers } from "@/utils/projects";
 
 const EditActivityModal = ({ isOpen, onClose, activityId, onUpdated }) => {
   const [loading, setLoading] = useState(true);
   const [activityData, setActivityData] = useState({
-    name: "",
-    description: "",
-    status: "pending",
-    start_date: "",
-    deadline: ""
+    name: "", description: "", status: "pending", start_date: "", deadline: ""
   });
+  const [selectedCollaborators, setSelectedCollaborators] = useState([]);
+  const [availableUsers, setAvailableUsers] = useState([]);
 
-  // Convierte ISO UTC a formato compatible con datetime-local
   function toLocalDateTimeInput(isoDate) {
     if (!isoDate) return "";
     const dt = new Date(isoDate);
     const offset = dt.getTimezoneOffset();
-    const local = new Date(dt.getTime() - offset * 60000); // ajusta a hora local
-    return local.toISOString().slice(0,16); // "YYYY-MM-DDTHH:mm"
+    const local = new Date(dt.getTime() - offset * 60000);
+    return local.toISOString().slice(0, 16);
   }
 
   useEffect(() => {
@@ -29,6 +27,8 @@ const EditActivityModal = ({ isOpen, onClose, activityId, onUpdated }) => {
     const fetchData = async () => {
       try {
         setLoading(true);
+        const myId = Number(localStorage.getItem("userId"));
+
         const data = await getActivityDetails(activityId);
         setActivityData({
           name: data.name,
@@ -37,6 +37,19 @@ const EditActivityModal = ({ isOpen, onClose, activityId, onUpdated }) => {
           start_date: toLocalDateTimeInput(data.start_date),
           deadline: toLocalDateTimeInput(data.deadline)
         });
+
+        // Traer usuarios de la actividad
+        const { fetchActivityUsers } = await import("@/utils/activities");
+        const activityUsers = await fetchActivityUsers(activityId);
+        setSelectedCollaborators(activityUsers.filter(u => u.id !== myId));
+
+        const alreadyIn = new Set(activityUsers.map(u => u.id));
+
+        // Traer usuarios del proyecto como disponibles
+        const projectUsers = await fetchProjectUsers(data.project_id);
+        setAvailableUsers(
+          projectUsers.filter(u => !alreadyIn.has(u.id) && u.id !== myId)
+        );
       } catch (err) {
         console.error(err);
       } finally {
@@ -47,21 +60,35 @@ const EditActivityModal = ({ isOpen, onClose, activityId, onUpdated }) => {
     fetchData();
   }, [activityId, isOpen]);
 
+  const selectCollaborator = (e) => {
+    const userId = Number(e.target.value);
+    const user = availableUsers.find(u => u.id === userId);
+    if (!user) return;
+    setSelectedCollaborators(prev => [...prev, user]);
+    setAvailableUsers(prev => prev.filter(u => u.id !== userId));
+  };
+
+  const removeCollaborator = (userId) => {
+    const user = selectedCollaborators.find(c => c.id === userId);
+    setSelectedCollaborators(prev => prev.filter(c => c.id !== userId));
+    if (user) setAvailableUsers(prev => [...prev, user]);
+  };
+
   const handleChange = (field, value) => {
     setActivityData(prev => ({ ...prev, [field]: value }));
   };
 
   const handleSave = async () => {
     try {
-      // Convertir fechas a ISO antes de enviar
       const payload = {
         ...activityData,
         start_date: activityData.start_date ? new Date(activityData.start_date).toISOString() : null,
-        deadline: activityData.deadline ? new Date(activityData.deadline).toISOString() : null
+        deadline: activityData.deadline ? new Date(activityData.deadline).toISOString() : null,
+        collaborators: selectedCollaborators.map(c => c.id)
       };
 
       await updateActivity(activityId, payload);
-      onUpdated(); // refrescar en el sidebar
+      onUpdated();
       onClose();
     } catch (err) {
       alert("Error al actualizar actividad");
@@ -101,12 +128,17 @@ const EditActivityModal = ({ isOpen, onClose, activityId, onUpdated }) => {
               value={activityData.start_date}
               onChange={e => handleChange("start_date", e.target.value)}
             />
-
             <Input
               label="Fecha de entrega"
               type="datetime-local"
               value={activityData.deadline}
               onChange={e => handleChange("deadline", e.target.value)}
+            />
+            <CollaboratorPicker
+              availableUsers={availableUsers}
+              selectedCollaborators={selectedCollaborators}
+              onSelect={selectCollaborator}
+              onRemove={removeCollaborator}
             />
           </>
         )}

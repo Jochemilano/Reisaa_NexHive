@@ -73,7 +73,7 @@ const ViewActivityModal = ({ isOpen, onClose, activityId }) => {
                 Responsable:
               </span>
               <span className="activity-detail__value">
-                {activity.created_by_name || "—"}
+                {activity.owner_name || "—"}
               </span>
             </div>
 

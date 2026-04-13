@@ -29,7 +29,6 @@
   font-size: 0.85rem;
 }
 
-/* BOTÓN NUEVA ACTIVIDAD */
 .group-page__header .modal-button {
   width: auto !important;
   height: auto !important;
@@ -45,17 +44,12 @@
   align-items: center;
   gap: 6px;
   transition: background-color 0.2s ease, opacity 0.2s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px var(--shadow);
 }
 
 .group-page__header .modal-button:hover {
   background-color: var(--primary-hover) !important;
   opacity: 0.95;
-  transform: none !important;
-}
-
-.group-page__header .modal-button:active {
-  transform: scale(0.98) !important;
 }
 
 /* ==========================================================================
@@ -71,7 +65,7 @@
 .group-page__filter {
   padding: 0.45rem 0.8rem;
   background-color: var(--bg-soft);
-  border: 1px solid var(--border, rgba(128, 128, 128, 0.2));
+  border: 1px solid var(--border);
   border-radius: var(--radius-search);
   color: var(--text-primary);
   font-size: 0.85rem;
@@ -95,12 +89,10 @@
   background: var(--bg-soft);
   border-radius: 12px;
   box-shadow: 0 4px 12px var(--shadow);
-  border: 1px solid var(--border, rgba(128, 128, 128, 0.1));
+  border: 1px solid var(--border);
   width: 100%;
   overflow-x: auto;
-  overflow-y: auto;
-  max-height: 70vh;
-  padding-bottom: 20px; 
+  padding-bottom: 40px; 
 }
 
 .activity-table {
@@ -121,20 +113,12 @@
   font-size: 0.7rem;
   font-weight: 700;
   text-transform: uppercase;
-  border-bottom: 2px solid var(--border, rgba(128, 128, 128, 0.1));
+  border-bottom: 2px solid var(--border);
 }
 
-.activity-table th::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  width: 100%;
-  border-bottom: 2px solid var(--border, rgba(128, 128, 128, 0.1));
-}
 .activity-table td {
   padding: 0.6rem 1rem;
-  border-bottom: 1px solid var(--border, rgba(128, 128, 128, 0.05));
+  border-bottom: 1px solid var(--border);
   color: var(--text-primary);
   font-size: 0.85rem;
   white-space: nowrap;
@@ -148,13 +132,11 @@
 }
 
 .activity-table tr:hover td {
-  background-color: rgba(255, 255, 255, 0.02);
+  background-color: var(--bg-hover);
 }
 
-tr:has(.activity-menu__dropdown) {
-  position: relative;
-  z-index: 100;
-  background-color: rgba(255, 255, 255, 0.05);
+.activity-table tr:hover {
+  z-index: 50;
 }
 
 /* ==========================================================================
@@ -167,13 +149,34 @@ tr:has(.activity-menu__dropdown) {
   font-weight: 700;
   display: inline-flex;
   text-transform: uppercase;
+  border: 1px solid transparent;
 }
 
-.activity-status--pending { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+.activity-status--pending { 
+  background-color: var(--bg-active); 
+  color: var(--text-tertiary);
+  border-color: var(--border);
+}
+
 .activity-status--in-progress, 
-.activity-status--in_progress { background: rgba(59, 130, 246, 0.15); color: var(--secondary); }
-.activity-status--completed { background: rgba(22, 163, 74, 0.15); color: var(--success); }
-.activity-status--cancelled { background: rgba(220, 38, 38, 0.15); color: var(--error); }
+.activity-status--in_progress { 
+  background-color: var(--bg-hover);
+  color: var(--primary); 
+  border-color: var(--primary);
+}
+
+.activity-status--completed,
+.activity-status--done { 
+  background-color: var(--bg-hover); 
+  color: var(--success); 
+  border-color: var(--success);
+}
+
+.activity-status--cancelled { 
+  background-color: var(--bg-hover); 
+  color: var(--error); 
+  border-color: var(--error);
+}
 
 /* ==========================================================================
    MENU DE ACCIONES (DROPDOWN)
@@ -203,18 +206,18 @@ tr:has(.activity-menu__dropdown) {
 }
 
 .activity-menu__trigger:hover {
-  background-color: var(--bg-elevated, rgba(128, 128, 128, 0.2));
+  background-color: var(--bg-hover);
   color: var(--primary);
 }
 
 .activity-menu__dropdown {
   position: absolute;
-  right: calc(100% + 10px);
+  right: calc(100% + 5px);
   top: 50%;
   transform: translateY(-50%);
-  z-index: 9999;
-  background-color: var(--bg-soft);
-  border: 1px solid var(--border, rgba(128, 128, 128, 0.2));
+  z-index: 999;
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border);
   border-radius: 10px;
   min-width: 160px;
   box-shadow: 0 10px 25px var(--shadow);
@@ -222,7 +225,6 @@ tr:has(.activity-menu__dropdown) {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  text-align: left;
   animation: menuSlide 0.2s ease-out;
 }
 
@@ -242,37 +244,36 @@ tr:has(.activity-menu__dropdown) {
   cursor: pointer;
   font-size: 0.8rem;
   font-weight: 500;
-  white-space: nowrap;
+  display: flex;
+  align-items: center;
   transition: background 0.2s;
 }
 
 .activity-menu__item:hover {
-  background-color: rgba(128, 128, 128, 0.1);
+  background-color: var(--bg-hover);
 }
 
 .activity-menu__item--danger {
   color: var(--error);
-  margin-top: 2px;
 }
 
 .activity-menu__item--danger:hover {
   background-color: var(--error) !important;
-  color: white !important;
+  color: #ffffff !important;
 }
 
 /* ==========================================================================
-   SCROLLBAR
+   SCROLLBAR Y HIGHLIGHT
    ========================================================================== */
 .activity-table-wrapper::-webkit-scrollbar { height: 6px; }
 .activity-table-wrapper::-webkit-scrollbar-thumb { 
-  background: var(--text-secondary); 
+  background: var(--text-tertiary); 
   border-radius: 10px; 
 }
 
-/* ===================== RESALTADO DE BÚSQUEDA ===================== */
 .highlighted-text {
-  background-color: var(--secondary);
-  color: var(--bg-base);
+  background-color: var(--primary);
+  color: #ffffff;
   font-weight: bold; 
   border-radius: 2px;
   padding: 0 2px;

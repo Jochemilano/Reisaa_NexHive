@@ -6,47 +6,51 @@ const verifyToken = require("../middleware/verifyToken");
 // Crear grupo
 router.post("/groups", verifyToken, async (req, res) => {
   const { name, collaborators = [], avatar = null } = req.body;
-  const adminId = req.userId;
+  const ownerId = req.userId;
 
   if (!name) return res.status(400).json({ message: "Nombre requerido" });
 
   try {
     const result = await query(
-      "INSERT INTO groups (name, admin_id, avatar) VALUES (?, ?, ?)",
-      [name, adminId, avatar]
+      "INSERT INTO groups (name, owner_id, avatar) VALUES (?, ?, ?)",
+      [name, ownerId, avatar]
     );
-
     const groupId = result.insertId;
 
+    // Agregar owner
     await query(
       "INSERT INTO user_groups (user_id, group_id) VALUES (?, ?)",
-      [adminId, groupId]
+      [ownerId, groupId]
     );
 
+    // Agregar colaboradores excluyendo owner
     if (collaborators.length > 0) {
-      const values = collaborators.map(userId => [userId, groupId]);
-      await query("INSERT INTO user_groups (user_id, group_id) VALUES ?", [values]);
+      const filtered = collaborators.filter(id => id !== ownerId);
+      if (filtered.length > 0) {
+        const values = filtered.map(id => [id, groupId]);
+        await query("INSERT INTO user_groups (user_id, group_id) VALUES ?", [values]);
+      }
     }
 
-    const allUsers = [adminId, ...collaborators];
+    const allUsers = [ownerId, ...collaborators.filter(id => id !== ownerId)];
 
+    // Crear rooms
     const chatRoom = await query(
-      "INSERT INTO rooms (name, type, created_by) VALUES (?, ?, ?)",
-      ["general-chat", "chat", adminId]
+      "INSERT INTO rooms (name, type, owner_id) VALUES (?, ?, ?)",
+      ["general-chat", "chat", ownerId]
     );
-    const chatRoomId = chatRoom.insertId;
-
     const voiceRoom = await query(
-      "INSERT INTO rooms (name, type, created_by) VALUES (?, ?, ?)",
-      ["general-voice", "voice", adminId]
+      "INSERT INTO rooms (name, type, owner_id) VALUES (?, ?, ?)",
+      ["general-voice", "voice", ownerId]
     );
+
+    const chatRoomId = chatRoom.insertId;
     const voiceRoomId = voiceRoom.insertId;
 
     if (allUsers.length > 0) {
-      const chatValues = allUsers.map(userId => [chatRoomId, userId]);
+      const chatValues = allUsers.map(id => [chatRoomId, id]);
+      const voiceValues = allUsers.map(id => [voiceRoomId, id]);
       await query("INSERT INTO room_participants (room_id, user_id) VALUES ?", [chatValues]);
-
-      const voiceValues = allUsers.map(userId => [voiceRoomId, userId]);
       await query("INSERT INTO room_participants (room_id, user_id) VALUES ?", [voiceValues]);
     }
 
@@ -58,24 +62,24 @@ router.post("/groups", verifyToken, async (req, res) => {
     res.json({
       id: groupId,
       name,
-      admin_id: adminId,
+      owner_id: ownerId,
       chat_room_id: chatRoomId,
       voice_room_id: voiceRoomId,
       collaborators,
     });
   } catch (err) {
-    console.error("ERROR DB GROUP:", err);
+    console.error("ERROR DB CREATE GROUP:", err);
     res.status(500).json({ message: "Error al crear grupo" });
   }
 });
 
-// Traer grupos de usuario
+// Traer grupos del usuario
 router.get("/groups", verifyToken, async (req, res) => {
   const userId = req.userId;
 
   try {
     const results = await query(
-      `SELECT g.id, g.name, g.admin_id, g.avatar
+      `SELECT g.id, g.name, g.owner_id, g.avatar
        FROM groups g
        JOIN user_groups ug ON g.id = ug.group_id
        WHERE ug.user_id = ?`,
@@ -88,7 +92,7 @@ router.get("/groups", verifyToken, async (req, res) => {
   }
 });
 
-// Detalles de grupo — incluye created_by_name en actividades
+// Detalles del grupo — solo canales y miembros
 router.get("/groups/:groupId/details", verifyToken, async (req, res) => {
   const { groupId } = req.params;
   const userId = req.userId;
@@ -98,116 +102,85 @@ router.get("/groups/:groupId/details", verifyToken, async (req, res) => {
       "SELECT * FROM user_groups WHERE user_id=? AND group_id=?",
       [userId, groupId]
     );
-
     if (userGroup.length === 0)
       return res.status(403).json({ message: "No pertenece al grupo" });
 
+    // Info del grupo
+    const groupInfo = await query(
+      `SELECT g.id, g.name, g.avatar, g.owner_id, u.name AS owner_name
+       FROM groups g
+       JOIN users u ON u.id = g.owner_id
+       WHERE g.id = ?`,
+      [groupId]
+    );
+
+    // Canales
     const channels = await query(
       "SELECT id, chat_room_id, voice_room_id FROM channels WHERE group_id=?",
       [groupId]
     );
 
-    const rows = await query(
-      `SELECT
-         p.id          AS project_id,
-         p.name        AS project_name,
-         a.id          AS activity_id,
-         a.name        AS activity_name,
-         a.description AS activity_description,
-         a.status      AS activity_status,
-         a.start_date,
-         a.deadline,
-         a.created_by  AS activity_created_by,
-         u.name        AS created_by_name
-       FROM projects p
-       LEFT JOIN activities a ON a.project_id = p.id
-       LEFT JOIN users u ON u.id = a.created_by
-       WHERE p.group_id = ?
-       ORDER BY p.id, a.id`,
+    // Miembros
+    const members = await query(
+      `SELECT u.id, u.name
+       FROM users u
+       JOIN user_groups ug ON u.id = ug.user_id
+       WHERE ug.group_id = ?`,
       [groupId]
     );
 
-    // Agrupar filas en proyectos con sus actividades
-    const projectsMap = new Map();
-    for (const row of rows) {
-      if (!projectsMap.has(row.project_id)) {
-        projectsMap.set(row.project_id, {
-          id: row.project_id,
-          name: row.project_name,
-          activities: [],
-        });
-      }
-      if (row.activity_id) {
-        projectsMap.get(row.project_id).activities.push({
-          id: row.activity_id,
-          name: row.activity_name,
-          description: row.activity_description,
-          status: row.activity_status,
-          start_date: row.start_date,
-          deadline: row.deadline,
-          created_by: row.activity_created_by,
-          created_by_name: row.created_by_name,
-        });
-      }
-    }
-
-    res.json({ channels, projects: [...projectsMap.values()] });
+    res.json({
+      ...groupInfo[0],
+      channels,
+      members,
+    });
   } catch (err) {
     console.error("ERROR DB GROUP DETAILS:", err);
     res.status(500).json({ message: "Error al traer detalles del grupo" });
   }
 });
 
-//Traer usuarios del gpo
+// Traer usuarios del grupo
 router.get("/groups/:groupId/users", verifyToken, async (req, res) => {
   const { groupId } = req.params;
   const userId = req.userId;
 
   try {
-    // Verificar que el usuario pertenece al grupo
     const userGroup = await query(
       "SELECT * FROM user_groups WHERE user_id=? AND group_id=?",
       [userId, groupId]
     );
-
-    if (!userGroup || userGroup.length === 0) {
+    if (userGroup.length === 0)
       return res.status(403).json({ message: "No pertenece al grupo" });
-    }
 
-    // Traer usuarios del grupo
     const users = await query(
       `SELECT u.id, u.name
-      FROM users u
-      JOIN user_groups ug ON u.id = ug.user_id
-      WHERE ug.group_id = ?`,
+       FROM users u
+       JOIN user_groups ug ON u.id = ug.user_id
+       WHERE ug.group_id = ?`,
       [groupId]
     );
-
-    res.json(users || []);
+    res.json(users);
   } catch (err) {
     console.error("ERROR DB GET GROUP USERS:", err);
     res.status(500).json({ message: "Error al traer usuarios del grupo" });
   }
 });
 
-//Editar gpo
+// Editar grupo — solo owner
 router.patch("/groups/:groupId", verifyToken, async (req, res) => {
   const { groupId } = req.params;
   const { name, avatar, collaborators } = req.body;
   const userId = req.userId;
 
   try {
-    // Verificar que el usuario es admin del grupo
     const group = await query(
-      "SELECT * FROM groups WHERE id=? AND admin_id=?",
+      "SELECT * FROM groups WHERE id=? AND owner_id=?",
       [groupId, userId]
     );
+    if (group.length === 0)
+      return res.status(403).json({ message: "No eres owner del grupo" });
 
-    if (group.length === 0) {
-      return res.status(403).json({ message: "No eres admin del grupo" });
-    }
-
-    // ACTUALIZAR GRUPO
     await query(
       `UPDATE groups 
        SET name = COALESCE(?, name),
@@ -216,30 +189,78 @@ router.patch("/groups/:groupId", verifyToken, async (req, res) => {
       [name ?? null, avatar ?? null, groupId]
     );
 
-    // ACTUALIZAR COLABORADORES
     if (Array.isArray(collaborators)) {
-      // eliminar todos excepto admin
       await query(
         "DELETE FROM user_groups WHERE group_id=? AND user_id != ?",
         [groupId, userId]
       );
 
-      // insertar nuevos
-      if (collaborators.length > 0) {
-        const values = collaborators.map(id => [id, groupId]);
+      const channel = await query(
+        "SELECT chat_room_id, voice_room_id FROM channels WHERE group_id=?",
+        [groupId]
+      );
+
+      if (channel.length > 0) {
+        const { chat_room_id, voice_room_id } = channel[0];
 
         await query(
-          "INSERT INTO user_groups (user_id, group_id) VALUES ?",
-          [values]
+          "DELETE FROM room_participants WHERE room_id IN (?, ?) AND user_id != ?",
+          [chat_room_id, voice_room_id, userId]
         );
+
+        if (collaborators.length > 0) {
+          const filtered = collaborators.filter(id => id !== userId);
+          if (filtered.length > 0) {
+            const groupValues = filtered.map(id => [id, groupId]);
+            const chatValues = filtered.map(id => [chat_room_id, id]);
+            const voiceValues = filtered.map(id => [voice_room_id, id]);
+
+            await query("INSERT INTO user_groups (user_id, group_id) VALUES ?", [groupValues]);
+            await query("INSERT INTO room_participants (room_id, user_id) VALUES ?", [chatValues]);
+            await query("INSERT INTO room_participants (room_id, user_id) VALUES ?", [voiceValues]);
+          }
+        }
       }
     }
 
     res.json({ message: "Grupo actualizado" });
-
   } catch (err) {
     console.error("ERROR DB UPDATE GROUP:", err);
     res.status(500).json({ message: "Error al actualizar grupo" });
+  }
+});
+
+// Transferir ownership del grupo
+router.patch("/groups/:groupId/transfer", verifyToken, async (req, res) => {
+  const { groupId } = req.params;
+  const { newOwnerId } = req.body;
+  const userId = req.userId;
+
+  try {
+    const group = await query(
+      "SELECT * FROM groups WHERE id=? AND owner_id=?",
+      [groupId, userId]
+    );
+    if (group.length === 0)
+      return res.status(403).json({ message: "No eres owner del grupo" });
+
+    // Verificar que el nuevo owner es miembro del grupo
+    const member = await query(
+      "SELECT * FROM user_groups WHERE user_id=? AND group_id=?",
+      [newOwnerId, groupId]
+    );
+    if (member.length === 0)
+      return res.status(400).json({ message: "El usuario no pertenece al grupo" });
+
+    await query(
+      "UPDATE groups SET owner_id=? WHERE id=?",
+      [newOwnerId, groupId]
+    );
+
+    res.json({ message: "Ownership transferido" });
+  } catch (err) {
+    console.error("ERROR DB TRANSFER GROUP:", err);
+    res.status(500).json({ message: "Error al transferir ownership" });
   }
 });
 

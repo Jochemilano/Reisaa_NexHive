@@ -17,14 +17,6 @@ const EditGroupModal = ({
   const [selectedCollaborators, setSelectedCollaborators] = useState([]);
   const [availableUsers, setAvailableUsers] = useState([]);
 
-  // Cargar datos del grupo
-  useEffect(() => {
-    if (isOpen && group) {
-      setName(group.name);
-      setSelectedCollaborators(group.collaborators || []);
-    }
-  }, [isOpen, group]);
-
   // Traer usuarios disponibles
   useEffect(() => {
     if (isOpen && group) {
@@ -81,7 +73,7 @@ const EditGroupModal = ({
       <Modal.Header onClose={handleClose}>Editar grupo</Modal.Header>
       <Modal.Body>
         <AvatarInput
-          onFileChange={setAvatarFile}
+          handleFile={setAvatarFile}
           currentAvatar={getAvatarUrl(group?.avatar)}
         />
         <Input

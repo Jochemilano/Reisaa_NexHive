@@ -1,34 +1,52 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { fetchGroupDetails, fetchGroupUsers } from "@/utils/groups";
+import { fetchGroupProjects } from "@/utils/projects";
 import Modal from "@/components/modal/Modal";
 import CreateProjectModal from "@/components/groups/CreateProjectModal";
+import EditProjectModal from "@/components/groups/EditProjectModal";
 import { FaHashtag, FaVolumeUp } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useGroup } from "@/context/GroupContext";
 
 const GroupSecondSidebar = ({ groupId }) => {
-  const [details, setDetails] = useState({ channels: [], projects: [] });
+  const [details, setDetails] = useState({ channels: [], members: [] });
+  const [projects, setProjects] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [editingProject, setEditingProject] = useState(null);
   const { selectedProjectId, setSelectedProjectId } = useGroup();
   const navigate = useNavigate();
   const [availableUsers, setAvailableUsers] = useState([]);
+  const myId = Number(localStorage.getItem("userId"));
+  const filteredAvailableUsers = availableUsers.filter(u => u.id !== myId);
 
   const loadDetails = async () => {
     if (!groupId) return;
     try {
       const data = await fetchGroupDetails(groupId);
       setDetails(data);
-      if (data.projects?.length > 0 && !selectedProjectId) {
-        setSelectedProjectId(data.projects[0].id);
-      }
     } catch (err) {
       console.error("Error cargando detalles del grupo:", err);
-      setDetails({ channels: [], projects: [] });
+      setDetails({ channels: [], members: [] });
+    }
+  };
+
+  const loadProjects = async () => {
+    if (!groupId) return;
+    try {
+      const data = await fetchGroupProjects(groupId);
+      setProjects(data);
+      if (data.length > 0 && !selectedProjectId) {
+        setSelectedProjectId(data[0].id);
+      }
+    } catch (err) {
+      console.error("Error cargando proyectos:", err);
+      setProjects([]);
     }
   };
 
   useEffect(() => {
     loadDetails();
+    loadProjects();
   }, [groupId]);
 
   useEffect(() => {
@@ -38,13 +56,36 @@ const GroupSecondSidebar = ({ groupId }) => {
         const users = await fetchGroupUsers(groupId);
         setAvailableUsers(users);
       } catch (err) {
-        console.error("Error cargando usuarios del grupo:", err);
         setAvailableUsers([]);
       }
     };
     loadUsers();
   }, [groupId]);
-  
+
+  // Long press logic
+  const longPressTimer = useRef(null);
+  const longPressTriggered = useRef(false);
+
+  const startPress = useCallback((project) => {
+    longPressTriggered.current = false;
+    longPressTimer.current = setTimeout(() => {
+      longPressTriggered.current = true;
+      setEditingProject(project);
+    }, 500);
+  }, []);
+
+  const cancelPress = useCallback(() => {
+    clearTimeout(longPressTimer.current);
+  }, []);
+
+  const handleProjectClick = useCallback((project) => {
+    if (longPressTriggered.current) {
+      longPressTriggered.current = false;
+      return;
+    }
+    setSelectedProjectId(project.id);
+  }, []);
+
   return (
     <>
       <div className="sidebar-content">
@@ -74,14 +115,19 @@ const GroupSecondSidebar = ({ groupId }) => {
         </div>
 
         <div className="project-list">
-          {details.projects.length === 0 && (
+          {projects.length === 0 && (
             <span className="empty-activities">Sin proyectos</span>
           )}
-          {details.projects.map((p) => (
+          {projects.map((p) => (
             <div
               key={`project-${p.id}`}
               className={`user-item ${selectedProjectId === p.id ? "project-item--active" : ""}`}
-              onClick={() => setSelectedProjectId(p.id)}
+              onMouseDown={() => startPress(p)}
+              onMouseUp={cancelPress}
+              onMouseLeave={cancelPress}
+              onTouchStart={() => startPress(p)}
+              onTouchEnd={cancelPress}
+              onClick={() => handleProjectClick(p)}
             >
               {p.name}
             </div>
@@ -93,13 +139,22 @@ const GroupSecondSidebar = ({ groupId }) => {
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
         groupId={groupId}
-        availableUsers={availableUsers}
+        availableUsers={filteredAvailableUsers}
         onCreated={(newProject) => {
-          setDetails((prev) => ({
-            ...prev,
-            projects: [...prev.projects, newProject],
-          }));
+          setProjects(prev => [...prev, newProject]);
           setSelectedProjectId(newProject.id);
+          setIsOpen(false);
+        }}
+      />
+
+      <EditProjectModal
+        isOpen={!!editingProject}
+        onClose={() => setEditingProject(null)}
+        project={editingProject}
+        groupId={groupId}
+        onUpdated={() => {
+          loadProjects();
+          setEditingProject(null);
         }}
       />
     </>

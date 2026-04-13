@@ -1,14 +1,40 @@
-// components/groups/CreateActivityModal
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Modal from "@/components/modal/Modal";
 import { Input, Textarea, Select } from "@/components/input/Input";
+import CollaboratorPicker from "@/components/input/CollaboratorPicker";
+import { fetchProjectUsers } from "@/utils/projects";
 
 const CreateActivityModal = ({ isOpen, onClose, currentProjectId, onCreated }) => {
   const [activityName, setActivityName] = useState("");
   const [activityDescription, setActivityDescription] = useState("");
-  const [activityStatus, setActivityStatus] = useState("");
+  const [activityStatus, setActivityStatus] = useState("pending");
   const [startDate, setStartDate] = useState("");
   const [deadline, setDeadline] = useState("");
+  const [availableUsers, setAvailableUsers] = useState([]);
+  const [selectedCollaborators, setSelectedCollaborators] = useState([]);
+
+  useEffect(() => {
+    if (isOpen && currentProjectId) {
+      const myId = Number(localStorage.getItem("userId"));
+      fetchProjectUsers(currentProjectId)
+        .then(users => setAvailableUsers(users.filter(u => u.id !== myId)))
+        .catch(console.error);
+    }
+  }, [isOpen, currentProjectId]);
+
+  const selectCollaborator = (e) => {
+    const userId = Number(e.target.value);
+    const user = availableUsers.find(u => u.id === userId);
+    if (!user) return;
+    setSelectedCollaborators(prev => [...prev, user]);
+    setAvailableUsers(prev => prev.filter(u => u.id !== userId));
+  };
+
+  const removeCollaborator = (userId) => {
+    const user = selectedCollaborators.find(c => c.id === userId);
+    setSelectedCollaborators(prev => prev.filter(c => c.id !== userId));
+    if (user) setAvailableUsers(prev => [...prev, user]);
+  };
 
   const handleCreate = async () => {
     if (!activityName.trim() || !currentProjectId) return;
@@ -21,15 +47,18 @@ const CreateActivityModal = ({ isOpen, onClose, currentProjectId, onCreated }) =
         status: activityStatus,
         start_date: startDate ? new Date(startDate).toISOString() : new Date().toISOString(),
         deadline: deadline ? new Date(deadline).toISOString() : null,
-        projectId: currentProjectId
+        projectId: currentProjectId,
+        collaborators: selectedCollaborators.map(c => c.id)
       });
 
-      onCreated(newActivity); // Pasamos la actividad al padre
+      onCreated(newActivity);
       setActivityName("");
       setActivityDescription("");
-      setActivityStatus("");
+      setActivityStatus("pending");
       setStartDate("");
       setDeadline("");
+      setSelectedCollaborators([]);
+      setAvailableUsers([]);
       onClose();
     } catch (err) {
       console.error("Error creando actividad:", err);
@@ -49,7 +78,7 @@ const CreateActivityModal = ({ isOpen, onClose, currentProjectId, onCreated }) =
         />
         <Textarea
           label="Descripción de la actividad"
-          placeholder="¿Cómo lo vas a hacer?, ¿Algo más que comentar?"
+          placeholder="¿Cómo lo vas a hacer?"
           value={activityDescription}
           onChange={e => setActivityDescription(e.target.value)}
         />
@@ -58,9 +87,9 @@ const CreateActivityModal = ({ isOpen, onClose, currentProjectId, onCreated }) =
           value={activityStatus}
           onChange={e => setActivityStatus(e.target.value)}
           options={[
+            { value: "pending", label: "Pending" },
             { value: "in_progress", label: "In progress" },
             { value: "done", label: "Done" },
-            { value: "pending", label: "Pending" },
           ]}
         />
         <Input
@@ -74,6 +103,12 @@ const CreateActivityModal = ({ isOpen, onClose, currentProjectId, onCreated }) =
           type="datetime-local"
           value={deadline}
           onChange={e => setDeadline(e.target.value)}
+        />
+        <CollaboratorPicker
+          availableUsers={availableUsers}
+          selectedCollaborators={selectedCollaborators}
+          onSelect={selectCollaborator}
+          onRemove={removeCollaborator}
         />
       </Modal.Body>
       <Modal.Footer onClose={onClose}>

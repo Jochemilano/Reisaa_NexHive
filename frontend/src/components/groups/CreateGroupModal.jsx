@@ -22,7 +22,7 @@ const CreateGroupModal = ({
       <Modal.Header onClose={handleClose}>Crea un grupo</Modal.Header>
 
       <Modal.Body>
-        <AvatarInput onFileChange={setAvatarFile} />
+        <AvatarInput handleFile={setAvatarFile} />
 
         <Input
           label="Nombre del grupo"

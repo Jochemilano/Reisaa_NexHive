@@ -13,7 +13,7 @@ router.post("/events", verifyToken, async (req, res) => {
   try {
     const eventResult = await query(
       `INSERT INTO calendar_events
-       (title, description, start_datetime, end_datetime, type, created_by)
+       (title, description, start_datetime, end_datetime, type, owner_id)
        VALUES (?, ?, ?, ?, 'PERSONAL', ?)`,
       [title, description || null, start, end, userId]
     );
@@ -32,7 +32,7 @@ router.post("/events", verifyToken, async (req, res) => {
       start,
       end,
       type: "PERSONAL",
-      created_by: userId
+      owner_id: userId
     });
 
   } catch (err) {

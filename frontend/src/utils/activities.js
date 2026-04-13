@@ -22,3 +22,7 @@ export const createActivity = (data) =>
 // Obtener actividades de un proyecto (ya existe)
 export const getActivities = (projectId) =>
   apiFetch(`projects/${projectId}/activities`);
+
+//traer usuarios de actividades
+export const fetchActivityUsers = (activityId) =>
+  apiFetch(`activities/${activityId}/users`);

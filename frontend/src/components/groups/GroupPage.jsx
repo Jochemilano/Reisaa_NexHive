@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useParams } from "react-router-dom";
-import { fetchGroupDetails } from "@/utils/groups";
+import { fetchGroupProjects, fetchProjectDetails } from "@/utils/projects";
 import CreateActivityModal from "@/components/groups/CreateActivityModal";
 import EditActivityModal from "@/components/groups/EditActivityModal";
 import ViewActivityModal from "@/components/groups/ViewActivityModal";
@@ -14,36 +14,27 @@ const STATUS_LABELS = {
   pending: "Pendiente",
   "in-progress": "En progreso",
   in_progress: "En progreso",
-  completed: "Completada",
-  cancelled: "Cancelada",
+  done: "Completada",
 };
 
 const formatDate = (d) => {
   if (!d) return "—";
   return new Date(d).toLocaleDateString("es-MX", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
+    day: "2-digit", month: "short", year: "numeric",
   });
 };
 
-const normalizeText = (str) => 
+const normalizeText = (str) =>
   str?.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() || "";
 
 const highlightText = (text, search) => {
   if (!search) return text;
-
   const escapedSearch = search.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
   const regex = new RegExp(`(${escapedSearch})`, "gi");
-
-  const parts = text.split(regex);
-
-  return parts.map((part, i) =>
-    normalizeText(part) === normalizeText(search) ? (
-      <span key={i} className="highlighted-text">{part}</span>
-    ) : (
-      part
-    )
+  return text.split(regex).map((part, i) =>
+    normalizeText(part) === normalizeText(search)
+      ? <span key={i} className="highlighted-text">{part}</span>
+      : part
   );
 };
 
@@ -51,28 +42,37 @@ const GroupPage = () => {
   const { groupId } = useParams();
   const { selectedProjectId } = useGroup();
 
+  const [selectedProject, setSelectedProject] = useState(null);
   const [projects, setProjects] = useState([]);
   const [createModal, setCreateModal] = useState(false);
   const [editModal, setEditModal] = useState({ open: false, activityId: null });
   const [viewModal, setViewModal] = useState({ open: false, activityId: null });
   const [openMenuId, setOpenMenuId] = useState(null);
-
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
-  const loadDetails = async () => {
-    if (!groupId) return;
-    try {
-      const data = await fetchGroupDetails(groupId);
-      setProjects(data.projects || []);
-    } catch (err) {
-      console.error("Error cargando grupo:", err);
-    }
-  };
-
+  // Cargar lista de proyectos del grupo
   useEffect(() => {
-    loadDetails();
+    if (!groupId) return;
+    fetchGroupProjects(groupId)
+      .then(setProjects)
+      .catch(err => console.error("Error cargando proyectos:", err));
   }, [groupId]);
+
+  // Cargar detalle del proyecto seleccionado (con actividades)
+  useEffect(() => {
+    if (!selectedProjectId) return;
+    fetchProjectDetails(selectedProjectId)
+      .then(setSelectedProject)
+      .catch(err => console.error("Error cargando proyecto:", err));
+  }, [selectedProjectId]);
+
+  const loadProjectDetails = () => {
+    if (!selectedProjectId) return;
+    fetchProjectDetails(selectedProjectId)
+      .then(setSelectedProject)
+      .catch(console.error);
+  };
 
   useEffect(() => {
     if (!openMenuId) return;
@@ -81,22 +81,18 @@ const GroupPage = () => {
     return () => document.removeEventListener("click", handler);
   }, [openMenuId]);
 
-  const selectedProject = projects.find((p) => p.id === selectedProjectId);
   const activities = selectedProject?.activities || [];
 
   const filteredActivities = useMemo(() => {
-  const result = activities.filter((a) => {
-    const matchesSearch =
-      normalizeText(a.name).includes(normalizeText(searchTerm)) ||
-      normalizeText(a.created_by_name).includes(normalizeText(searchTerm));
-
-    const matchesStatus = statusFilter === "all" || a.status === statusFilter;
-
-    return matchesSearch && matchesStatus;
-  });
-
-  return [...result].sort((a, b) => b.id - a.id);
-}, [activities, searchTerm, statusFilter]);
+    const result = activities.filter((a) => {
+      const matchesSearch =
+        normalizeText(a.name).includes(normalizeText(searchTerm)) ||
+        normalizeText(a.owner_name).includes(normalizeText(searchTerm));
+      const matchesStatus = statusFilter === "all" || a.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
+    return [...result].sort((a, b) => b.id - a.id);
+  }, [activities, searchTerm, statusFilter]);
 
   const handleDelete = (activity) => {
     const confirmed = window.confirm(`¿Eliminar la actividad "${activity.name}"?`);
@@ -107,7 +103,7 @@ const GroupPage = () => {
 
   const toggleMenu = (e, id) => {
     e.stopPropagation();
-    setOpenMenuId((prev) => (prev === id ? null : id));
+    setOpenMenuId(prev => prev === id ? null : id);
   };
 
   return (
@@ -124,7 +120,6 @@ const GroupPage = () => {
               </p>
             )}
           </div>
-
           {selectedProject && (
             <Modal.Button onClick={() => setCreateModal(true)}>
               + Nueva actividad
@@ -142,7 +137,6 @@ const GroupPage = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-
               <select
                 className="group-page__filter"
                 value={statusFilter}
@@ -151,8 +145,7 @@ const GroupPage = () => {
                 <option value="all">Todos los estados</option>
                 <option value="pending">Pendiente</option>
                 <option value="in_progress">En progreso</option>
-                <option value="completed">Completada</option>
-                <option value="cancelled">Cancelada</option>
+                <option value="done">Completada</option>
               </select>
             </div>
 
@@ -172,8 +165,8 @@ const GroupPage = () => {
                   {filteredActivities.length === 0 ? (
                     <tr>
                       <td colSpan={6} className="activity-table__empty">
-                        {activities.length === 0 
-                          ? "Este proyecto no tiene actividades aún." 
+                        {activities.length === 0
+                          ? "Este proyecto no tiene actividades aún."
                           : "No hay actividades que coincidan con la búsqueda."}
                       </td>
                     </tr>
@@ -181,7 +174,7 @@ const GroupPage = () => {
                     filteredActivities.map((a) => (
                       <tr key={`activity-${a.id}`}>
                         <td>{highlightText(a.name || "Sin nombre", searchTerm)}</td>
-                        <td>{highlightText(a.created_by_name || "—", searchTerm)}</td>
+                        <td>{highlightText(a.owner_name || "—", searchTerm)}</td>
                         <td>
                           <span className={`activity-status activity-status--${a.status}`}>
                             {STATUS_LABELS[a.status] ?? "—"}
@@ -209,8 +202,7 @@ const GroupPage = () => {
                                     setOpenMenuId(null);
                                   }}
                                 >
-                                  <FaEye style={{ marginRight: "12px" }} />
-                                  Ver detalles
+                                  <FaEye style={{ marginRight: "12px" }} /> Ver detalles
                                 </button>
                                 <button
                                   className="activity-menu__item"
@@ -219,8 +211,7 @@ const GroupPage = () => {
                                     setOpenMenuId(null);
                                   }}
                                 >
-                                  <FaEdit style={{ marginRight: "12px" }} />
-                                  Editar
+                                  <FaEdit style={{ marginRight: "12px" }} /> Editar
                                 </button>
                                 <button
                                   className="activity-menu__item activity-menu__item--danger"
@@ -229,8 +220,7 @@ const GroupPage = () => {
                                     setOpenMenuId(null);
                                   }}
                                 >
-                                  <FaTrash style={{ marginRight: "12px" }} />
-                                  Eliminar
+                                  <FaTrash style={{ marginRight: "12px" }} /> Eliminar
                                 </button>
                               </div>
                             )}
@@ -244,35 +234,27 @@ const GroupPage = () => {
             </div>
           </>
         ) : (
-          !selectedProject && projects.length === 0 && (
+          projects.length === 0 && (
             <p className="group-page__empty">No hay proyectos en este grupo todavía.</p>
           )
         )}
       </div>
 
-        <CreateActivityModal
+      <CreateActivityModal
         isOpen={createModal}
         onClose={() => setCreateModal(false)}
         currentProjectId={selectedProjectId}
-        onCreated={(newActivity) => {
-        setProjects((prev) =>
-        prev.map((p) =>
-        p.id === selectedProjectId
-          ? { 
-              ...p, 
-              activities: [newActivity, ...(p.activities || [])] 
-            }
-              : p
-              )
-            );
-          }}
-        />
+        onCreated={() => {
+          loadProjectDetails();
+          setCreateModal(false);
+        }}
+      />
 
       <EditActivityModal
         isOpen={editModal.open}
         onClose={() => setEditModal({ open: false, activityId: null })}
         activityId={editModal.activityId}
-        onUpdated={loadDetails}
+        onUpdated={loadProjectDetails}
       />
 
       <ViewActivityModal
