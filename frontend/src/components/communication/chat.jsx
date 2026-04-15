@@ -249,6 +249,23 @@ const Chat = ({ roomId, userId, targetUserId, targetUserName, targetUserAvatar }
     }
   };
 
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      if (file.type.startsWith("image/") || file.type === "application/pdf") {
+        setPreviewFile(file);
+      }
+    }
+  };
+
   const handleCall = () => startCall(targetUserId, targetUserName, roomId);
 
   const handleEdit = (msg) => {
@@ -325,7 +342,7 @@ const Chat = ({ roomId, userId, targetUserId, targetUserName, targetUserAvatar }
         </div>
       )}
 
-      <div className="chat-section">
+      <div className="chat-section" onDragOver={handleDragOver} onDrop={handleDrop}>
         <div className="chat-header">
           <div className="chat-header-info">
             <div className="chat-avatar">

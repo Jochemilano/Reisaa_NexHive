@@ -5,30 +5,40 @@ import { apiFetch } from "@/utils/apiClient";
 import { useCall } from "@/context/CallContext";
 
 export default function ChatWrapper() {
-  const { chatRoomId } = useParams();
+  const { chatRoomId, groupId } = useParams(); // ← captura groupId si existe
   const userId = parseInt(localStorage.getItem("userId"));
 
-  const [authorized, setAuthorized]   = useState(false);
-  const [loading, setLoading]         = useState(true);
-  const [targetUser, setTargetUser]   = useState({ id: null, name: null });
+  const [authorized, setAuthorized] = useState(false);
+  const [loading, setLoading]       = useState(true);
+  const [targetUser, setTargetUser] = useState({ id: null, name: null, avatar: null });
 
   const { activeCall, setIsMinimized } = useCall();
 
   useEffect(() => {
     const checkAccess = async () => {
       try {
-        // 1. Verificar acceso (ya lo hacía antes)
         await apiFetch(`rooms/${chatRoomId}/messages`);
         setAuthorized(true);
 
-        // 2. Traer el otro participante de la sala
-        const participants = await apiFetch(`rooms/${chatRoomId}/participants`);
-        if (participants.length > 0) {
-          setTargetUser({ 
-            id: participants[0].id, 
-            name: participants[0].name,
-            avatar: participants[0].profile_pic
+        if (groupId) {
+          // ── Chat grupal: traer info del grupo ──────────────────
+          const group = await apiFetch(`groups/${groupId}/details`);
+          setTargetUser({
+            id: null,               // no hay un targetUser individual
+            name: group.name,
+            avatar: group.avatar,
           });
+        } else {
+          // ── Chat privado: traer el otro participante ────────────
+          const participants = await apiFetch(`rooms/${chatRoomId}/participants`);
+          const other = participants.find(p => p.id !== userId) ?? participants[0];
+          if (other) {
+            setTargetUser({
+              id: other.id,
+              name: other.name,
+              avatar: other.profile_pic,
+            });
+          }
         }
 
       } catch (err) {
@@ -40,13 +50,10 @@ export default function ChatWrapper() {
     };
 
     if (chatRoomId) checkAccess();
-  }, [chatRoomId]);
+  }, [chatRoomId, groupId]);
 
-  // Al salir del chat, minimizar la llamada si hay una activa
   useEffect(() => {
-    return () => {
-      if (activeCall) setIsMinimized(true);
-    };
+    return () => { if (activeCall) setIsMinimized(true); };
   }, [activeCall]);
 
   if (!chatRoomId)  return <p>Chat no encontrado</p>;
