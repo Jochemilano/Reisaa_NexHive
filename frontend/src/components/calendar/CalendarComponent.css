@@ -8,25 +8,24 @@
 
 /* --------------------- FIX ALINEACIÓN --------------------- */
 .rbc-time-header.rbc-overflowing {
-    margin-right: 0 !important;
-    padding-right: 0 !important;
+    margin-right: 0;
+    padding-right: 0;
 }
 
 .rbc-time-content {
-    overflow-y: scroll !important; 
-    border-right: none !important;
+    overflow-y: scroll; 
+    border-right: none;
     background-color: var(--bg-base);
 }
 
 /* --------------------- EVENTOS (FINOS Y ELEGANTES) --------------------- */
 .rbc-event {
-    background-color: var(--primary) !important;
-    color: #ffffff !important;
-    border: none !important;
+    background-color: var(--primary);
+    border: none;
     border-radius: 6px;
     font-size: 0.85rem;
     font-weight: 500;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .rbc-event:hover {
@@ -42,7 +41,6 @@
 
 .rbc-header.rbc-today span a {
     background-color: var(--primary);
-    color: white !important;
     width: 28px;
     height: 28px;
     border-radius: 50%;
@@ -53,13 +51,11 @@
 }
 
 /* --------------------- LÍNEAS (CASI INVISIBLES) --------------------- */
-.rbc-day-slot, 
-.rbc-time-slot, 
-.rbc-timeslot-group, 
-.rbc-time-content, 
-.rbc-month-view, 
-.rbc-month-row {
-    border-color: #f1f1f4 !important; 
+.rbc-time-content {
+    overflow-y: scroll;
+    border-right: none;
+    background-color: var(--bg-base);
+    border-top-color: rgba(255,255,255,0.08);
 }
 
 /* --------------------- SCROLLBAR FINO --------------------- */

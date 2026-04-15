@@ -1,7 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "@/utils/protected-route";
 import Layout from "@/components/layout/Layout";
-import Calendar from "@/pages/Calendar";
+import Calendar from "@/components/calendar/Calendar";
 import Login from "@/pages/Login";
 import Favorites from "@/components/favorites/Favorites";
 import GroupPage from "@/components/groups/GroupPage";

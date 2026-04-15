@@ -4,7 +4,7 @@ import CreateEventModal from '@/components/calendar/CreateEventModal';
 import { createPersonalEvent, getPersonalEvents, deletePersonalEvent } from '@/utils/calendar';
 import EditPersonalEventModal from '@/components/calendar/EditPersonalEventModal';
 import EditActivityModal from '@/components/groups/EditActivityModal';
-import '../styles.css';
+import '@/styles.css';
 
 const Calendar = () => {
   const [events, setEvents] = useState([]);
@@ -15,9 +15,9 @@ const Calendar = () => {
   const [editingActivityId, setEditingActivityId] = useState(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [initialDate, setInitialDate] = useState(null); 
+  
 
-
-  // ⚡ Traer eventos cuando carga el componente
+  // Traer eventos cuando carga el componente
   useEffect(() => {
     const fetchEvents = async () => {
       try {
@@ -27,7 +27,8 @@ const Calendar = () => {
           ...e,
           start: new Date(e.start),
           end: new Date(e.end),
-          isActivity: !!e.activity_id // true si es una actividad
+          isActivity: !!e.activity_id,
+          project_id: e.project_id ?? null
         }));
         setEvents(eventsWithDate);
       } catch (err) {
@@ -74,17 +75,43 @@ const Calendar = () => {
     }
   };
 
+  // Paleta de colores para proyectos
+  const PROJECT_COLORS = [
+    '#7C3AED', // violeta
+    '#0891B2', // cyan
+    '#059669', // verde
+    '#D97706', // naranja
+    '#DC2626', // rojo
+    '#DB2777', // rosa
+    '#65A30D', // lima
+  ];
+
+  const getEventColor = (event) => {
+    if (!event.isActivity) {
+      return { backgroundColor: '#3B82F6', borderColor: '#2563EB' }; // azul — personal
+    }
+    // Actividad: color por project_id
+    const index = event.project_id
+      ? Math.abs(event.project_id) % PROJECT_COLORS.length
+      : 0;
+    const color = PROJECT_COLORS[index];
+    return { backgroundColor: color, borderColor: color };
+  };
+
 
 
   return (
     <div>
       <CalendarComponent
         events={events}
+        eventPropGetter={(event) => ({
+          style: getEventColor(event)
+        })}
         onSelectSlot={(slotInfo) => {
-        setInitialDate(slotInfo.start);
-        setIsCreateOpen(true);
-      }}
-        onSelectEvent={handleSelectEvent} // ahora abre modal
+          setInitialDate(slotInfo.start);
+          setIsCreateOpen(true);
+        }}
+        onSelectEvent={handleSelectEvent}
       />
       <CreateEventModal
         isOpen={isCreateOpen}

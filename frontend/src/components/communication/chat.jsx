@@ -5,7 +5,7 @@ import CallVideo from "./Callvideo";
 import ImageModal from "./ImageModal";
 import MediaPanel from "./MediaPanel";
 import ChatSearch from "./ChatSearch";
-import { FaPaperclip, FaPaperPlane, FaStar, FaPhone, FaReply, FaEdit, FaTrash, FaTimes, FaImages, FaCopy } from "react-icons/fa";
+import { FaPaperclip, FaPaperPlane, FaStar, FaPhone, FaReply, FaEdit, FaTrash, FaTimes, FaImages, FaCopy, FaPlus } from "react-icons/fa";
 import { getFileUrl, getFileName, toggleFavoriteMessage } from "@/utils/chat";
 import "./chat.css";
 import "./call.css";
@@ -48,9 +48,7 @@ const MessageContent = ({ msg, onImageClick, isMine, onReply, onEdit, onDelete, 
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const handleFavorite = async () => {
@@ -64,27 +62,23 @@ const MessageContent = ({ msg, onImageClick, isMine, onReply, onEdit, onDelete, 
 
   const handleCopy = () => {
     if (msg.type === "text") {
-      navigator.clipboard.writeText(msg.content)
-        .then(() => {
-          console.log("Mensaje copiado al portapapeles");
-        })
-        .catch(err => console.error("Error al copiar: ", err));
+      navigator.clipboard.writeText(msg.content).catch(err => console.error(err));
     }
   };
 
   return (
     <div className="message-wrapper">
       <div className="message-content">
-      {msg.reply_to_id && (
-        <div
-          className="reply-preview"
-          onClick={() => onReplyToOriginal && onReplyToOriginal(msg.reply_to_id)}
-          style={{ cursor: "pointer" }}
-        >
-          <div className="reply-author">{msg.reply_sender_name}</div>
-          <div className="reply-text">{msg.reply_content}</div>
-        </div>
-      )}
+        {msg.reply_to_id && (
+          <div
+            className="reply-preview"
+            onClick={() => onReplyToOriginal && onReplyToOriginal(msg.reply_to_id)}
+            style={{ cursor: "pointer" }}
+          >
+            <div className="reply-author">{msg.reply_sender_name}</div>
+            <div className="reply-text">{msg.reply_content}</div>
+          </div>
+        )}
 
         {{
           image: <img className="content-image" src={src} alt="imagen" onClick={() => onImageClick(src)} />,
@@ -97,13 +91,7 @@ const MessageContent = ({ msg, onImageClick, isMine, onReply, onEdit, onDelete, 
           <span className="message-time">{formatTime(msg.created_at)}</span>
         </div>
 
-        <button
-          className="menu-toggle-btn"
-          onClick={() => setMenuOpen(prev => !prev)}
-          type="button"
-        >
-          ▼
-        </button>
+        <button className="menu-toggle-btn" onClick={() => setMenuOpen(prev => !prev)} type="button">▼</button>
 
         {menuOpen && (
           <div className="context-menu" ref={menuRef}>
@@ -113,10 +101,8 @@ const MessageContent = ({ msg, onImageClick, isMine, onReply, onEdit, onDelete, 
                   <FaCopy style={{ marginRight: 6 }} /> Copiar
                 </li>
               )}
-
               <li onClick={() => { handleFavorite(); setMenuOpen(false); }}>
-                <FaStar style={{color: favorite ? "gold" : "gray", marginRight: 6}} />
-                Favoritos
+                <FaStar style={{color: favorite ? "gold" : "gray", marginRight: 6}} /> Favoritos
               </li>
               {isMine && (
                 <>
@@ -133,76 +119,55 @@ const MessageContent = ({ msg, onImageClick, isMine, onReply, onEdit, onDelete, 
         )}
       </div>
 
-      <button
-        className="reply-btn"
-        onClick={() => onReply(msg)}
-        aria-label="Responder"
-        type="button"
-      >
-        <FaReply />
-      </button>
+      <button className="reply-btn" onClick={() => onReply(msg)} type="button"><FaReply /></button>
     </div>
   );
 };
 
-// ── Componente principal ──────────────────────────────────
+// ── COMPONENTE PRINCIPAL ──────────────────────────────────
 const Chat = ({ roomId, userId, targetUserId, targetUserName, targetUserAvatar }) => {
-  // 1. Estados
   const [input, setInput] = useState("");
   const [modalImage, setModalImage] = useState(null);
-  const [previewFile, setPreviewFile] = useState(null);
+  const [previewFiles, setPreviewFiles] = useState([]); // Cambiado a Array para múltiples archivos
+  const [isDragging, setIsDragging] = useState(false); // Estado para el aviso de arrastre
   const [replyTo, setReplyTo] = useState(null);
   const [editingMsg, setEditingMsg] = useState(null);
   const [isAtBottom, setIsAtBottom] = useState(true);
   const [showMediaPanel, setShowMediaPanel] = useState(false);
 
-// --- NUEVOS ESTADOS DE BÚSQUEDA ---
   const [showSearch, setSearchSearch] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [currentMatchIndex, setCurrentMatchIndex] = useState(-1);
 
-  // 2. Refs
   const chatPageRef = useRef(null);
   const scrollContainerRef = useRef(null);
   const messagesRef = useRef(null);
   const messageRefs = useRef({});
 
-  // 3. Hooks de datos
-  const { messages, send, sendFile, deleteMessage, editMessage, loadMore, hasMore, loadingMore } = useChat(roomId, userId);
-  const { activeCall, isMinimized, startCall } = useCall();
+  const { messages, send, sendFile, deleteMessage, editMessage, startCall } = useChat(roomId, userId);
+  const { activeCall, isMinimized } = useCall();
 
-  // 4. Funciones de scroll
   const scrollToBottom = () => {
     const container = scrollContainerRef.current;
     if (!container) return;
-
     const targetPos = container.scrollHeight - container.clientHeight;
-
-    smoothScroll(container, targetPos, {
-      maxDuration: 500,
-      onComplete: () => setIsAtBottom(true)
-    });
+    smoothScroll(container, targetPos, { maxDuration: 500, onComplete: () => setIsAtBottom(true) });
   };
 
   const handleScroll = () => {
     const container = scrollContainerRef.current;
     if (!container) return;
-    const threshold = 80;
-    const atBottom =
-      container.scrollHeight - container.scrollTop - container.clientHeight < threshold;
+    const atBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 80;
     setIsAtBottom(atBottom);
   };
 
-  // 5. Effects
   useEffect(() => {
     const container = messagesRef.current;
     if (!container) return;
-
     scrollContainerRef.current = container;
     container.addEventListener("scroll", handleScroll);
     scrollToBottom();
-
     return () => container.removeEventListener("scroll", handleScroll);
   }, []);
 
@@ -210,28 +175,29 @@ const Chat = ({ roomId, userId, targetUserId, targetUserName, targetUserAvatar }
     if (isAtBottom) scrollToBottom();
   }, [messages]);
 
- // 6. Handlers
   const handleSend = () => {
-    if (previewFile) {
-      sendFile(previewFile);
-      setPreviewFile(null);
-      if (!input.trim()) return;
+    if (previewFiles.length > 0) {
+      previewFiles.forEach(file => sendFile(file));
+      setPreviewFiles([]);
     }
 
-    if (!input.trim()) return;
-    if (editingMsg) {
-      editMessage(editingMsg.id, input);
-      setEditingMsg(null);
-    } else {
-      send(input, replyTo?.id || null);
-      setReplyTo(null);
+    if (!input.trim() && previewFiles.length === 0) return;
+
+    if (input.trim()) {
+      if (editingMsg) {
+        editMessage(editingMsg.id, input);
+        setEditingMsg(null);
+      } else {
+        send(input, replyTo?.id || null);
+        setReplyTo(null);
+      }
+      setInput("");
     }
-    setInput("");
   };
 
-  const handleFile = (e) => {
-    const file = e.target.files[0];
-    if (file) setPreviewFile(file);
+  const handleFileChange = (e) => {
+    const selectedFiles = Array.from(e.target.files);
+    setPreviewFiles(prev => [...prev, ...selectedFiles]);
   };
 
   const handlePaste = (e) => {
@@ -242,8 +208,7 @@ const Chat = ({ roomId, userId, targetUserId, targetUserName, targetUserAvatar }
         const file = items[i].getAsFile();
         if (file) {
           e.preventDefault();
-          e.stopPropagation();
-          setPreviewFile(file);
+          setPreviewFiles(prev => [...prev, file]);
         }
       }
     }
@@ -252,21 +217,27 @@ const Chat = ({ roomId, userId, targetUserId, targetUserName, targetUserAvatar }
   const handleDragOver = (e) => {
     e.preventDefault();
     e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // Solo quitamos el overlay si salimos realmente del contenedor
+    if (e.currentTarget.contains(e.relatedTarget)) return;
+    setIsDragging(false);
   };
 
   const handleDrop = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    const files = e.dataTransfer.files;
-    if (files && files.length > 0) {
-      const file = files[0];
-      if (file.type.startsWith("image/") || file.type === "application/pdf") {
-        setPreviewFile(file);
-      }
+    setIsDragging(false);
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) {
+      const validFiles = files.filter(f => f.type.startsWith("image/") || f.type === "application/pdf");
+      setPreviewFiles(prev => [...prev, ...validFiles]);
     }
   };
-
-  const handleCall = () => startCall(targetUserId, targetUserName, roomId);
 
   const handleEdit = (msg) => {
     setEditingMsg(msg);
@@ -282,15 +253,14 @@ const Chat = ({ roomId, userId, targetUserId, targetUserName, targetUserAvatar }
   const cancelAction = () => {
     setReplyTo(null);
     setEditingMsg(null);
-    setPreviewFile(null);
+    setPreviewFiles([]);
     setInput("");
   };
 
   const handleInputChange = (e) => {
     const textarea = e.target;
     textarea.style.height = "auto";
-    const maxHeight = 4 * 1.4 * 16;
-    textarea.style.height = Math.min(textarea.scrollHeight, maxHeight) + "px";
+    textarea.style.height = Math.min(textarea.scrollHeight, 4 * 1.4 * 16) + "px";
     setInput(textarea.value);
   };
 
@@ -329,7 +299,6 @@ const Chat = ({ roomId, userId, targetUserId, targetUserName, targetUserAvatar }
     let nextIdx = direction === "up" 
       ? (currentMatchIndex > 0 ? currentMatchIndex - 1 : searchResults.length - 1)
       : (currentMatchIndex < searchResults.length - 1 ? currentMatchIndex + 1 : 0);
-    
     setCurrentMatchIndex(nextIdx);
     handleScrollToOriginal(searchResults[nextIdx]);
   };
@@ -342,7 +311,23 @@ const Chat = ({ roomId, userId, targetUserId, targetUserName, targetUserAvatar }
         </div>
       )}
 
-      <div className="chat-section" onDragOver={handleDragOver} onDrop={handleDrop}>
+      <div 
+        className="chat-section" 
+        onDragOver={handleDragOver} 
+        onDragLeave={handleDragLeave} 
+        onDrop={handleDrop}
+        style={{ position: 'relative' }}
+      >
+        {/* OVERLAY DE ARRASTRE */}
+        {isDragging && (
+          <div className="drag-drop-overlay">
+            <div className="drag-drop-content">
+              <FaImages size={50} color="#00a884" />
+              <p>Suelta las imágenes aquí</p>
+            </div>
+          </div>
+        )}
+
         <div className="chat-header">
           <div className="chat-header-info">
             <div className="chat-avatar">
@@ -355,33 +340,20 @@ const Chat = ({ roomId, userId, targetUserId, targetUserName, targetUserAvatar }
 
           <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
             <ChatSearch 
-            showSearch={showSearch}
-            setShowSearch={setSearchSearch}
-            searchTerm={searchTerm}
-            onSearch={handleSearch}
-            results={searchResults}
-            currentIndex={currentMatchIndex}
-            onNavigate={navigateMatch}
-           />
-  
+              showSearch={showSearch} setShowSearch={setSearchSearch}
+              searchTerm={searchTerm} onSearch={handleSearch}
+              results={searchResults} currentIndex={currentMatchIndex}
+              onNavigate={navigateMatch}
+            />
             {targetUserId && !activeCall && (
-            <button 
-            onClick={handleCall} 
-            className="header-icon-btn" 
-            title="Llamar"
-          >
-          <FaPhone />
-          </button>
-        )}
-
-          <button
-          onClick={() => setShowMediaPanel(prev => !prev)}
-          className="header-icon-btn"
-          title="Multimedia"
-           >
-          <FaImages />
-        </button>
-      </div>
+              <button onClick={() => startCall(targetUserId, targetUserName, roomId)} className="header-icon-btn" title="Llamar">
+                <FaPhone />
+              </button>
+            )}
+            <button onClick={() => setShowMediaPanel(prev => !prev)} className="header-icon-btn" title="Multimedia">
+              <FaImages />
+            </button>
+          </div>
         </div>
 
         <div className="chat-messages" ref={messagesRef}>
@@ -393,55 +365,41 @@ const Chat = ({ roomId, userId, targetUserId, targetUserName, targetUserAvatar }
             >
               <span className="sender">{msg.sender_name || msg.sender_id}</span>
               <MessageContent
-                msg={msg}
-                searchTerm={searchTerm}
-                onImageClick={setModalImage}
-                isMine={Number(msg.sender_id) === Number(userId)}
-                onReply={handleReply}
-                onReplyToOriginal={handleScrollToOriginal}
-                onEdit={handleEdit}
-                onDelete={deleteMessage}
+                msg={msg} searchTerm={searchTerm}
+                onImageClick={setModalImage} isMine={Number(msg.sender_id) === Number(userId)}
+                onReply={handleReply} onReplyToOriginal={handleScrollToOriginal}
+                onEdit={handleEdit} onDelete={deleteMessage}
               />
             </div>
           ))}
         </div>
 
         {showMediaPanel && (
-          <MediaPanel
-            messages={messages}
-            onClose={() => setShowMediaPanel(false)}
-            onImageClick={setModalImage}
-            onGoToMessage={handleScrollToOriginal}
-          />
+          <MediaPanel messages={messages} onClose={() => setShowMediaPanel(false)} onImageClick={setModalImage} onGoToMessage={handleScrollToOriginal} />
         )}
 
         <div className="chat-footer">
-          {previewFile && (
-  <div className="preview-upload-box">
-    <div className="preview-image-wrapper">
-      {/* Si el archivo empieza con "image/", muestra la foto */}
-      {previewFile.type.startsWith("image/") ? (
-        <img src={URL.createObjectURL(previewFile)} alt="preview" />
-      ) : (
-        /* Si es PDF o cualquier otro, muestra el icono del clip */
-        <div className="preview-file-icon">
-          <FaPaperclip />
-        </div>
-      )}
-      <button className="remove-preview" onClick={() => setPreviewFile(null)} type="button">
-        <FaTimes />
-      </button>
-    </div>
-    
-    <div className="preview-info">
-      {/* Muestra el nombre real: "documento.pdf" */}
-      <span className="file-name-truncate">{previewFile.name}</span>
-      <span className="file-status">
-        {previewFile.type.startsWith("image/") ? "Imagen lista" : "Archivo listo"}
-      </span>
-    </div>
-  </div>
-)}
+          {/* LISTADO DE MÚLTIPLES PREVIEWS */}
+          {previewFiles.length > 0 && (
+            <div className="preview-multi-container">
+              {previewFiles.map((file, idx) => (
+                <div key={idx} className="preview-image-wrapper">
+                  {file.type.startsWith("image/") ? (
+                    <img src={URL.createObjectURL(file)} alt="preview" />
+                  ) : (
+                    <div className="preview-file-icon"><FaPaperclip /></div>
+                  )}
+                  <button className="remove-preview" onClick={() => setPreviewFiles(prev => prev.filter((_, i) => i !== idx))} type="button">
+                    <FaTimes />
+                  </button>
+                </div>
+              ))}
+              <label className="add-more-files">
+                <FaPlus />
+                <input type="file" multiple onChange={handleFileChange} style={{ display: "none" }} />
+              </label>
+            </div>
+          )}
 
           {(replyTo || editingMsg) && (
             <div className="action-banner">
@@ -450,12 +408,8 @@ const Chat = ({ roomId, userId, targetUserId, targetUserName, targetUserAvatar }
                   <>
                     <FaReply className="action-icon" />
                     <div className="action-info">
-                      <span className="reply-label">
-                        Respondiendo a <b>{replyTo.sender_name}</b>
-                      </span>
-                      <span className="reply-text-truncate">
-                        {replyTo.content}
-                      </span>
+                      <span className="reply-label">Respondiendo a <b>{replyTo.sender_name}</b></span>
+                      <span className="reply-text-truncate">{replyTo.content}</span>
                     </div>
                   </>
                 )}
@@ -466,17 +420,13 @@ const Chat = ({ roomId, userId, targetUserId, targetUserName, targetUserAvatar }
                   </>
                 )}
               </div>
-              <button className="cancel-action" onClick={cancelAction}>
-                <FaTimes />
-              </button>
+              <button className="cancel-action" onClick={cancelAction}><FaTimes /></button>
             </div>
           )}
 
           <div className="chat-input">
-            <label htmlFor="file-upload" className="upload-btn">
-              <FaPaperclip />
-            </label>
-            <input id="file-upload" type="file" onChange={handleFile} style={{ display: "none" }} />
+            <label htmlFor="file-upload" className="upload-btn"><FaPaperclip /></label>
+            <input id="file-upload" type="file" multiple onChange={handleFileChange} style={{ display: "none" }} />
 
             <textarea
               value={input}
@@ -488,16 +438,12 @@ const Chat = ({ roomId, userId, targetUserId, targetUserName, targetUserAvatar }
                   handleSend();
                 }
               }}
-            placeholder={
-            previewFile 
-            ? "Añade un comentario al archivo..." 
-            : (editingMsg ? "Edita el mensaje..." : "Escribe un mensaje...")
-            }
+              placeholder={previewFiles.length > 0 ? "Añade un comentario..." : (editingMsg ? "Edita el mensaje..." : "Escribe un mensaje...")}
               className="chat-textarea"
               rows={1}
             />
 
-            <button onClick={handleSend} className="send-btn" disabled={!input.trim() && !previewFile}>
+            <button onClick={handleSend} className="send-btn" disabled={!input.trim() && previewFiles.length === 0}>
               <FaPaperPlane />
             </button>
           </div>
@@ -505,14 +451,7 @@ const Chat = ({ roomId, userId, targetUserId, targetUserName, targetUserAvatar }
       </div>
 
       {!isAtBottom && (
-        <button
-          className="scroll-to-bottom-btn"
-          onClick={scrollToBottom}
-          aria-label="Ir al fondo"
-          type="button"
-        >
-          ↓
-        </button>
+        <button className="scroll-to-bottom-btn" onClick={scrollToBottom} type="button">↓</button>
       )}
 
       <ImageModal src={modalImage} onClose={() => setModalImage(null)} />
