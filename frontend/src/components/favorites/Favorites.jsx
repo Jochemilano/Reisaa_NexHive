@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { getUserFavorites, formatDate } from "@/utils/favorites";
 import { getFileUrl, getFileName, toggleFavoriteMessage  } from "@/utils/chat";
 import {FaStar} from "react-icons/fa";
@@ -11,6 +12,7 @@ const Favorites = () => {
   const [loading, setLoading] = useState(true);
   const userId = parseInt(localStorage.getItem("userId"));
   const [modalImage, setModalImage] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchFavorites = async () => {
@@ -27,14 +29,22 @@ const Favorites = () => {
     fetchFavorites();
   }, [userId]);
 
-  const handleToggleFavorite = async (msgId) => {
+  const handleGoToChat = (msg) => {
+    if (msg.room_id) {
+      navigate(`/chat/${msg.room_id}`, { state: { scrollToMessageId: msg.id } });
+    } else {
+      console.warn("Este mensaje no tiene un room_id asociado.");
+    }
+  };
+
+  const handleToggleFavorite = async (e, msgId) => {
+    e.stopPropagation();
     const confirmRemove = window.confirm("¿Seguro que quieres quitar este mensaje de tus favoritos?");
     if (!confirmRemove) return;
 
     try {
       const data = await toggleFavoriteMessage(msgId);
       if (!data.favorite) {
-        // Elimina de la lista si ya no es favorito
         setFavorites((prev) => prev.filter((msg) => msg.id !== msgId));
       }
     } catch (err) {
@@ -51,7 +61,10 @@ const Favorites = () => {
 
       <div className="favorites-list">
         {favorites.map((msg) => (
-          <div key={msg.id} className="favorite-message">
+          <div key={msg.id} className="favorite-message"
+          onClick={() => handleGoToChat(msg)}
+            style={{ cursor: "pointer" }}
+          >
 
           {/* Header */}
             <div className="message-header">
@@ -67,7 +80,10 @@ const Favorites = () => {
                 <img
                   src={getFileUrl(msg.content)}
                   alt="Imagen enviada"
-                  onClick={() => setModalImage(getFileUrl(msg.content))}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setModalImage(getFileUrl(msg.content));
+                  }}
                   style={{ cursor: "pointer" }}
                   onError={(e) => { e.target.style.display = "none"; }}
                 />
@@ -77,6 +93,7 @@ const Favorites = () => {
                   target="_blank"
                   rel="noreferrer"
                   className="content-file"
+                  onClick={(e) => e.stopPropagation()}
                 >
                   {getFileName(msg.content)}
                 </a>
@@ -88,7 +105,7 @@ const Favorites = () => {
             {/* Botón flotante */}
             <button
               className="favorite-toggle-btn"
-              onClick={() => handleToggleFavorite(msg.id)}
+              onClick={(e) => handleToggleFavorite(e, msg.id)}
               title="Quitar de favoritos"
             >
               <FaStar style={{ color: "gold" }} />

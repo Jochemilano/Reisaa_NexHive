@@ -8,27 +8,29 @@ import '@/styles.css';
 
 const Calendar = () => {
   const [events, setEvents] = useState([]);
-  const [eventToDelete, setEventToDelete] = useState(null);
   const [selectedPersonalEvent, setSelectedPersonalEvent] = useState(null);
   const [isPersonalModalOpen, setIsPersonalModalOpen] = useState(false);
   const [isEditActivityOpen, setIsEditActivityOpen] = useState(false);
   const [editingActivityId, setEditingActivityId] = useState(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [initialDate, setInitialDate] = useState(null); 
-  
+  const [initialDate, setInitialDate] = useState(null);
+
+  const currentUserId = parseInt(localStorage.getItem('userId')) || null;
 
   // Traer eventos cuando carga el componente
   useEffect(() => {
     const fetchEvents = async () => {
       try {
         const data = await getPersonalEvents();
-        // Convertir fechas de string a Date
         const eventsWithDate = data.map(e => ({
           ...e,
           start: new Date(e.start),
           end: new Date(e.end),
           isActivity: !!e.activity_id,
-          project_id: e.project_id ?? null
+          project_id: e.project_id ?? null,
+          owner_id: e.owner_id,
+          collaborators: e.collaborators || [],
+          isOwner: e.owner_id === currentUserId,
         }));
         setEvents(eventsWithDate);
       } catch (err) {
@@ -36,7 +38,7 @@ const Calendar = () => {
       }
     };
     fetchEvents();
-  }, []);
+  }, [currentUserId]);
 
   //Guardar evento nuevo
   const handleSaveEvent = async (newEvent) => {
@@ -45,7 +47,12 @@ const Calendar = () => {
       setEvents([...events, {
         ...savedEvent,
         start: new Date(savedEvent.start),
-        end: new Date(savedEvent.end)
+        end: new Date(savedEvent.end),
+        isActivity: !!savedEvent.activity_id,
+        project_id: savedEvent.project_id ?? null,
+        owner_id: savedEvent.owner_id,
+        collaborators: savedEvent.collaborators || [],
+        isOwner: savedEvent.owner_id === currentUserId,
       }]);
     } catch (err) {
       alert('Error al guardar evento');
@@ -60,18 +67,6 @@ const Calendar = () => {
     } else {
       setSelectedPersonalEvent(event);
       setIsPersonalModalOpen(true);
-    }
-};
-
-
-  const handleConfirmDelete = async () => {
-    try {
-      await deletePersonalEvent(eventToDelete.id);
-      setEvents(events.filter(e => e.id !== eventToDelete.id));
-      setEventToDelete(null);
-    } catch (err) {
-      alert("Error al eliminar evento");
-      console.error(err);
     }
   };
 
@@ -90,15 +85,12 @@ const Calendar = () => {
     if (!event.isActivity) {
       return { backgroundColor: '#3B82F6', borderColor: '#2563EB' }; // azul — personal
     }
-    // Actividad: color por project_id
     const index = event.project_id
       ? Math.abs(event.project_id) % PROJECT_COLORS.length
       : 0;
     const color = PROJECT_COLORS[index];
     return { backgroundColor: color, borderColor: color };
   };
-
-
 
   return (
     <div>
@@ -123,13 +115,18 @@ const Calendar = () => {
         isOpen={isPersonalModalOpen}
         onClose={() => setIsPersonalModalOpen(false)}
         event={selectedPersonalEvent}
+        currentUserId={currentUserId}
         onUpdated={async () => {
           const data = await getPersonalEvents();
           setEvents(data.map(e => ({
             ...e,
             start: new Date(e.start),
             end: new Date(e.end),
-            isActivity: !!e.activity_id
+            isActivity: !!e.activity_id,
+            project_id: e.project_id ?? null,
+            owner_id: e.owner_id,
+            collaborators: e.collaborators || [],
+            isOwner: e.owner_id === currentUserId,
           })));
         }}
         onDeleted={async (eventId) => {
@@ -147,12 +144,15 @@ const Calendar = () => {
             ...e,
             start: new Date(e.start),
             end: new Date(e.end),
-            isActivity: !!e.activity_id
+            isActivity: !!e.activity_id,
+            project_id: e.project_id ?? null,
+            owner_id: e.owner_id,
+            collaborators: e.collaborators || [],
+            isOwner: e.owner_id === currentUserId,
           }));
           setEvents(eventsWithDate);
         }}
       />
-
     </div>
   );
 };

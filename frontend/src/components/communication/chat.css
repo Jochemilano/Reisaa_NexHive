@@ -120,6 +120,24 @@
   display: none;
 }
 
+.date-separator {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 10px 0;
+}
+
+.date-separator span {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--bg-soft);
+  color: var(--text-secondary);
+  font-size: 12px;
+  text-transform: capitalize;
+}
+
 /* ── BURBUJAS DE MENSAJE ───────────────────────────────── */
 .chat-message {
   max-width: 85%;
@@ -149,12 +167,13 @@
 
 .message-content {
   position: relative;
-  padding: 10px 35px 10px 14px !important;
+  padding: 10px 42px 26px 14px !important;
   border-radius: 12px;
   font-size: 14px;
   display: flex;
   flex-direction: column;
   transition: 0.3s ease;
+  min-width: 80px;
 }
 
 .chat-message.mine .message-content {
@@ -163,7 +182,7 @@
   border-bottom-right-radius: 2px;
 }
 
-.chat-message.mine .message-content a{
+.chat-message.mine .message-content a {
   color: var(--text-primary);
 }
 
@@ -174,15 +193,59 @@
 }
 
 .message-meta {
-  display: flex;
-  justify-content: flex-end;
+  position: absolute;
+  right: 10px;
+  bottom: 8px;
+  display: inline-flex;
   align-items: center;
-  gap: 5px;
-  margin-top: 4px;
+  justify-content: flex-end;
+  gap: 4px;
   font-size: 10px;
-  opacity: 0.7;
+  opacity: 0.75;
+  color: var(--text-secondary);
 }
 
+.chat-message.mine .message-meta {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.message-time {
+  white-space: nowrap;
+}
+
+.read-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+  font-size: 1rem;
+}
+
+.read-status.read {
+  color: var(--success);
+}
+
+.read-status.sent {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.check-mark {
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.check-mark.sent-check {
+  font-size: 0.95rem;
+  opacity: 0.9;
+}
+
+.check-mark.done-all {
+  font-size: 1rem;
+}
+
+.check-mark.second {
+  margin-left: 0;
+}
 .chat-message .content {
   margin: 0;
   white-space: pre-wrap;

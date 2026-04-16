@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { socket, joinRoom, sendMessage } from "@/utils/socket";
+import { socket, joinRoom, sendMessage, markRoomRead } from "@/utils/socket";
 import { apiFetch } from "@/utils/apiClient";
 import { uploadFile } from "@/utils/rooms";
 
@@ -8,13 +8,36 @@ export const useChat = (roomId, userId) => {
 
   useEffect(() => {
     apiFetch(`rooms/${roomId}/messages`)
-      .then(setMessages)
+      .then((loadedMessages) => {
+        setMessages(loadedMessages.map((msg) => ({ ...msg, read: !!msg.read })));
+        markRoomRead(roomId);
+      })
       .catch(err => console.error("Error cargando mensajes:", err));
 
     joinRoom(roomId);
-    socket.on("receive-message", msg => setMessages(prev => [...prev, msg]));
-    return () => socket.off("receive-message");
-  }, [roomId]);
+    markRoomRead(roomId);
+
+    socket.on("receive-message", (msg) => {
+      setMessages(prev => [...prev, { ...msg, read: !!msg.read }]);
+      markRoomRead(roomId);
+    });
+
+    socket.on("room-read", ({ roomId: readRoomId, userId: readerId }) => {
+      if (readRoomId !== roomId) return;
+      if (Number(readerId) === Number(userId)) return;
+      setMessages((prev) => prev.map((msg) => {
+        if (msg.sender_id && Number(msg.sender_id) === Number(userId) && !msg.read) {
+          return { ...msg, read: true };
+        }
+        return msg;
+      }));
+    });
+
+    return () => {
+      socket.off("receive-message");
+      socket.off("room-read");
+    };
+  }, [roomId, userId]);
 
   const send = (content, replyToId = null) => {
     sendMessage({

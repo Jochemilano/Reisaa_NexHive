@@ -1,6 +1,6 @@
 import "./Input.css";
 
-export const Input = ({ label, type = "text", placeholder, value, onChange }) => {
+export const Input = ({ label, type = "text", placeholder, value, onChange, ...props }) => {
   return (
     <div className="input-container">
       <label className="input-label">{label}</label>
@@ -10,12 +10,13 @@ export const Input = ({ label, type = "text", placeholder, value, onChange }) =>
         placeholder={placeholder}
         value={value}
         onChange={onChange}
+        {...props}
       />
     </div>
   );
 };
 
-export const Textarea = ({ label, placeholder, value, onChange }) => {
+export const Textarea = ({ label, placeholder, value, onChange, ...props }) => {
   return (
     <div className="input-container">
       <label className="input-label">{label}</label>
@@ -24,6 +25,7 @@ export const Textarea = ({ label, placeholder, value, onChange }) => {
         placeholder={placeholder}
         value={value}
         onChange={onChange}
+        {...props}
       />
     </div>
   );

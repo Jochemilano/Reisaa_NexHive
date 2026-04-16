@@ -18,4 +18,8 @@ const sendMessage = (message) => {
   socket.emit("send-message", message);
 };
 
-export { socket, joinRoom, sendMessage };
+const markRoomRead = (roomId) => {
+  socket.emit("mark-room-read", { roomId });
+};
+
+export { socket, joinRoom, sendMessage, markRoomRead };

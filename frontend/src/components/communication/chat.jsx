@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useChat } from "@/hooks/useChat";
 import { useCall } from "@/context/CallContext";
 import CallVideo from "./Callvideo";
@@ -6,6 +7,8 @@ import ImageModal from "./ImageModal";
 import MediaPanel from "./MediaPanel";
 import ChatSearch from "./ChatSearch";
 import { FaPaperclip, FaPaperPlane, FaStar, FaPhone, FaReply, FaEdit, FaTrash, FaTimes, FaImages, FaCopy, FaPlus } from "react-icons/fa";
+import { MdDoneAll } from "react-icons/md";
+import { FiCheck } from "react-icons/fi";
 import { getFileUrl, getFileName, toggleFavoriteMessage } from "@/utils/chat";
 import "./chat.css";
 import "./call.css";
@@ -89,6 +92,14 @@ const MessageContent = ({ msg, onImageClick, isMine, onReply, onEdit, onDelete, 
         <div className="message-meta">
           {msg.edited === 1 && <span className="edited-tag">editado</span>}
           <span className="message-time">{formatTime(msg.created_at)}</span>
+          {isMine && (
+            <span className={`read-status ${msg.read === true ? "read" : "sent"}`}>
+              {msg.read === true
+                ? <MdDoneAll className="check-mark done-all" />
+                : <FiCheck className="check-mark sent-check" />
+              }
+            </span>
+          )}
         </div>
 
         <button className="menu-toggle-btn" onClick={() => setMenuOpen(prev => !prev)} type="button">▼</button>
@@ -126,6 +137,9 @@ const MessageContent = ({ msg, onImageClick, isMine, onReply, onEdit, onDelete, 
 
 // ── COMPONENTE PRINCIPAL ──────────────────────────────────
 const Chat = ({ roomId, userId, targetUserId, targetUserName, targetUserAvatar }) => {
+  const location = useLocation(); 
+  const navigate = useNavigate();
+  
   const [input, setInput] = useState("");
   const [modalImage, setModalImage] = useState(null);
   const [previewFiles, setPreviewFiles] = useState([]); // Cambiado a Array para múltiples archivos
@@ -162,18 +176,40 @@ const Chat = ({ roomId, userId, targetUserId, targetUserName, targetUserAvatar }
     setIsAtBottom(atBottom);
   };
 
+ // 1. Efecto de carga inicial y scroll al fondo condicionado
   useEffect(() => {
     const container = messagesRef.current;
     if (!container) return;
     scrollContainerRef.current = container;
     container.addEventListener("scroll", handleScroll);
-    scrollToBottom();
+
+    const isNavigatingToFav = !!location.state?.scrollToMessageId;
+    if (!isNavigatingToFav) {
+      scrollToBottom();
+    }
     return () => container.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // 2. Efecto para nuevos mensajes (solo baja si no estamos buscando un favorito)
   useEffect(() => {
-    if (isAtBottom) scrollToBottom();
-  }, [messages]);
+    const isNavigatingToFav = !!location.state?.scrollToMessageId;
+    if (isAtBottom && !isNavigatingToFav) {
+      scrollToBottom();
+    }
+  }, [messages, isAtBottom, location.state]);
+
+  // 3. Efecto para buscar y scrollear al mensaje favorito
+  useEffect(() => {
+    const targetId = location.state?.scrollToMessageId;
+    
+    if (targetId && messages.length > 0) {
+      const timer = setTimeout(() => {
+        handleScrollToOriginal(targetId);
+        navigate(location.pathname, { replace: true, state: {} });
+      }, 300);     
+      return () => clearTimeout(timer);
+    }
+  }, [location.state, messages, navigate, location.pathname]);
 
   const handleSend = () => {
     if (previewFiles.length > 0) {
@@ -274,6 +310,42 @@ const Chat = ({ roomId, userId, targetUserId, targetUserName, targetUserAvatar }
     setTimeout(() => target.classList.remove("highlighted"), 1500);
   };
 
+  const formatDateSeparator = (dateStr) => {
+    if (!dateStr) return "";
+    const date = new Date(dateStr);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+
+    if (date.toDateString() === today.toDateString()) return "Hoy";
+    if (date.toDateString() === yesterday.toDateString()) return "Ayer";
+
+    return date.toLocaleDateString("es-MX", {
+      weekday: "long",
+      day: "numeric",
+      month: "short",
+    });
+  };
+
+  const getMessagesWithSeparators = () => {
+    const items = [];
+    let lastDateKey = null;
+
+    messages.forEach((msg) => {
+      const msgDate = new Date(msg.created_at);
+      const dateKey = msgDate.toDateString();
+
+      if (dateKey !== lastDateKey) {
+        items.push({ separator: true, label: formatDateSeparator(msg.created_at), key: `sep-${dateKey}` });
+        lastDateKey = dateKey;
+      }
+
+      items.push({ ...msg, separator: false, key: msg.id || `${msg.sender_id}-${msg.created_at}-${Math.random()}` });
+    });
+
+    return items;
+  };
+
   const handleSearch = (text) => {
     setSearchTerm(text);
     if (!text.trim()) {
@@ -357,20 +429,30 @@ const Chat = ({ roomId, userId, targetUserId, targetUserName, targetUserAvatar }
         </div>
 
         <div className="chat-messages" ref={messagesRef}>
-          {messages.map((msg) => (
-            <div
-              key={msg.id || `${msg.sender_id}-${msg.content}`}
-              ref={(el) => (messageRefs.current[msg.id] = el)}
-              className={`chat-message ${Number(msg.sender_id) === Number(userId) ? "mine" : "other"}`}
-            >
-              <span className="sender">{msg.sender_name || msg.sender_id}</span>
-              <MessageContent
-                msg={msg} searchTerm={searchTerm}
-                onImageClick={setModalImage} isMine={Number(msg.sender_id) === Number(userId)}
-                onReply={handleReply} onReplyToOriginal={handleScrollToOriginal}
-                onEdit={handleEdit} onDelete={deleteMessage}
-              />
-            </div>
+          {getMessagesWithSeparators().map((item) => (
+            item.separator ? (
+              <div key={item.key} className="date-separator">
+                <span>{item.label}</span>
+              </div>
+            ) : (
+              <div
+                key={item.key}
+                ref={(el) => (messageRefs.current[item.id] = el)}
+                className={`chat-message ${Number(item.sender_id) === Number(userId) ? "mine" : "other"}`}
+              >
+                <span className="sender">{item.sender_name || item.sender_id}</span>
+                <MessageContent
+                  msg={item}
+                  searchTerm={searchTerm}
+                  onImageClick={setModalImage}
+                  isMine={Number(item.sender_id) === Number(userId)}
+                  onReply={handleReply}
+                  onReplyToOriginal={handleScrollToOriginal}
+                  onEdit={handleEdit}
+                  onDelete={deleteMessage}
+                />
+              </div>
+            )
           ))}
         </div>
 

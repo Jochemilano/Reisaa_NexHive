@@ -4,6 +4,43 @@ const jwt = require("jsonwebtoken");
 const query = require("../helpers/query");
 const verifyToken = require("../middleware/verifyToken");
 
+// REGISTER
+router.post("/register", async (req, res) => {
+  const { name, email, password } = req.body;
+
+  if (!name || !email || !password) {
+    return res.status(400).json({ message: "Nombre, correo y contraseña son requeridos" });
+  }
+
+  try {
+    const existing = await query("SELECT id FROM users WHERE email = ?", [email]);
+    if (existing.length) {
+      return res.status(409).json({ message: "El correo ya está registrado" });
+    }
+
+    const result = await query(
+      "INSERT INTO users (name, email, password, status, rol) VALUES (?, ?, ?, 1, 'user')",
+      [name, email, password]
+    );
+
+    const token = jwt.sign({ id: result.insertId }, process.env.JWT_SECRET, { expiresIn: "1d" });
+
+    res.status(201).json({
+      token,
+      user: {
+        id: result.insertId,
+        nombre: name,
+        email,
+        estado: 1,
+        rol: "user"
+      }
+    });
+  } catch (err) {
+    console.error("ERROR DB REGISTER:", err);
+    res.status(500).json({ message: "Error de servidor" });
+  }
+});
+
 // LOGIN
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;

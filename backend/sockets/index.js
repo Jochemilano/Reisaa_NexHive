@@ -41,6 +41,23 @@ module.exports = (io, connectedUsers) => {
       console.log("Usuario", socket.userId, "se unió a sala", roomId);
     });
 
+    // Marcar sala como leída vía socket
+    socket.on("mark-room-read", async ({ roomId }) => {
+      try {
+        await db.query(
+          "UPDATE room_participants SET last_read_at = NOW() WHERE room_id = ? AND user_id = ?",
+          [roomId, socket.userId]
+        );
+        socket.to(roomId.toString()).emit("room-read", {
+          roomId,
+          userId: socket.userId,
+          lastReadAt: new Date()
+        });
+      } catch (err) {
+        console.error("ERROR SOCKET MARK ROOM READ:", err);
+      }
+    });
+
     // Enviar mensaje
     socket.on("send-message", async ({ roomId, type, content, replyToId }) => {
       try {
@@ -90,6 +107,7 @@ module.exports = (io, connectedUsers) => {
           created_at: new Date(),
           edited: 0,
           favorite: 0,
+          read: false,
         };
 
         // 5️⃣ Emitir mensaje a todos los usuarios en la sala

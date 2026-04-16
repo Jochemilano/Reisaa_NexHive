@@ -7,6 +7,7 @@ export const createPersonalEvent = async (eventData) => {
     description: eventData.description || null,
     start: eventData.start,
     end: eventData.end,
+    collaborators: eventData.collaborators || [],
   };
   return await apiFetch('events', {
     method: 'POST',
@@ -31,6 +32,7 @@ export const updatePersonalEvent = async (eventId, eventData) => {
     description: eventData.description || null,
     start: eventData.start,
     end: eventData.end,
+    ...(eventData.collaborators ? { collaborators: eventData.collaborators } : {}),
   };
   return await apiFetch(`events/${eventId}`, {
     method: 'PUT',

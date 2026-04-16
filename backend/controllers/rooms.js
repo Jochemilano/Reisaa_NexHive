@@ -14,7 +14,7 @@ router.post("/rooms", verifyToken, async (req, res) => {
 
   try {
     const roomResult = await query(
-      "INSERT INTO rooms (name, type, created_by) VALUES (?, ?, ?)",
+      "INSERT INTO rooms (name, type, owner_id) VALUES (?, ?, ?)",
       [name, type, createdBy]
     );
 
@@ -29,6 +29,28 @@ router.post("/rooms", verifyToken, async (req, res) => {
   } catch (err) {
     console.error("ERROR DB CREATE ROOM:", err);
     res.status(500).json({ message: "Error creando sala" });
+  }
+});
+
+// Marcar sala como leída
+router.put("/rooms/:roomId/read", verifyToken, async (req, res) => {
+  const { roomId } = req.params;
+  const userId = req.userId;
+
+  try {
+    const result = await query(
+      "UPDATE room_participants SET last_read_at = NOW() WHERE room_id = ? AND user_id = ?",
+      [roomId, userId]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "No se encontró participación en la sala" });
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("ERROR DB MARK ROOM READ:", err);
+    res.status(500).json({ message: "Error marcando como leído" });
   }
 });
 
@@ -90,7 +112,22 @@ router.get("/rooms/:roomId/messages", verifyToken, async (req, res) => {
       [userId, roomId]
     );
 
-    res.json(messages);
+    const [reads] = await db.query(
+      "SELECT user_id, last_read_at FROM room_participants WHERE room_id = ?",
+      [roomId]
+    );
+
+    const otherReaders = reads.filter(r => r.user_id !== userId);
+
+    const messagesWithRead = messages.map((msg) => {
+      const isSentByMe = Number(msg.sender_id) === Number(userId);
+      const read = isSentByMe && otherReaders.length > 0 && otherReaders.every((reader) => {
+        return reader.last_read_at && new Date(reader.last_read_at) >= new Date(msg.created_at);
+      });
+      return { ...msg, read };
+    });
+
+    res.json(messagesWithRead);
 
   } catch (err) {
     console.error("ERROR DB GET ROOM MESSAGES:", err);

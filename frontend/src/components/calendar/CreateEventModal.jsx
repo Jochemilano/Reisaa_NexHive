@@ -1,11 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import Modal from '@/components/modal/Modal';
 import Input from '@/components/input/Input';
+import CollaboratorPicker from '@/components/input/CollaboratorPicker';
+import { fetchAllUsers } from '@/utils/groups';
 
 const CreateEventModal = ({ isOpen, onClose, onSave, initialDate }) => {
   const [eventName, setEventName] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [allUsers, setAllUsers] = useState([]);
+  const [selectedCollaborators, setSelectedCollaborators] = useState([]);
+  const [currentUserId, setCurrentUserId] = useState(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setCurrentUserId(parseInt(localStorage.getItem('userId')) || null);
+    fetchAllUsers()
+      .then(users => setAllUsers(users))
+      .catch(err => console.error('Error cargando usuarios:', err));
+    setSelectedCollaborators([]);
+  }, [isOpen]);
 
   // Prellenar fechas cuando cambia initialDate
   useEffect(() => {
@@ -17,6 +31,23 @@ const CreateEventModal = ({ isOpen, onClose, onSave, initialDate }) => {
       setEndDate(endIso);
     }
   }, [initialDate]);
+
+  const availableUsers = allUsers.filter(
+    user => user.id !== currentUserId && !selectedCollaborators.some(c => c.id === user.id)
+  );
+
+  const handleSelectCollaborator = (e) => {
+    const userId = parseInt(e.target.value);
+    const user = allUsers.find(u => u.id === userId);
+    if (user && !selectedCollaborators.some(c => c.id === user.id)) {
+      setSelectedCollaborators(prev => [...prev, user]);
+    }
+    e.target.value = '';
+  };
+
+  const handleRemoveCollaborator = (userId) => {
+    setSelectedCollaborators(prev => prev.filter(c => c.id !== userId));
+  };
 
   // Guardar evento
   const handleSave = () => {
@@ -39,12 +70,14 @@ const CreateEventModal = ({ isOpen, onClose, onSave, initialDate }) => {
       title: eventName.trim(),
       start,
       end,
+      collaborators: selectedCollaborators.map(c => c.id),
     });
 
     // Limpiar campos y cerrar modal
     setEventName('');
     setStartDate('');
     setEndDate('');
+    setSelectedCollaborators([]);
     onClose();
   };
     // Cancelar y limpiar
@@ -77,6 +110,12 @@ const CreateEventModal = ({ isOpen, onClose, onSave, initialDate }) => {
           type="datetime-local"
           value={endDate}
           onChange={e => setEndDate(e.target.value)}
+        />
+        <CollaboratorPicker
+          availableUsers={availableUsers}
+          selectedCollaborators={selectedCollaborators}
+          onSelect={handleSelectCollaborator}
+          onRemove={handleRemoveCollaborator}
         />
       </Modal.Body>
       <Modal.Footer onClose={handleCancel}>
