@@ -21,14 +21,14 @@ module.exports = (io, connectedUsers) => {
       const userData = rows[0];
 
       socket.userInfo = userData;
-      connectedUsers.set(socket.userId, userData);
+      connectedUsers.set(socket.userId, { socketId: socket.id, userData });
 
       socket.join(socket.userId.toString());
 
       console.log("Usuario conectado:", socket.userId);
 
       // enviar info completa
-      io.emit("usuarios:lista", [...connectedUsers.values()]);
+      io.emit("usuarios:lista", [...connectedUsers.values()].map(v => v.userData));
 
     } catch (err) {
       console.log("❌ JWT inválido en socket:", err.message);
@@ -60,6 +60,7 @@ module.exports = (io, connectedUsers) => {
 
     // Enviar mensaje
     socket.on("send-message", async ({ roomId, type, content, replyToId }) => {
+      console.log("Received send-message:", { roomId, type, content, replyToId, userId: socket.userId });
       try {
         // 1️⃣ Insertar el mensaje en la base de datos
         const [result] = await db.query(
@@ -120,12 +121,17 @@ module.exports = (io, connectedUsers) => {
 
     // Llamadas 1 a 1
     socket.on("call-user", async ({ toUserId, offer }) => {
-      const targetSocketId = connectedUsers.get(toUserId);
-      if (!targetSocketId) return;
+      console.log("Received call-user from", socket.userId, "to", toUserId);
+      const target = connectedUsers.get(toUserId);
+      if (!target) {
+        console.log("Target not connected:", toUserId);
+        return;
+      }
 
       try {
         const [user] = await db.query("SELECT name FROM users WHERE id=?", [socket.userId]);
-        io.to(targetSocketId).emit("incoming-call", {
+        console.log("Emitting incoming-call to", target.socketId);
+        io.to(target.socketId).emit("incoming-call", {
           fromUserId: socket.userId,
           fromUserName: user?.[0]?.name || "Usuario",
           offer
@@ -136,19 +142,19 @@ module.exports = (io, connectedUsers) => {
     });
 
     socket.on("call-accepted", ({ toUserId, answer }) => {
-      const targetSocketId = connectedUsers.get(toUserId);
-      if (!targetSocketId) return;
-      io.to(targetSocketId).emit("call-accepted", { fromUserId: socket.userId, answer });
+      const target = connectedUsers.get(toUserId);
+      if (!target) return;
+      io.to(target.socketId).emit("call-accepted", { fromUserId: socket.userId, answer });
     });
 
     socket.on("call-declined", ({ toUserId }) => {
-      const targetSocketId = connectedUsers.get(toUserId);
-      if (targetSocketId) io.to(targetSocketId).emit("call-declined");
+      const target = connectedUsers.get(toUserId);
+      if (target) io.to(target.socketId).emit("call-declined");
     });
 
     socket.on("call-ended", ({ toUserId }) => {
-      const targetSocketId = connectedUsers.get(toUserId);
-      if (targetSocketId) io.to(targetSocketId).emit("call-ended");
+      const target = connectedUsers.get(toUserId);
+      if (target) io.to(target.socketId).emit("call-ended");
     });
 
     // ── Sala de voz grupal (mesh) ──────────────────────────────────────────
@@ -173,9 +179,9 @@ module.exports = (io, connectedUsers) => {
 
       // Avisar a los que ya están que llegó alguien nuevo
       room.forEach((_, existingUserId) => {
-        const existingSocketId = connectedUsers.get(existingUserId);
-        if (existingSocketId) {
-          io.to(existingSocketId).emit("voice-user-joined", {
+        const existing = connectedUsers.get(existingUserId);
+        if (existing) {
+          io.to(existing.socketId).emit("voice-user-joined", {
             userId: socket.userId,
             userName,
           });
@@ -189,9 +195,9 @@ module.exports = (io, connectedUsers) => {
     });
 
     socket.on("voice-signal", ({ toUserId, signal }) => {
-      const targetSocketId = connectedUsers.get(toUserId);
-      if (targetSocketId) {
-        io.to(targetSocketId).emit("voice-signal", {
+      const target = connectedUsers.get(toUserId);
+      if (target) {
+        io.to(target.socketId).emit("voice-signal", {
           fromUserId: socket.userId,
           signal,
         });
@@ -223,7 +229,7 @@ module.exports = (io, connectedUsers) => {
 
       connectedUsers.delete(socket.userId);
       console.log("Usuario desconectado:", socket.userId);
-      io.emit("usuarios:lista", [...connectedUsers.values()]); // ← fuera del forEach y con .values()
+      io.emit("usuarios:lista", [...connectedUsers.values()].map(v => v.userData)); // ← fuera del forEach y con .values()
     });
   });
 };

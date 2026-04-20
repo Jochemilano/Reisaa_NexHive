@@ -18,6 +18,7 @@ export const useChat = (roomId, userId) => {
     markRoomRead(roomId);
 
     socket.on("receive-message", (msg) => {
+      console.log("Received message:", msg);
       setMessages(prev => [...prev, { ...msg, read: !!msg.read }]);
       markRoomRead(roomId);
     });
@@ -40,6 +41,7 @@ export const useChat = (roomId, userId) => {
   }, [roomId, userId]);
 
   const send = (content, replyToId = null) => {
+    console.log("Sending message:", { roomId, type: "text", content, replyToId });
     sendMessage({
       roomId,
       senderId: userId,

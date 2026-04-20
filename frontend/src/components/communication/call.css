@@ -65,6 +65,7 @@
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 1rem;
   width: 100%;
+  position: relative;
 }
 
 .video-wrapper {
@@ -98,6 +99,81 @@
   gap: 6px;
   align-items: center;
   z-index: 5;
+}
+
+/* Resaltar cuando habla */
+.video-wrapper.speaking {
+  box-shadow: 0 0 0 3px rgba(0,168,132,0.18), 0 12px 30px rgba(0,0,0,0.25);
+  border: 2px solid var(--primary);
+}
+
+/* Pin button (tachuela) */
+.pin-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 6;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(0,0,0,0.35);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  cursor: pointer;
+}
+
+.video-wrapper:hover .pin-btn,
+.floating-video:hover .pin-btn {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.pin-btn.pinned {
+  background: var(--primary);
+  color: white;
+}
+
+/* Cuando hay un pinned, layout Meet/Discord style */
+.video-grid.pinned {
+  display: flex;
+  align-items: stretch;
+  height: 100%;
+  min-height: 500px;
+  background-color: var(--bg-soft);
+  border-radius: 12px;
+}
+
+/* Cámara pinchada (grande - full screen) */
+.video-grid.pinned .video-wrapper.pinned-active {
+  flex: 1;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  bottom: auto;
+  right: auto;
+  aspect-ratio: 16/9;
+  order: 0 !important;
+  border-radius: 12px;
+}
+
+/* Cámara pequeña (picture-in-picture) en esquina - estilo Meet/Discord */
+.video-grid.pinned .video-wrapper:not(.pinned-active) {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  width: 240px;
+  height: 180px;
+  aspect-ratio: 4/3;
+  flex: none;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  z-index: 10;
+  border-radius: 12px;
+  border: 2px solid rgba(255,255,255,0.1);
 }
 
 /* Barra de controles */

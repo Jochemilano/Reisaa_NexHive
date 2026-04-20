@@ -41,6 +41,7 @@ export const CallProvider = ({ children }) => {
 
   useEffect(() => {
     socket.on("incoming-call", ({ fromUserId, fromUserName, offer }) => {
+      console.log("Received incoming-call from", fromUserId, fromUserName);
       setIncomingCall({ fromUserId, fromUserName, offer });
     });
     socket.on("call-accepted", ({ answer }) => {
@@ -59,6 +60,7 @@ export const CallProvider = ({ children }) => {
   }, []);
 
   const startCall = async (targetUserId, targetUserName, chatRoomId) => {
+    console.log("Starting call to", targetUserId, targetUserName);
     try {
       const stream = await initMedia();
       setActiveCall({ targetUserId, targetUserName, chatRoomId });
@@ -67,7 +69,10 @@ export const CallProvider = ({ children }) => {
       setIsMinimized(false);
 
       const peer = new Peer({ initiator: true, trickle: false, stream });
-      peer.on("signal", offer => socket.emit("call-user", { toUserId: targetUserId, offer }));
+      peer.on("signal", offer => {
+        console.log("Emitting call-user with offer");
+        socket.emit("call-user", { toUserId: targetUserId, offer });
+      });
       peer.on("stream", remote => setRemoteStream(remote));
       peerRef.current = peer;
     } catch (err) {

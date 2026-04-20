@@ -159,8 +159,8 @@ const Chat = ({ roomId, userId, targetUserId, targetUserName, targetUserAvatar }
   const messagesRef = useRef(null);
   const messageRefs = useRef({});
 
-  const { messages, send, sendFile, deleteMessage, editMessage, startCall } = useChat(roomId, userId);
-  const { activeCall, isMinimized } = useCall();
+  const { messages, send, sendFile, deleteMessage, editMessage } = useChat(roomId, userId);
+  const { startCall, activeCall, isMinimized } = useCall();
 
   const scrollToBottom = () => {
     const container = scrollContainerRef.current;
@@ -228,6 +228,10 @@ const Chat = ({ roomId, userId, targetUserId, targetUserName, targetUserAvatar }
         setReplyTo(null);
       }
       setInput("");
+
+      setTimeout(() => {
+      scrollToBottom();
+      }, 50);
     }
   };
 

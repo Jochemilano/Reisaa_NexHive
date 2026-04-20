@@ -8,6 +8,18 @@ const socket = io(CONFIG.BASE_URL, {
   }
 });
 
+socket.on("connect", () => {
+  console.log("Socket connected");
+});
+
+socket.on("disconnect", () => {
+  console.log("Socket disconnected");
+});
+
+socket.on("connect_error", (err) => {
+  console.log("Socket connect error:", err);
+});
+
 // Función para unirse a una sala
 const joinRoom = (roomId) => {
   socket.emit("join-room", roomId);

@@ -38,6 +38,7 @@ export default function ChatWrapper() {
               name: other.name,
               avatar: other.profile_pic,
             });
+            console.log("Target user for chat:", other);
           }
         }
 
