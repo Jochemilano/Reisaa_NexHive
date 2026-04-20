@@ -2,7 +2,7 @@ const jwt = require("jsonwebtoken");
 const db = require("../db");
 
 module.exports = (io, connectedUsers) => {
-  const voiceRooms = new Map(); 
+  const voiceRooms = new Map();
 
   io.on("connection", async (socket) => {
     const token = socket.handshake.auth?.token;

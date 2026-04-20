@@ -26,12 +26,13 @@ const CallVideo = ({ expanded = true }) => {
   useEffect(() => {
     if (localVidRef.current && localStreamRef.current)
       localVidRef.current.srcObject = localStreamRef.current;
-  }, [activeCall, isMinimized]);
+  }, [activeCall, isMinimized, pinned]);
 
   useEffect(() => {
     if (remoteVidRef.current && remoteStream)
       remoteVidRef.current.srcObject = remoteStream;
-  }, [remoteStream, callAccepted, isMinimized]);
+  }, [remoteStream, callAccepted, isMinimized, pinned]);
+
 
   // Simple VAD (Voice Activity Detection) using WebAudio Analyser
   useEffect(() => {
@@ -88,11 +89,67 @@ const CallVideo = ({ expanded = true }) => {
     };
   }, [remoteStream]);
 
+  const [pos, setPos] = useState({ x: window.innerWidth - 240, y: window.innerHeight - 200 });
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartPos = useRef({ x: 0, y: 0 });
+
+  const onMouseDown = (e) => {
+    // Solo arrastrar desde el header o el area de video si no es un boton
+    if (e.target.closest('button')) return;
+    
+    setIsDragging(true);
+    dragStartPos.current = {
+      x: e.clientX - pos.x,
+      y: e.clientY - pos.y
+    };
+  };
+
+  useEffect(() => {
+    const onMouseMove = (e) => {
+      if (!isDragging) return;
+      
+      // Dimensiones aproximadas de la ventana minimizada
+      const winW = 220; 
+      const winH = 260; // Aumentado por los nuevos controles
+      
+      let newX = e.clientX - dragStartPos.current.x;
+      let newY = e.clientY - dragStartPos.current.y;
+      
+      // Limites de pantalla
+      newX = Math.max(0, Math.min(window.innerWidth - winW, newX));
+      newY = Math.max(0, Math.min(window.innerHeight - winH, newY));
+      
+      setPos({ x: newX, y: newY });
+    };
+    const onMouseUp = () => setIsDragging(false);
+
+    if (isDragging) {
+      window.addEventListener("mousemove", onMouseMove);
+      window.addEventListener("mouseup", onMouseUp);
+    }
+    return () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+    };
+  }, [isDragging]);
+
   if (!activeCall) return null;
 
   // Vista FLOTANTE (Chiquita)
   if (!expanded || isMinimized) return (
-    <div className="floating-call">
+    <div 
+      className="floating-call"
+      style={{ 
+        left: `${pos.x}px`, 
+        top: `${pos.y}px`, 
+        bottom: 'auto', 
+        right: 'auto',
+        cursor: isDragging ? 'grabbing' : 'grab',
+        userSelect: 'none',
+        height: 'auto'
+      }}
+      onMouseDown={onMouseDown}
+    >
       <div className="floating-header">
         <span className="floating-name">
           <FaPhone /> {activeCall.targetUserName}
@@ -105,25 +162,51 @@ const CallVideo = ({ expanded = true }) => {
           >
             <FaExpand />
           </button>
-          <button onClick={hangUp} className="floating-btn danger">
-            <FaTimes />
-          </button>
         </div>
       </div>
 
       <div className="floating-video">
+        {/* Siempre tener el video remoto aunque sea oculto para no perder el audio si no es el principal */}
+        {pinned !== 'remote' && (
+          <video ref={remoteVidRef} autoPlay playsInline style={{ display: 'none' }} />
+        )}
+        
         <video
-          ref={localVidRef}
+          ref={pinned === 'remote' ? remoteVidRef : localVidRef}
           autoPlay
           playsInline
-          muted
-          className={`video-stream ${isLocalSpeaking ? 'speaking' : ''}`}
+          muted={pinned !== 'remote'}
+          className={`video-stream ${(pinned === 'remote' ? isRemoteSpeaking : isLocalSpeaking) ? 'speaking' : ''}`}
         />
-        <div className="video-label">Tú {!isMicOn && "🔇"}</div>
-        <button className={`pin-btn ${pinned === 'local' ? 'pinned' : ''}`} title="Fijar" onClick={() => setPinned(pinned === 'local' ? null : 'local')}><FaThumbtack /></button>
+        <div className="video-label">
+          {pinned === 'remote' ? activeCall.targetUserName : `Tú ${!isMicOn ? "🔇" : ""}`}
+        </div>
+        <button 
+          className={`pin-btn ${pinned ? 'pinned' : ''}`} 
+          title="Fijar" 
+          onClick={() => setPinned(pinned ? null : 'remote')}
+        >
+          <FaThumbtack />
+        </button>
+      </div>
+
+
+
+      <div className="floating-mini-controls">
+        <button onClick={toggleMic} className={`mini-control-btn ${isMicOn ? "on" : "off"}`}>
+          {isMicOn ? <FaMicrophone /> : <FaMicrophoneSlash />}
+        </button>
+        <button onClick={toggleCamera} className={`mini-control-btn ${isCameraOn ? "on" : "off"}`}>
+          {isCameraOn ? <FaVideo /> : <FaVideoSlash />}
+        </button>
+        <button onClick={hangUp} className="mini-control-btn danger" title="Colgar">
+          <FaPhone style={{ transform: 'rotate(135deg)' }} />
+        </button>
       </div>
     </div>
   );
+
+
 
   // Vista EXPANDIDA
   return (

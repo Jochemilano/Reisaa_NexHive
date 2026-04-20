@@ -36,6 +36,7 @@
 .sidebar-content::-webkit-scrollbar {
   width: 3px;
 }
+
 .sidebar-content::-webkit-scrollbar-thumb {
   background: var(--border);
   border-radius: 10px;

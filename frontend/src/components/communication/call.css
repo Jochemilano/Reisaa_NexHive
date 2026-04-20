@@ -317,6 +317,48 @@
   gap: 4px;
 }
 
+.floating-mini-controls {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px;
+  background: rgba(0,0,0,0.2);
+  backdrop-filter: blur(4px);
+}
+
+.mini-control-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.mini-control-btn.on {
+  background: var(--bg-elevated);
+  color: var(--primary);
+}
+
+.mini-control-btn.off {
+  background: var(--error);
+  color: #fff;
+}
+
+.mini-control-btn.danger {
+  background: var(--error);
+  color: #fff;
+}
+
+.mini-control-btn:hover {
+  transform: scale(1.1);
+}
+
+
 /* -------------------------------
    ANIMACIONES
 --------------------------------*/
