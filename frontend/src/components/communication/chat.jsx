@@ -5,6 +5,8 @@ import { useCall } from "@/context/CallContext";
 import CallVideo from "./Callvideo";
 import ImageModal from "./ImageModal";
 import MediaPanel from "./MediaPanel";
+import ImageEditorModal from "./ImageEditorModal";
+
 import ChatSearch from "./ChatSearch";
 import { FaPaperclip, FaPaperPlane, FaStar, FaPhone, FaReply, FaEdit, FaTrash, FaTimes, FaImages, FaCopy, FaPlus } from "react-icons/fa";
 import { MdDoneAll } from "react-icons/md";
@@ -148,6 +150,9 @@ const Chat = ({ roomId, userId, targetUserId, targetUserName, targetUserAvatar }
   const [editingMsg, setEditingMsg] = useState(null);
   const [isAtBottom, setIsAtBottom] = useState(true);
   const [showMediaPanel, setShowMediaPanel] = useState(false);
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [editorFiles, setEditorFiles] = useState([]);
+
 
   const [showSearch, setSearchSearch] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -237,8 +242,19 @@ const Chat = ({ roomId, userId, targetUserId, targetUserName, targetUserAvatar }
 
   const handleFileChange = (e) => {
     const selectedFiles = Array.from(e.target.files);
-    setPreviewFiles(prev => [...prev, ...selectedFiles]);
+    const images = selectedFiles.filter(f => f.type.startsWith("image/"));
+    const others = selectedFiles.filter(f => !f.type.startsWith("image/"));
+    
+    if (images.length > 0) {
+      setEditorFiles(images);
+      setIsEditorOpen(true);
+    }
+    
+    if (others.length > 0) {
+      setPreviewFiles(prev => [...prev, ...others]);
+    }
   };
+
 
   const handlePaste = (e) => {
     const items = e.clipboardData?.items;
@@ -248,10 +264,12 @@ const Chat = ({ roomId, userId, targetUserId, targetUserName, targetUserAvatar }
         const file = items[i].getAsFile();
         if (file) {
           e.preventDefault();
-          setPreviewFiles(prev => [...prev, file]);
+          setEditorFiles([file]);
+          setIsEditorOpen(true);
         }
       }
     }
+
   };
 
   const handleDragOver = (e) => {
@@ -274,9 +292,19 @@ const Chat = ({ roomId, userId, targetUserId, targetUserName, targetUserAvatar }
     setIsDragging(false);
     const files = Array.from(e.dataTransfer.files);
     if (files.length > 0) {
-      const validFiles = files.filter(f => f.type.startsWith("image/") || f.type === "application/pdf");
-      setPreviewFiles(prev => [...prev, ...validFiles]);
+      const images = files.filter(f => f.type.startsWith("image/"));
+      const others = files.filter(f => !f.type.startsWith("image/") && f.type === "application/pdf");
+      
+      if (images.length > 0) {
+        setEditorFiles(images);
+        setIsEditorOpen(true);
+      }
+      
+      if (others.length > 0) {
+        setPreviewFiles(prev => [...prev, ...others]);
+      }
     }
+
   };
 
   const handleEdit = (msg) => {
@@ -541,6 +569,25 @@ const Chat = ({ roomId, userId, targetUserId, targetUserName, targetUserAvatar }
       )}
 
       <ImageModal src={modalImage} onClose={() => setModalImage(null)} />
+
+      {isEditorOpen && (
+        <ImageEditorModal 
+          files={editorFiles} 
+          onSave={(edited) => {
+            setPreviewFiles(prev => [...prev, ...edited]);
+            setIsEditorOpen(false);
+          }}
+          onClose={() => {
+            // "Al volver atrás, las imágenes NO se pierden" -> se quedan en preview normal
+            setPreviewFiles(prev => [...prev, ...editorFiles]);
+            setIsEditorOpen(false);
+          }}
+          onAddMore={(newFiles) => {
+            setEditorFiles(prev => [...prev, ...newFiles]);
+          }}
+        />
+      )}
+
     </div>
   );
 };
