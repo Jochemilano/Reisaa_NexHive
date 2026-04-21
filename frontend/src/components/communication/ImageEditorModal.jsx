@@ -1,25 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import {
-  Canvas,
-  PencilBrush,
-  FabricImage,
-  IText,
-  Rect,
-} from 'fabric';
-import {
-  FaArrowLeft,
-  FaCheck,
-  FaPencilAlt,
-  FaFont,
-  FaUndo,
-  FaTrash,
-  FaPlus,
-  FaTimes,
-  FaMousePointer,
-  FaCrop,
-  FaSmile,
-  FaMinus,
-} from 'react-icons/fa';
+import { Canvas, PencilBrush, FabricImage, IText, Rect } from 'fabric';
+import { FaArrowLeft, FaCheck, FaPencilAlt, FaFont, FaUndo, FaTrash, FaPlus, FaTimes, FaMousePointer, FaCrop, FaSmile, FaMinus } from 'react-icons/fa';
 import './ImageEditorModal.css';
 
 const ImageEditorModal = ({ files, onSave, onClose, onAddMore }) => {
@@ -42,7 +23,6 @@ const ImageEditorModal = ({ files, onSave, onClose, onAddMore }) => {
   // --- INITIALIZATION ---
   useEffect(() => {
     if (files && files.length > 0) {
-      // Generar nuevas URLs de objeto para esta instancia
       const initial = files.map((file, idx) => ({
         id: `img-${Date.now()}-${idx}-${Math.random()}`,
         file: file,
@@ -50,7 +30,7 @@ const ImageEditorModal = ({ files, onSave, onClose, onAddMore }) => {
         canvasData: null,
         initialScale: 1
       }));
-      
+
       setActiveFiles(initial);
       setCurrentIndex(0);
     }
@@ -389,10 +369,10 @@ const ImageEditorModal = ({ files, onSave, onClose, onAddMore }) => {
           <div className="top-left-group">
             <button className="tool-btn-v2" onClick={handleBack} title="Atrás"><FaArrowLeft /></button>
             <div className="active-tool-indicator">
-              {isCropping ? 'Modo: Recortar' : 
-               showEmojis ? 'Modo: Stickers' : 
-               activeTool === 'pencil' ? 'Modo: Pincel' :
-               activeTool === 'text' ? 'Modo: Texto' : 'Modo: Selección'}
+              {isCropping ? 'Modo: Recortar' :
+                showEmojis ? 'Modo: Stickers' :
+                  activeTool === 'pencil' ? 'Modo: Pincel' :
+                    activeTool === 'text' ? 'Modo: Texto' : 'Modo: Selección'}
             </div>
           </div>
 
@@ -408,16 +388,16 @@ const ImageEditorModal = ({ files, onSave, onClose, onAddMore }) => {
               </div>
             ) : (
               <>
-                <button 
-                  className={`tool-btn-v2 ${isCropping ? 'active' : ''}`} 
+                <button
+                  className={`tool-btn-v2 ${isCropping ? 'active' : ''}`}
                   onClick={handleStartCrop}
                   title="Recortar"
                 >
                   <FaCrop />
                   <span className="tool-label">Recortar</span>
                 </button>
-                <button 
-                  className={`tool-btn-v2 ${showEmojis ? 'active' : ''}`} 
+                <button
+                  className={`tool-btn-v2 ${showEmojis ? 'active' : ''}`}
                   onClick={() => {
                     setShowEmojis(!showEmojis);
                     if (!showEmojis) setActiveTool('select');
@@ -427,16 +407,16 @@ const ImageEditorModal = ({ files, onSave, onClose, onAddMore }) => {
                   <FaSmile />
                   <span className="tool-label">Stickers</span>
                 </button>
-                <button 
-                  className={`tool-btn-v2 ${activeTool === 'text' ? 'active' : ''}`} 
+                <button
+                  className={`tool-btn-v2 ${activeTool === 'text' ? 'active' : ''}`}
                   onClick={handleAddText}
                   title="Texto"
                 >
                   <FaFont />
                   <span className="tool-label">Texto</span>
                 </button>
-                <button 
-                  className={`tool-btn-v2 ${activeTool === 'pencil' ? 'active' : ''}`} 
+                <button
+                  className={`tool-btn-v2 ${activeTool === 'pencil' ? 'active' : ''}`}
                   onClick={() => {
                     setActiveTool('pencil');
                     setShowEmojis(false);
@@ -446,8 +426,8 @@ const ImageEditorModal = ({ files, onSave, onClose, onAddMore }) => {
                   <FaPencilAlt />
                   <span className="tool-label">Pincel</span>
                 </button>
-                <button 
-                  className={`tool-btn-v2 ${activeTool === 'select' ? 'active' : ''}`} 
+                <button
+                  className={`tool-btn-v2 ${activeTool === 'select' ? 'active' : ''}`}
                   onClick={() => {
                     setActiveTool('select');
                     setShowEmojis(false);
@@ -457,16 +437,16 @@ const ImageEditorModal = ({ files, onSave, onClose, onAddMore }) => {
                   <FaMousePointer />
                   <span className="tool-label">Mover</span>
                 </button>
-                <button 
-                  className="tool-btn-v2" 
+                <button
+                  className="tool-btn-v2"
                   onClick={() => { fabricCanvas.current.getObjects().forEach(o => { if (o.selectable) fabricCanvas.current.remove(o); }); fabricCanvas.current.renderAll(); }}
                   title="Limpiar"
                 >
                   <FaTrash />
                   <span className="tool-label">Limpiar</span>
                 </button>
-                <button 
-                  className="tool-btn-v2" 
+                <button
+                  className="tool-btn-v2"
                   onClick={() => { const obs = fabricCanvas.current.getObjects().filter(o => o.selectable); if (obs.length) fabricCanvas.current.remove(obs[obs.length - 1]); fabricCanvas.current.renderAll(); }}
                   title="Deshacer"
                 >
@@ -488,7 +468,7 @@ const ImageEditorModal = ({ files, onSave, onClose, onAddMore }) => {
             <canvas ref={canvasRef} />
             {showEmojis && (
               <div className="emoji-picker-v2">
-                {['😀', '😂', '😍', '🤔', '😎', '👍', '🔥', '❤️', '✨', '🎉'].map(e => (
+                {['🎨', '✨', '🔥', '❤️', '🙌', '🚀', '⭐', '🌈', '💡', '✅', '❌', '⚠️', '👀', '📌', '🎭', '🥳', '😎', '🎉', '💪', '🍕'].map(e => (
                   <span key={e} onClick={() => {
                     const text = new IText(e, { left: fabricCanvas.current.width / 2, top: fabricCanvas.current.height / 2, fontSize: 80, originX: 'center', originY: 'center' });
                     fabricCanvas.current.add(text);
@@ -500,39 +480,49 @@ const ImageEditorModal = ({ files, onSave, onClose, onAddMore }) => {
             )}
           </div>
 
-          {/* SIDE TOOLS */}
           <div className="editor-side-tools">
             <div className="vertical-color-picker">
-              {['#ffffff', '#000000', '#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff'].map(c => (
+              {[
+                '#ffffff', '#000000', // Blanco y Negro
+                '#ff5c5c', '#d63031', // Rojos
+                '#ff9f5c', '#e17055', // Naranjas
+                '#ffef5c', '#fdcb6e', // Amarillos
+                '#5cff9f', '#00b894', // Verdes
+                '#5c9fff', '#0984e3', // Azules
+                '#9f5cff', '#6c5ce7', // Morados
+                '#8b0000', '#a0522d', // Oscuros / Café
+                '#b8860b', '#006400', // Oro / Verde Oscuro
+                '#00008b', '#4b0082'  // Azul Oscuro / Índigo
+              ].map(c => (
                 <div key={c} className={`color-dot ${activeColor === c ? 'active' : ''}`} style={{ backgroundColor: c }} onClick={() => setActiveColor(c)} />
               ))}
             </div>
             <div className="vertical-size-slider">
-            <button className="size-step-btn" onClick={() => setBrushWidth(prev => Math.min(50, prev + 2))}><FaPlus /></button>
-            <input 
-              type="range" 
-              min="1" 
-              max="50" 
-              value={brushWidth} 
-              onChange={(e) => setBrushWidth(parseInt(e.target.value))} 
-            />
-            <button className="size-step-btn" onClick={() => setBrushWidth(prev => Math.max(1, prev - 2))}><FaMinus /></button>
-          </div>
+              <button className="size-step-btn" onClick={() => setBrushWidth(prev => Math.min(50, prev + 2))}><FaPlus /></button>
+              <input
+                type="range"
+                min="1"
+                max="50"
+                value={brushWidth}
+                onChange={(e) => setBrushWidth(parseInt(e.target.value))}
+              />
+              <button className="size-step-btn" onClick={() => setBrushWidth(prev => Math.max(1, prev - 2))}><FaMinus /></button>
+            </div>
 
-          <div className="font-selector-v2">
-            {['Arial', 'Georgia', 'Courier New', 'Brush Script MT', 'Impact'].map(f => (
-              <button 
-                key={f} 
-                className={`font-btn ${fontFamily === f ? 'active' : ''}`}
-                style={{ fontFamily: f }}
-                onClick={() => setFontFamily(f)}
-              >
-                Abc
-              </button>
-            ))}
+            <div className="font-selector-v2">
+              {['Arial', 'Georgia', 'Courier New', 'Brush Script MT', 'Impact'].map(f => (
+                <button
+                  key={f}
+                  className={`font-btn ${fontFamily === f ? 'active' : ''}`}
+                  style={{ fontFamily: f }}
+                  onClick={() => setFontFamily(f)}
+                >
+                  Abc
+                </button>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
 
         {/* FOOTER */}
         <div className="editor-footer-v2">
