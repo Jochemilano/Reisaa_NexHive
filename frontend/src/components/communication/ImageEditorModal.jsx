@@ -1,27 +1,29 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Canvas, 
-  PencilBrush, 
-  FabricImage, 
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import {
+  Canvas,
+  PencilBrush,
+  FabricImage,
   IText,
-  Rect
-} from 'fabric'; 
-import { 
-  FaArrowLeft, 
-  FaCheck, 
-  FaPencilAlt, 
-  FaFont, 
-  FaUndo, 
-  FaTrash, 
+  Rect,
+} from 'fabric';
+import {
+  FaArrowLeft,
+  FaCheck,
+  FaPencilAlt,
+  FaFont,
+  FaUndo,
+  FaTrash,
   FaPlus,
   FaTimes,
   FaMousePointer,
   FaCrop,
-  FaSmile
+  FaSmile,
+  FaMinus,
 } from 'react-icons/fa';
 import './ImageEditorModal.css';
 
 const ImageEditorModal = ({ files, onSave, onClose, onAddMore }) => {
+  // --- STATE ---
   const [activeFiles, setActiveFiles] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [activeTool, setActiveTool] = useState('pencil');
@@ -32,630 +34,520 @@ const ImageEditorModal = ({ files, onSave, onClose, onAddMore }) => {
   const [isCropping, setIsCropping] = useState(false);
   const [cropRect, setCropRect] = useState(null);
   const [showEmojis, setShowEmojis] = useState(false);
-  
+
   const canvasRef = useRef(null);
   const fabricCanvas = useRef(null);
   const containerRef = useRef(null);
 
-  // Inicializar/Actualizar archivos locales con estado de edición
+  // --- INITIALIZATION ---
   useEffect(() => {
     if (files && files.length > 0) {
-      setActiveFiles(prev => {
-        // Encontrar archivos que no están en el estado actual (por nombre y tamaño como proxy simple)
-        const newFiles = files.filter(f => !prev.some(p => p.file.name === f.name && p.file.size === f.size));
-        
-        if (newFiles.length === 0) return prev;
-
-        const initial = newFiles.map((file, idx) => ({
-          id: `img-${Date.now()}-${idx}-${Math.random()}`,
-          file: file,
-          preview: URL.createObjectURL(file),
-          canvasData: null
-        }));
-        
-        return [...prev, ...initial];
-      });
+      // Generar nuevas URLs de objeto para esta instancia
+      const initial = files.map((file, idx) => ({
+        id: `img-${Date.now()}-${idx}-${Math.random()}`,
+        file: file,
+        preview: URL.createObjectURL(file),
+        canvasData: null,
+        initialScale: 1
+      }));
+      
+      setActiveFiles(initial);
+      setCurrentIndex(0);
     }
   }, [files]);
 
-  // Inicializar Fabric Canvas con ResizeObserver
+  // --- FABRIC CANVAS SETUP ---
   useEffect(() => {
     if (!canvasRef.current || !containerRef.current) return;
 
     const canvas = new Canvas(canvasRef.current, {
-      width: containerRef.current.offsetWidth || 800,
-      height: containerRef.current.offsetHeight || 600,
-      backgroundColor: '#000000',
+      backgroundColor: 'transparent',
       preserveObjectStacking: true,
     });
 
     fabricCanvas.current = canvas;
 
-    // Manejar tecla suprimir
     const handleKeyDown = (e) => {
-      if (e.key === 'Delete' || e.key === 'Backspace') {
-        // Solo si no estamos editando texto
+      if ((e.key === 'Delete' || e.key === 'Backspace')) {
         const activeObject = canvas.getActiveObject();
-        if (activeObject && !activeObject.isEditing) {
-          handleDeleteSelected();
+        if (activeObject && !activeObject.isEditing && activeObject.name !== 'crop-selection') {
+          canvas.remove(activeObject);
+          canvas.renderAll();
         }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
 
-    // Eventos de selección para sincronizar UI
-    canvas.on('selection:created', (e) => {
-      const obj = e.selected[0];
-      if (obj && (obj.type === 'i-text' || obj.type === 'text')) {
-        setIsTextSelected(true);
-        setActiveColor(obj.fill);
-        setFontFamily(obj.fontFamily);
-      }
-    });
-
-    canvas.on('selection:updated', (e) => {
-      const obj = e.selected[0];
-      if (obj && (obj.type === 'i-text' || obj.type === 'text')) {
-        setIsTextSelected(true);
-        setActiveColor(obj.fill);
-        setFontFamily(obj.fontFamily);
-      } else {
-        setIsTextSelected(false);
-      }
-    });
-
-    canvas.on('selection:cleared', () => {
-      setIsTextSelected(false);
-    });
-
-    const resizeObserver = new ResizeObserver((entries) => {
-      if (entries[0] && fabricCanvas.current && containerRef.current) {
-        const { width, height } = entries[0].contentRect;
-        if (width > 0 && height > 0) {
-          fabricCanvas.current.setDimensions({ width, height });
-          fabricCanvas.current.renderAll();
-        }
-      }
-    });
-
-    resizeObserver.observe(containerRef.current);
+    canvas.on('selection:created', (e) => setIsTextSelected(e.selected[0]?.type.includes('text')));
+    canvas.on('selection:updated', (e) => setIsTextSelected(e.selected[0]?.type.includes('text')));
+    canvas.on('selection:cleared', () => setIsTextSelected(false));
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
-      canvas.dispose();
-      resizeObserver.disconnect();
+      if (fabricCanvas.current) {
+        fabricCanvas.current.dispose();
+        fabricCanvas.current = null;
+      }
+      activeFiles.forEach(f => { if (f.preview.startsWith('blob:')) URL.revokeObjectURL(f.preview); });
     };
   }, []);
 
-  // Cargar imagen actual al canvas
-  useEffect(() => {
-    if (!fabricCanvas.current || activeFiles.length === 0) return;
-
+  // --- IMAGE LOADING & RESIZING ---
+  const setupCanvas = useCallback(async () => {
+    if (!fabricCanvas.current || activeFiles.length === 0 || !containerRef.current) return;
     const canvas = fabricCanvas.current;
     const currentData = activeFiles[currentIndex];
 
-    const setupCanvas = async () => {
-      // Limpiar canvas
+    try {
+      const img = await FabricImage.fromURL(currentData.preview);
+      const containerWidth = containerRef.current.clientWidth - 80;
+      const containerHeight = containerRef.current.clientHeight - 80;
+
+      const scale = Math.min(containerWidth / img.width, containerHeight / img.height);
+      const canvasW = img.width * scale;
+      const canvasH = img.height * scale;
+
+      canvas.setDimensions({ width: Math.floor(canvasW), height: Math.floor(canvasH) });
       canvas.clear();
-      canvas.backgroundColor = '#000000';
 
-      try {
-        // Cargar imagen de fondo
-        const img = await FabricImage.fromURL(currentData.preview);
-        
-        // Escalar imagen para que quepa en el canvas manteniendo proporción
-        const canvasWidth = canvas.width;
-        const canvasHeight = canvas.height;
-        const scale = Math.min(canvasWidth / img.width, canvasHeight / img.height);
-        
-        img.set({
-          scaleX: scale,
-          scaleY: scale,
-          left: canvasWidth / 2,
-          top: canvasHeight / 2,
-          originX: 'center',
-          originY: 'center',
-          selectable: false,
-          evented: false,
-          hoverCursor: 'default'
-        });
-
-        // Si hay datos guardados de edición previa, cargarlos
-        if (currentData.canvasData) {
-          await canvas.loadFromJSON(currentData.canvasData);
-          // Después de cargar el JSON, nos aseguramos de que la imagen de fondo esté presente
-          // (a veces el JSON puede no incluirla o queremos forzar la actual)
-          const objects = canvas.getObjects();
-          const existingBg = objects.find(obj => obj.type === 'image' && obj.selectable === false);
-          if (existingBg) canvas.remove(existingBg);
-        }
-
-        canvas.add(img);
-        canvas.sendObjectToBack(img);
-        canvas.renderAll();
-        updateBrush();
-      } catch (error) {
-        console.error("Error loading image to canvas:", error);
-      }
-    };
-
-    setupCanvas();
-  }, [currentIndex, activeFiles.length]);
-
-  // Sincronizar cambios de UI con el objeto seleccionado (Color, Tamaño, Fuente)
-  useEffect(() => {
-    if (!fabricCanvas.current) return;
-    const canvas = fabricCanvas.current;
-    
-    const activeObjects = canvas.getActiveObjects();
-    if (activeObjects.length > 0) {
-      activeObjects.forEach(obj => {
-        if (obj.type === 'i-text' || obj.type === 'text') {
-          obj.set({
-            fill: activeColor,
-            fontSize: brushWidth * 3 + 20,
-            fontFamily: fontFamily
-          });
-        } else if (obj.type === 'path') {
-          // Si seleccionamos un trazo, también permitimos cambiar su color/grosor
-          obj.set({
-            stroke: activeColor,
-            strokeWidth: brushWidth
-          });
-        }
+      img.set({
+        scaleX: scale,
+        scaleY: scale,
+        left: 0,
+        top: 0,
+        originX: 'left',
+        originY: 'top',
+        selectable: false,
+        evented: false
       });
-      canvas.renderAll();
-    }
 
-    // Actualizar pincel si estamos en modo dibujo
-    if (canvas.isDrawingMode && canvas.freeDrawingBrush) {
-      canvas.freeDrawingBrush.color = activeColor;
-      canvas.freeDrawingBrush.width = brushWidth;
-    }
-  }, [activeColor, brushWidth, fontFamily]);
+      // Update initial scale for the current file
+      setActiveFiles(prev => {
+        const updated = [...prev];
+        if (updated[currentIndex]) updated[currentIndex].initialScale = scale;
+        return updated;
+      });
 
-  const updateBrush = (tool) => {
-    if (!fabricCanvas.current) return;
-    const canvas = fabricCanvas.current;
-    setActiveTool(tool);
-
-    if (tool === 'pencil') {
-      canvas.isDrawingMode = true;
-      if (!canvas.freeDrawingBrush) {
-        canvas.freeDrawingBrush = new PencilBrush(canvas);
+      if (currentData.canvasData) {
+        await canvas.loadFromJSON(currentData.canvasData);
+        // Remove duplicate background images from JSON
+        canvas.getObjects().forEach(obj => {
+          if (obj.type === 'image' && obj.selectable === false) canvas.remove(obj);
+        });
       }
+
+      canvas.add(img);
+      canvas.sendObjectToBack(img);
+      canvas.renderAll();
+
+      updateBrushState();
+    } catch (err) {
+      console.error("Error setting up canvas:", err);
+    }
+  }, [currentIndex, activeFiles.length, activeFiles[currentIndex]?.preview]);
+
+  useEffect(() => {
+    setupCanvas();
+  }, [setupCanvas]);
+
+  // --- TOOL MANAGEMENT ---
+  const updateBrushState = useCallback(() => {
+    const canvas = fabricCanvas.current;
+    if (!canvas) return;
+
+    // El pincel solo está activo si la herramienta es 'pencil' Y no estamos recortando Y no hay emojis abiertos
+    if (activeTool === 'pencil' && !isCropping && !showEmojis) {
+      canvas.isDrawingMode = true;
+      if (!canvas.freeDrawingBrush) canvas.freeDrawingBrush = new PencilBrush(canvas);
       canvas.freeDrawingBrush.color = activeColor;
       canvas.freeDrawingBrush.width = brushWidth;
     } else {
       canvas.isDrawingMode = false;
     }
-  };
+  }, [activeTool, isCropping, showEmojis, activeColor, brushWidth]);
 
-  const handleAddText = () => {
-    if (!fabricCanvas.current) return;
+  useEffect(() => {
+    updateBrushState();
     const canvas = fabricCanvas.current;
-    
-    const text = new IText('Texto...', {
+    if (!canvas) return;
+
+    const activeObj = canvas.getActiveObject();
+    if (activeObj && (activeObj.type.includes('text') || activeObj.type === 'path')) {
+      activeObj.set({
+        fill: activeObj.type.includes('text') ? activeColor : activeObj.fill,
+        stroke: activeObj.type === 'path' ? activeColor : activeObj.stroke,
+        strokeWidth: activeObj.type === 'path' ? brushWidth : activeObj.strokeWidth,
+        fontFamily: activeObj.type.includes('text') ? fontFamily : activeObj.fontFamily
+      });
+      canvas.renderAll();
+    }
+  }, [activeColor, brushWidth, activeTool, fontFamily, isCropping, showEmojis, updateBrushState]);
+
+  // --- ACTIONS ---
+  const handleAddText = () => {
+    const canvas = fabricCanvas.current;
+    setShowEmojis(false);
+    const text = new IText('', {
       left: canvas.width / 2,
       top: canvas.height / 2,
-      fontFamily: fontFamily,
-      fill: activeColor,
       fontSize: 40,
+      fill: activeColor,
+      fontFamily: fontFamily,
+      placeholder: 'Escribe aquí...',
       originX: 'center',
       originY: 'center',
-      cornerColor: '#3498db',
-      cornerStrokeColor: '#fff',
-      transparentCorners: false,
-      cornerSize: 12,
-      padding: 10,
-      borderDashArray: [3, 3],
-      borderColor: '#3498db'
     });
-    
     canvas.add(text);
     canvas.setActiveObject(text);
-    updateBrush('select');
-    
-    setTimeout(() => {
-        text.enterEditing();
-        text.selectAll();
-        canvas.renderAll();
-    }, 100);
+    text.enterEditing();
+    canvas.renderAll();
+    setActiveTool('select');
   };
 
   const handleStartCrop = () => {
-    if (!fabricCanvas.current) return;
     const canvas = fabricCanvas.current;
     setIsCropping(true);
-    updateBrush('select');
+    canvas.isDrawingMode = false;
+    canvas.discardActiveObject();
 
-    // Crear un rectángulo de recorte
     const rect = new Rect({
-        left: canvas.width * 0.1,
-        top: canvas.height * 0.1,
-        width: canvas.width * 0.8,
-        height: canvas.height * 0.8,
-        fill: 'rgba(0,0,0,0.3)',
-        stroke: '#3498db',
-        strokeWidth: 2,
-        dashArray: [5, 5],
-        cornerColor: '#3498db',
-        cornerSize: 12,
-        transparentCorners: false,
-        selectable: true,
-        hasRotatingPoint: false,
+      left: 0,
+      top: 0,
+      width: canvas.width,
+      height: canvas.height,
+      fill: 'transparent',
+      stroke: '#fff',
+      strokeWidth: 2,
+      cornerColor: '#fff',
+      cornerSize: 12,
+      transparentCorners: false,
+      selectable: true,
+      hasRotatingPoint: false,
+      name: 'crop-selection',
+      lockRotation: true,
+      originX: 'left',
+      originY: 'top'
     });
 
-    canvas.add(rect);
+    const createOverlay = (name) => new Rect({
+      fill: 'rgba(0,0,0,0.7)',
+      selectable: false,
+      evented: false,
+      name: name,
+      originX: 'left',
+      originY: 'top'
+    });
+    const overlays = [createOverlay('ov-t'), createOverlay('ov-b'), createOverlay('ov-l'), createOverlay('ov-r')];
+
+    const updateOverlays = () => {
+      const { left, top, width, height, scaleX, scaleY } = rect;
+      const w = width * scaleX;
+      const h = height * scaleY;
+
+      // Restricción física dentro del canvas
+      if (left < 0) rect.set('left', 0);
+      if (top < 0) rect.set('top', 0);
+      if (left + w > canvas.width) {
+        if (w > canvas.width) rect.set('scaleX', canvas.width / width);
+        else rect.set('left', canvas.width - w);
+      }
+      if (top + h > canvas.height) {
+        if (h > canvas.height) rect.set('scaleY', canvas.height / height);
+        else rect.set('top', canvas.height - h);
+      }
+
+      const curL = rect.left;
+      const curT = rect.top;
+      const curW = rect.width * rect.scaleX;
+      const curH = rect.height * rect.scaleY;
+
+      overlays[0].set({ left: 0, top: 0, width: canvas.width, height: curT }); // Top
+      overlays[1].set({ left: 0, top: curT + curH, width: canvas.width, height: Math.max(0, canvas.height - (curT + curH)) }); // Bottom
+      overlays[2].set({ left: 0, top: curT, width: curL, height: curH }); // Left
+      overlays[3].set({ left: curL + curW, top: curT, width: Math.max(0, canvas.width - (curL + curW)), height: curH }); // Right
+
+      canvas.renderAll();
+    };
+
+    rect.on('moving', updateOverlays);
+    rect.on('scaling', updateOverlays);
+    canvas.add(...overlays, rect);
     canvas.setActiveObject(rect);
     setCropRect(rect);
+    updateOverlays();
   };
 
-  const handleApplyCrop = async () => {
+  const handleApplyCrop = () => {
     if (!fabricCanvas.current || !cropRect) return;
     const canvas = fabricCanvas.current;
-    
-    const { left, top, width, height, scaleX, scaleY } = cropRect;
-    const actualWidth = width * scaleX;
-    const actualHeight = height * scaleY;
+    const currentData = activeFiles[currentIndex];
+    const multiplier = 1 / (currentData.initialScale || 1);
 
-    // Obtener la imagen recortada
+    const { left, top, width, height, scaleX, scaleY } = cropRect;
+    const w = Math.floor(width * scaleX);
+    const h = Math.floor(height * scaleY);
+    const l = Math.floor(left);
+    const t = Math.floor(top);
+
+    // Ocultar UI de recorte
+    const overlays = canvas.getObjects().filter(o => o.name?.startsWith('ov-') || o.name === 'crop-selection');
+    overlays.forEach(o => o.set('visible', false));
+    canvas.discardActiveObject();
+    canvas.renderAll();
+
+    // Capturar el área recortada con multiplicador para mantener la resolución original
     const dataUrl = canvas.toDataURL({
-        left: left,
-        top: top,
-        width: actualWidth,
-        height: actualHeight,
-        format: 'png',
-        multiplier: 1 // Mantener resolución actual del canvas
+      left: l,
+      top: t,
+      width: w,
+      height: h,
+      format: 'jpeg',
+      quality: 0.9,
+      multiplier: 1 / (currentData.initialScale || 1)
     });
 
-    // Limpiar todo y poner la nueva imagen
-    canvas.clear();
-    canvas.backgroundColor = '#000000';
-    
-    try {
-        const img = await FabricImage.fromURL(dataUrl);
-        const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
-        img.set({
-            scaleX: scale,
-            scaleY: scale,
-            left: canvas.width / 2,
-            top: canvas.height / 2,
-            originX: 'center',
-            originY: 'center',
-            selectable: false,
-            evented: false
-        });
-        
-        canvas.add(img);
-        canvas.sendObjectToBack(img);
-        canvas.renderAll();
-        
-        setIsCropping(false);
-        setCropRect(null);
-        saveCurrentState();
-    } catch (e) {
-        console.error("Error applying crop:", e);
-    }
-  };
+    setActiveFiles(prev => {
+      const updated = [...prev];
+      if (updated[currentIndex]) {
+        updated[currentIndex].preview = dataUrl;
+        updated[currentIndex].canvasData = null;
+        updated[currentIndex].initialScale = 1;
+      }
+      return updated;
+    });
 
-  const handleCancelCrop = () => {
-    if (!fabricCanvas.current || !cropRect) return;
-    fabricCanvas.current.remove(cropRect);
     setIsCropping(false);
     setCropRect(null);
   };
 
-  const handleUndo = () => {
-    if (!fabricCanvas.current) return;
+  const handleCancelCrop = () => {
     const canvas = fabricCanvas.current;
-    const objects = canvas.getObjects();
-    // No borrar la imagen de fondo (último objeto añadido en setupCanvas, pero enviado al fondo)
-    // Buscamos el último objeto que NO sea la imagen de fondo
-    const reversibleObjects = objects.filter(obj => obj.selectable !== false);
-    if (reversibleObjects.length > 0) {
-      canvas.remove(reversibleObjects[reversibleObjects.length - 1]);
-      canvas.renderAll();
-    }
-  };
-
-  const handleClearAll = () => {
-    if (!fabricCanvas.current) return;
-    const canvas = fabricCanvas.current;
-    const objects = canvas.getObjects();
-    objects.forEach(obj => {
-      if (obj.selectable !== false) {
-        canvas.remove(obj);
-      }
-    });
+    canvas.getObjects().filter(o => o.name?.startsWith('ov-') || o.name === 'crop-selection').forEach(o => canvas.remove(o));
+    setIsCropping(false);
+    setCropRect(null);
     canvas.renderAll();
   };
 
-  const handleDeleteSelected = () => {
-    if (!fabricCanvas.current) return;
-    const canvas = fabricCanvas.current;
-    const activeObjects = canvas.getActiveObjects();
-    if (activeObjects.length > 0) {
-      activeObjects.forEach(obj => {
-        if (obj.selectable !== false) {
-          canvas.remove(obj);
-        }
-      });
-      canvas.discardActiveObject();
-      canvas.renderAll();
-    }
-  };
-
-  const handleAddEmoji = (emoji) => {
-    if (!fabricCanvas.current) return;
-    const canvas = fabricCanvas.current;
-    
-    const text = new IText(emoji, {
-      left: canvas.width / 2,
-      top: canvas.height / 2,
-      fontSize: 80,
-      originX: 'center',
-      originY: 'center',
-      selectable: true,
-    });
-    
-    canvas.add(text);
-    canvas.setActiveObject(text);
-    setActiveTool('select');
-    setShowEmojis(false);
-  };
   const saveCurrentState = () => {
     if (!fabricCanvas.current) return;
     const json = fabricCanvas.current.toJSON();
-    
     setActiveFiles(prev => {
       const updated = [...prev];
-      if (updated[currentIndex]) {
-        updated[currentIndex].canvasData = json;
-      }
+      if (updated[currentIndex]) updated[currentIndex].canvasData = json;
       return updated;
     });
   };
 
-  const switchImage = (index) => {
-    saveCurrentState();
-    setCurrentIndex(index);
+  const handleBack = () => {
+    // Limpieza agresiva antes de cerrar para asegurar que la próxima apertura sea limpia
+    if (fabricCanvas.current) {
+      fabricCanvas.current.dispose();
+      fabricCanvas.current = null;
+    }
+    onClose();
   };
 
   const handleFinish = async () => {
     saveCurrentState();
-    
-    // Generar archivos finales
     const editedFilesPromises = activeFiles.map(async (item, idx) => {
-      // Si somos el actual, usamos el canvas vivo. Si no, tendríamos que renderizar cada uno.
-      // Para simplificar y asegurar calidad, renderizaremos el actual y usaremos los datos guardados para los demás si es necesario.
-      // Pero mejor: iteramos y renderizamos cada uno en un canvas temporal o el mismo.
-      
-      // Renderizar el canvas actual para obtener la imagen editada
-      const canvas = fabricCanvas.current;
-      
-      // Si estamos procesando el currentIndex, usamos el canvas tal cual
       if (idx === currentIndex) {
-        return await canvasToFile(canvas, item.file.name);
+        return await canvasToFile(fabricCanvas.current, item.file.name, 1 / (item.initialScale || 1));
       } else {
-        // Para los otros, tendríamos que cargarlos.
-        // Opción: Al guardar el estado, también guardamos un "preview" editado o simplemente procesamos todo al final.
-        // Vamos a procesar todo al final cambiando el currentIndex programáticamente (oculto si es posible) o recreando un canvas.
-        
-        // Crear canvas temporal
         const tempElement = document.createElement('canvas');
-        tempElement.width = canvas.width;
-        tempElement.height = canvas.height;
         const tempCanvas = new Canvas(tempElement);
-        
-        // Cargar datos
-        await tempCanvas.loadFromJSON(item.canvasData || {});
-        
-        // Cargar imagen de fondo si no estaba en JSON (depende de cómo se guarde en fabric)
-        // Por defecto toJSON no guarda la imagen de fondo si la pusimos manualmente sin src persistente.
-        // Así que la añadimos de nuevo.
-        const img = await FabricImage.fromURL(item.preview);
-        const scale = Math.min(tempCanvas.width / img.width, tempCanvas.height / img.height);
-        img.set({
-            scaleX: scale, scaleY: scale,
-            left: tempCanvas.width / 2,
-            top: tempCanvas.height / 2,
-            originX: 'center',
-            originY: 'center',
-            selectable: false, evented: false
-        });
-        tempCanvas.add(img);
-        tempCanvas.sendObjectToBack(img);
-        
-        const file = await canvasToFile(tempCanvas, item.file.name);
+        const bgImg = await FabricImage.fromURL(item.preview);
+        tempCanvas.setDimensions({ width: bgImg.width, height: bgImg.height });
+        if (item.canvasData) await tempCanvas.loadFromJSON(item.canvasData);
+        bgImg.set({ left: 0, top: 0, selectable: false });
+        tempCanvas.getObjects().forEach(o => { if (o.type === 'image' && !o.selectable) tempCanvas.remove(o); });
+        tempCanvas.add(bgImg);
+        tempCanvas.sendObjectToBack(bgImg);
+        const file = await canvasToFile(tempCanvas, item.file.name, 1);
         tempCanvas.dispose();
         return file;
       }
     });
-
     const editedFiles = await Promise.all(editedFilesPromises);
     onSave(editedFiles);
   };
 
-  const canvasToFile = (canvas, filename) => {
+  const canvasToFile = (canvas, filename, multiplier) => {
     return new Promise((resolve) => {
-      // Exportar a mayor calidad/tamaño original si es posible, pero aquí usamos el tamaño de vista
-      const dataUrl = canvas.toDataURL({
-        format: 'jpeg',
-        quality: 0.9,
+      const dataUrl = canvas.toDataURL({ format: 'jpeg', quality: 0.9, multiplier });
+      fetch(dataUrl).then(res => res.blob()).then(blob => {
+        resolve(new File([blob], filename, { type: 'image/jpeg' }));
       });
-      
-      fetch(dataUrl)
-        .then(res => res.blob())
-        .then(blob => {
-          const file = new File([blob], filename, { type: 'image/jpeg' });
-          resolve(file);
-        });
     });
-  };
-
-  const handleRemoveImage = (e, index) => {
-    e.stopPropagation();
-    const newFiles = activeFiles.filter((_, i) => i !== index);
-    if (newFiles.length === 0) {
-      onClose();
-      return;
-    }
-    setActiveFiles(newFiles);
-    if (currentIndex >= newFiles.length) {
-      setCurrentIndex(newFiles.length - 1);
-    }
   };
 
   return (
     <div className={`image-editor-modal ${isCropping ? 'mode-crop' : ''}`}>
-      <div className="editor-overlay" onClick={onClose} />
       <div className="editor-content-v2">
-        
-        {/* TOP BAR - WhatsApp Style */}
-        <div className="editor-top-bar">
-          <button className="btn-icon-v2" onClick={onClose}>
-            <FaArrowLeft />
-          </button>
-          
-          <div className="top-tools">
-            <button 
-                className={`tool-btn-v2 ${isCropping ? 'active' : ''}`} 
-                onClick={isCropping ? handleApplyCrop : handleStartCrop}
-                title="Recortar"
-            >
-                <FaCrop />
-            </button>
-            <button 
-                className="tool-btn-v2" 
-                onClick={() => setShowEmojis(!showEmojis)}
-                title="Stickers"
-            >
-                <FaSmile />
-            </button>
-            <button 
-                className={`tool-btn-v2 ${activeTool === 'text' ? 'active' : ''}`} 
-                onClick={handleAddText}
-                title="Texto"
-            >
-                <FaFont />
-            </button>
-            <button 
-                className={`tool-btn-v2 ${activeTool === 'pencil' ? 'active' : ''}`} 
-                onClick={() => updateBrush('pencil')}
-                title="Pincel"
-            >
-                <FaPencilAlt />
-            </button>
-            <button 
-                className={`tool-btn-v2 ${activeTool === 'select' ? 'active' : ''}`} 
-                onClick={() => setActiveTool('select')}
-                title="Seleccionar"
-            >
-                <FaMousePointer />
-            </button>
-            <button className="tool-btn-v2" onClick={handleUndo} title="Deshacer">
-                <FaUndo />
-            </button>
 
-            {(activeTool === 'text' || isTextSelected) && (
-              <select 
-                value={fontFamily} 
-                onChange={(e) => setFontFamily(e.target.value)}
-                className="font-select-v2"
-              >
-                <option value="Arial">Arial</option>
-                <option value="Tahoma">Tahoma</option>
-                <option value="Verdana">Verdana</option>
-                <option value="Times New Roman">Times</option>
-                <option value="Courier New">Mono</option>
-                <option value="Impact">Impact</option>
-              </select>
+        {/* TOP BAR */}
+        <div className="editor-top-bar">
+          <div className="top-left-group">
+            <button className="tool-btn-v2" onClick={handleBack} title="Atrás"><FaArrowLeft /></button>
+            <div className="active-tool-indicator">
+              {isCropping ? 'Modo: Recortar' : 
+               showEmojis ? 'Modo: Stickers' : 
+               activeTool === 'pencil' ? 'Modo: Pincel' :
+               activeTool === 'text' ? 'Modo: Texto' : 'Modo: Selección'}
+            </div>
+          </div>
+
+          <div className="top-tools">
+            {isCropping ? (
+              <div className="crop-actions-group">
+                <button className="crop-action-btn cancel" onClick={handleCancelCrop}>
+                  Cancelar recorte
+                </button>
+                <button className="crop-action-btn confirm" onClick={handleApplyCrop}>
+                  Confirmar recorte
+                </button>
+              </div>
+            ) : (
+              <>
+                <button 
+                  className={`tool-btn-v2 ${isCropping ? 'active' : ''}`} 
+                  onClick={handleStartCrop}
+                  title="Recortar"
+                >
+                  <FaCrop />
+                  <span className="tool-label">Recortar</span>
+                </button>
+                <button 
+                  className={`tool-btn-v2 ${showEmojis ? 'active' : ''}`} 
+                  onClick={() => {
+                    setShowEmojis(!showEmojis);
+                    if (!showEmojis) setActiveTool('select');
+                  }}
+                  title="Stickers"
+                >
+                  <FaSmile />
+                  <span className="tool-label">Stickers</span>
+                </button>
+                <button 
+                  className={`tool-btn-v2 ${activeTool === 'text' ? 'active' : ''}`} 
+                  onClick={handleAddText}
+                  title="Texto"
+                >
+                  <FaFont />
+                  <span className="tool-label">Texto</span>
+                </button>
+                <button 
+                  className={`tool-btn-v2 ${activeTool === 'pencil' ? 'active' : ''}`} 
+                  onClick={() => {
+                    setActiveTool('pencil');
+                    setShowEmojis(false);
+                  }}
+                  title="Pincel"
+                >
+                  <FaPencilAlt />
+                  <span className="tool-label">Pincel</span>
+                </button>
+                <button 
+                  className={`tool-btn-v2 ${activeTool === 'select' ? 'active' : ''}`} 
+                  onClick={() => {
+                    setActiveTool('select');
+                    setShowEmojis(false);
+                  }}
+                  title="Mover"
+                >
+                  <FaMousePointer />
+                  <span className="tool-label">Mover</span>
+                </button>
+                <button 
+                  className="tool-btn-v2" 
+                  onClick={() => { fabricCanvas.current.getObjects().forEach(o => { if (o.selectable) fabricCanvas.current.remove(o); }); fabricCanvas.current.renderAll(); }}
+                  title="Limpiar"
+                >
+                  <FaTrash />
+                  <span className="tool-label">Limpiar</span>
+                </button>
+                <button 
+                  className="tool-btn-v2" 
+                  onClick={() => { const obs = fabricCanvas.current.getObjects().filter(o => o.selectable); if (obs.length) fabricCanvas.current.remove(obs[obs.length - 1]); fabricCanvas.current.renderAll(); }}
+                  title="Deshacer"
+                >
+                  <FaUndo />
+                  <span className="tool-label">Deshacer</span>
+                </button>
+              </>
             )}
           </div>
 
-          <button className="btn-send-v2" onClick={handleFinish}>
-            {isCropping ? <FaCheck /> : <FaCheck />} {isCropping ? 'Aplicar' : 'Listo'}
+          <button className="btn-send-v2" onClick={handleFinish} disabled={isCropping}>
+            <FaCheck /> Listo
           </button>
         </div>
 
-        {/* MAIN AREA */}
+        {/* WORKSPACE */}
         <div className="editor-workspace">
-            <div className="editor-main-v2" ref={containerRef}>
-                <canvas ref={canvasRef} />
-                
-                {/* Emoji Picker Popover */}
-                {showEmojis && (
-                    <div className="emoji-picker-v2">
-                        {['😀', '😂', '😍', '🤔', '😎', '👍', '🔥', '❤️', '✨', '🎉'].map(e => (
-                            <span key={e} onClick={() => handleAddEmoji(e)}>{e}</span>
-                        ))}
-                    </div>
-                )}
-            </div>
-
-            {/* Right Side - Color Picker & Size Slider */}
-            <div className="editor-side-tools">
-                {/* Brush Preview Circle */}
-                <div className="brush-preview-container">
-                    <div 
-                        className="brush-preview-dot"
-                        style={{ 
-                            width: `${brushWidth}px`, 
-                            height: `${brushWidth}px`,
-                            backgroundColor: activeColor,
-                            boxShadow: `0 0 10px ${activeColor}88`
-                        }}
-                    />
-                </div>
-
-                <div className="vertical-color-picker">
-                    {[
-                        '#ffffff', '#000000', '#ff0000', '#ff7f00', '#ffff00', 
-                        '#00ff00', '#00ffff', '#0000ff', '#8b00ff', '#ff00ff'
-                    ].map(c => (
-                        <div 
-                            key={c} 
-                            className={`color-dot ${activeColor === c ? 'active' : ''}`}
-                            style={{ backgroundColor: c }}
-                            onClick={() => setActiveColor(c)}
-                        />
-                    ))}
-                </div>
-                
-                <div className="vertical-size-slider">
-                    <span className="size-label-v2">{brushWidth}px</span>
-                    <div className="slider-wrapper-v2">
-                        <input 
-                            type="range" 
-                            min="1" 
-                            max="50" 
-                            step="1"
-                            value={brushWidth} 
-                            onChange={(e) => setBrushWidth(parseInt(e.target.value))}
-                        />
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {/* FOOTER - Thumbnails */}
-        <div className="editor-footer-v2">
-            <div className="thumbnails-v2">
-                {activeFiles.map((item, idx) => (
-                    <div 
-                        key={item.id} 
-                        className={`thumb-v2 ${idx === currentIndex ? 'active' : ''}`}
-                        onClick={() => switchImage(idx)}
-                    >
-                        <img src={item.preview} alt="" />
-                    </div>
+          <div className="editor-main-v2" ref={containerRef}>
+            <canvas ref={canvasRef} />
+            {showEmojis && (
+              <div className="emoji-picker-v2">
+                {['😀', '😂', '😍', '🤔', '😎', '👍', '🔥', '❤️', '✨', '🎉'].map(e => (
+                  <span key={e} onClick={() => {
+                    const text = new IText(e, { left: fabricCanvas.current.width / 2, top: fabricCanvas.current.height / 2, fontSize: 80, originX: 'center', originY: 'center' });
+                    fabricCanvas.current.add(text);
+                    fabricCanvas.current.setActiveObject(text);
+                    setShowEmojis(false);
+                  }}>{e}</span>
                 ))}
-                <label className="thumb-v2 thumb-add">
-                    <FaPlus />
-                    <input type="file" multiple accept="image/*" onChange={(e) => onAddMore(Array.from(e.target.files))} hidden />
-                </label>
+              </div>
+            )}
+          </div>
+
+          {/* SIDE TOOLS */}
+          <div className="editor-side-tools">
+            <div className="vertical-color-picker">
+              {['#ffffff', '#000000', '#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff'].map(c => (
+                <div key={c} className={`color-dot ${activeColor === c ? 'active' : ''}`} style={{ backgroundColor: c }} onClick={() => setActiveColor(c)} />
+              ))}
             </div>
+            <div className="vertical-size-slider">
+            <button className="size-step-btn" onClick={() => setBrushWidth(prev => Math.min(50, prev + 2))}><FaPlus /></button>
+            <input 
+              type="range" 
+              min="1" 
+              max="50" 
+              value={brushWidth} 
+              onChange={(e) => setBrushWidth(parseInt(e.target.value))} 
+            />
+            <button className="size-step-btn" onClick={() => setBrushWidth(prev => Math.max(1, prev - 2))}><FaMinus /></button>
+          </div>
+
+          <div className="font-selector-v2">
+            {['Arial', 'Georgia', 'Courier New', 'Brush Script MT', 'Impact'].map(f => (
+              <button 
+                key={f} 
+                className={`font-btn ${fontFamily === f ? 'active' : ''}`}
+                style={{ fontFamily: f }}
+                onClick={() => setFontFamily(f)}
+              >
+                Abc
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+        {/* FOOTER */}
+        <div className="editor-footer-v2">
+          <div className="thumbnails-v2">
+            {activeFiles.map((item, idx) => (
+              <div key={item.id} className={`thumb-v2 ${idx === currentIndex ? 'active' : ''}`} onClick={() => { saveCurrentState(); setCurrentIndex(idx); }}>
+                <img src={item.preview} alt="" />
+                <button className="btn-remove-thumb" onClick={(e) => { e.stopPropagation(); const n = activeFiles.filter((_, i) => i !== idx); if (n.length === 0) onClose(); else { setActiveFiles(n); if (currentIndex >= n.length) setCurrentIndex(n.length - 1); } }}><FaTimes /></button>
+              </div>
+            ))}
+            <label className="thumb-v2 thumb-add">
+              <FaPlus />
+              <input type="file" multiple accept="image/*" onChange={(e) => onAddMore(Array.from(e.target.files))} hidden />
+            </label>
+          </div>
         </div>
 
       </div>
