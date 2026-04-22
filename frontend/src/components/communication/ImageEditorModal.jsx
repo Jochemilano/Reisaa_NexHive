@@ -23,6 +23,7 @@ const ImageEditorModal = ({ files, onSave, onClose, onAddMore }) => {
   const currentImageIdRef = useRef(null);
   const isCanvasLoading = useRef(false);
   const blobUrlsRef = useRef(new Set());
+  const isCanvasDirty = useRef(false);
 
   // --- INITIALIZATION ---
   useEffect(() => {
@@ -113,6 +114,7 @@ const ImageEditorModal = ({ files, onSave, onClose, onAddMore }) => {
     // UPDATE IMMEDIATELY to prevent concurrent starts for the same target
     currentImageIdRef.current = imgKey;
     isCanvasLoading.current = true;
+    isCanvasDirty.current = false;
 
     try {
       const img = await FabricImage.fromURL(currentData.preview);
@@ -325,6 +327,8 @@ const ImageEditorModal = ({ files, onSave, onClose, onAddMore }) => {
       multiplier: 1 / (currentData.initialScale || 1)
     });
 
+    isCanvasDirty.current = true;
+
     setActiveFiles(prev => {
       const updated = [...prev];
       if (updated[currentIndex]) {
@@ -351,7 +355,7 @@ const ImageEditorModal = ({ files, onSave, onClose, onAddMore }) => {
   };
 
   const saveCurrentState = useCallback(() => {
-    if (!fabricCanvas.current || isCanvasLoading.current) return;
+    if (!fabricCanvas.current || isCanvasLoading.current || isCanvasDirty.current) return;
     const json = fabricCanvas.current.toJSON(['name']);
     setActiveFiles(prev => {
       const updated = [...prev];
