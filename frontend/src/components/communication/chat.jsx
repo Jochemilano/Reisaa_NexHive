@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useChat } from "@/hooks/useChat";
 import { useCall } from "@/context/CallContext";
 import CallVideo from "./Callvideo";
-import ImageModal from "./ImageModal";
+import MediaModal from "./MediaModal";
 import MediaPanel from "./MediaPanel";
 import ImageEditorModal from "./ImageEditorModal";
 
@@ -39,7 +39,7 @@ const formatTime = (dateStr) => {
   return d.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" });
 };
 
-const MessageContent = ({ msg, onImageClick, isMine, onReply, onEdit, onDelete, onReplyToOriginal, searchTerm }) => {
+const MessageContent = ({ msg, onImageClick, onVideoClick, isMine, onReply, onEdit, onDelete, onReplyToOriginal, searchTerm }) => {
   const [favorite, setFavorite] = useState(msg.favorite === 1);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef();
@@ -87,6 +87,17 @@ const MessageContent = ({ msg, onImageClick, isMine, onReply, onEdit, onDelete, 
 
         {{
           image: <img className="content-image" src={src} alt="imagen" onClick={() => onImageClick(src)} />,
+          video: (
+            <div className="video-preview-wrapper" onClick={() => onVideoClick(src)}>
+              <video className="content-video" src={src} />
+              <div className="video-play-overlay">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                  <path d="M8 5v14l11-7z"/>
+                </svg>
+              </div>
+            </div>
+          ),
+          audio: <audio className="content-audio" src={src} controls />,
           file:  <a className="content-file" href={src} target="_blank" rel="noreferrer">{getFileName(msg.content)}</a>,
           text: <p className="content">{highlightText(msg.content, searchTerm)}</p>,
         }[msg.type]}
@@ -143,7 +154,7 @@ const Chat = ({ roomId, userId, targetUserId, targetUserName, targetUserAvatar }
   const navigate = useNavigate();
   
   const [input, setInput] = useState("");
-  const [modalImage, setModalImage] = useState(null);
+  const [modalMedia, setModalMedia] = useState(null); // {src, type}
   const [previewFiles, setPreviewFiles] = useState([]); // Cambiado a Array para múltiples archivos
   const [isDragging, setIsDragging] = useState(false); // Estado para el aviso de arrastre
   const [replyTo, setReplyTo] = useState(null);
@@ -293,7 +304,7 @@ const Chat = ({ roomId, userId, targetUserId, targetUserName, targetUserAvatar }
     const files = Array.from(e.dataTransfer.files);
     if (files.length > 0) {
       const images = files.filter(f => f.type.startsWith("image/"));
-      const others = files.filter(f => !f.type.startsWith("image/") && f.type === "application/pdf");
+      const others = files.filter(f => !f.type.startsWith("image/"));
       
       if (images.length > 0) {
         setEditorFiles(images);
@@ -476,7 +487,8 @@ const Chat = ({ roomId, userId, targetUserId, targetUserName, targetUserAvatar }
                 <MessageContent
                   msg={item}
                   searchTerm={searchTerm}
-                  onImageClick={setModalImage}
+                  onImageClick={(src) => setModalMedia({src, type: 'image'})}
+                  onVideoClick={(src) => setModalMedia({src, type: 'video'})}
                   isMine={Number(item.sender_id) === Number(userId)}
                   onReply={handleReply}
                   onReplyToOriginal={handleScrollToOriginal}
@@ -489,7 +501,13 @@ const Chat = ({ roomId, userId, targetUserId, targetUserName, targetUserAvatar }
         </div>
 
         {showMediaPanel && (
-          <MediaPanel messages={messages} onClose={() => setShowMediaPanel(false)} onImageClick={setModalImage} onGoToMessage={handleScrollToOriginal} />
+          <MediaPanel 
+            messages={messages} 
+            onClose={() => setShowMediaPanel(false)} 
+            onImageClick={(src) => setModalMedia({src, type: 'image'})} 
+            onVideoClick={(src) => setModalMedia({src, type: 'video'})}
+            onGoToMessage={handleScrollToOriginal} 
+          />
         )}
 
         <div className="chat-footer">
@@ -568,7 +586,7 @@ const Chat = ({ roomId, userId, targetUserId, targetUserName, targetUserAvatar }
         <button className="scroll-to-bottom-btn" onClick={scrollToBottom} type="button">↓</button>
       )}
 
-      <ImageModal src={modalImage} onClose={() => setModalImage(null)} />
+      <MediaModal media={modalMedia} onClose={() => setModalMedia(null)} />
 
       {isEditorOpen && (
         <ImageEditorModal 

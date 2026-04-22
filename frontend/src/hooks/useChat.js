@@ -54,10 +54,15 @@ export const useChat = (roomId, userId) => {
   const sendFile = async (file) => {
     if (!file) return;
     const data = await uploadFile(file);
+    let type = "file";
+    if (file.type.startsWith("image/")) type = "image";
+    else if (file.type.startsWith("video/")) type = "video";
+    else if (file.type.startsWith("audio/")) type = "audio";
+
     sendMessage({
       roomId,
       senderId: userId,
-      type: file.type.startsWith("image/") ? "image" : "file",
+      type,
       content: data.url,
     });
   };

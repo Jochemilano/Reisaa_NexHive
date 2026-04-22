@@ -477,14 +477,54 @@
   padding: 5px;
 }
 
-/* ── IMÁGENES ─────────────────────────────────────────── */
-.content-image {
+/* ── MULTIMEDIA ─────────────────────────────────────────── */
+.content-image,
+.content-video {
   max-width: 250px;
   max-height: 250px;
   border-radius: 8px;
   cursor: pointer;
   object-fit: cover;
   display: block;
+}
+
+.video-preview-wrapper {
+  position: relative;
+  max-width: 250px;
+  max-height: 250px;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.video-play-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s ease;
+}
+
+.video-preview-wrapper:hover .video-play-overlay {
+  background: rgba(0,0,0,0.4);
+}
+
+.video-play-overlay svg {
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+  transform: scale(1.5);
+}
+
+.content-audio {
+  max-width: 250px;
+  height: 40px;
+  display: block;
+  margin-top: 5px;
+}
+
+.chat-message.mine .content-audio {
+  filter: invert(1) hue-rotate(180deg); /* Opcional: ajustar color de controles en burbuja oscura */
 }
 
 /* ── BOTÓN IR AL FONDO ─────────────────────────────────── */

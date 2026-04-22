@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { getUserFavorites, formatDate } from "@/utils/favorites";
 import { getFileUrl, getFileName, toggleFavoriteMessage  } from "@/utils/chat";
 import {FaStar} from "react-icons/fa";
-import ImageModal from "@/components/communication/ImageModal";
+import MediaModal from "@/components/communication/MediaModal";
 import "@/styles.css";
 import "./Favorites.css"
 
@@ -11,7 +11,7 @@ const Favorites = () => {
   const [favorites, setFavorites] = useState([]);
   const [loading, setLoading] = useState(true);
   const userId = parseInt(localStorage.getItem("userId"));
-  const [modalImage, setModalImage] = useState(null);
+  const [modalMedia, setModalMedia] = useState(null); // {src, type}
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -82,11 +82,25 @@ const Favorites = () => {
                   alt="Imagen enviada"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setModalImage(getFileUrl(msg.content));
+                    setModalMedia({ src: getFileUrl(msg.content), type: 'image' });
                   }}
-                  style={{ cursor: "pointer" }}
+                  style={{ cursor: "pointer", maxWidth: "200px", borderRadius: "8px" }}
                   onError={(e) => { e.target.style.display = "none"; }}
                 />
+              ) : msg.type === "video" ? (
+                <div 
+                  className="favorite-video-preview"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setModalMedia({ src: getFileUrl(msg.content), type: 'video' });
+                  }}
+                  style={{ cursor: "pointer", position: "relative", width: "150px" }}
+                >
+                  <video src={getFileUrl(msg.content)} style={{ width: "100%", borderRadius: "8px" }} />
+                  <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.2)" }}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg>
+                  </div>
+                </div>
               ) : msg.type === "file" ? (
                 <a
                   href={getFileUrl(msg.content)}
@@ -115,7 +129,7 @@ const Favorites = () => {
         ))}
       </div>
 
-      <ImageModal src={modalImage} onClose={() => setModalImage(null)} />
+      <MediaModal media={modalMedia} onClose={() => setModalMedia(null)} />
     </div>
   );
 };

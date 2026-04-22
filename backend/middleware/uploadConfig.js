@@ -12,13 +12,24 @@ const storage = multer.diskStorage({
 
 const fileFilter = (req, file, cb) => {
   const allowedTypes = [
-    "image/jpeg",
-    "image/png",
-    "image/webp",
+    // Imágenes
+    "image/jpeg", "image/png", "image/webp", "image/gif",
+    // Videos
+    "video/mp4", "video/quicktime", "video/x-msvideo", "video/webm",
+    // Audios
+    "audio/mpeg", "audio/wav", "audio/ogg", "audio/mp4",
+    // Documentos
     "application/pdf",
     "application/msword",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    "text/plain"
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "application/vnd.ms-powerpoint",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    "text/plain",
+    "application/zip",
+    "application/x-zip-compressed",
+    "application/x-rar-compressed"
   ];
   if (allowedTypes.includes(file.mimetype)) {
     cb(null, true);
@@ -27,6 +38,6 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-const upload = multer({ storage, fileFilter, limits: { fileSize: 5 * 1024 * 1024 } });
+const upload = multer({ storage, fileFilter, limits: { fileSize: 100 * 1024 * 1024 } }); // 100MB limit
 
 module.exports = upload;
