@@ -10,6 +10,30 @@ function formatDateForSQL(date) {
   return d.toISOString().slice(0, 19).replace("T", " ");
 }
 
+// Obtener mis actividades (trabajando)
+router.get("/my-activities", verifyToken, async (req, res) => {
+  const userId = req.userId;
+  try {
+    const [activities] = await db.query(
+      `SELECT a.id, a.name AS activity_name, a.status, a.description,
+              p.id AS project_id, p.name AS project_name, 
+              g.id AS group_id, g.name AS group_name
+       FROM activities a
+       JOIN projects p ON a.project_id = p.id
+       JOIN groups g ON p.group_id = g.id
+       JOIN user_activities ua ON a.id = ua.activity_id
+       WHERE ua.user_id = ? 
+         AND a.status IN ('in_progress', 'in-progress')
+       ORDER BY a.id DESC`,
+      [userId]
+    );
+    res.json(activities);
+  } catch (err) {
+    console.error("ERROR DB GET MY ACTIVITIES:", err);
+    res.status(500).json({ message: "Error al obtener tus actividades", error: err.message });
+  }
+});
+
 // Crear actividad
 router.post("/activities", verifyToken, async (req, res) => {
   const { name, projectId, description, status, start_date, deadline, collaborators } = req.body;
