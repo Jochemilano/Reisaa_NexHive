@@ -113,11 +113,11 @@ export default function Home() {
                   }}
                   style={{ cursor: 'pointer' }}
                 >
+                  <div className="mini-activity-name">{act.activity_name}</div>
                   <div className="mini-card-header">
                     <span className="mini-project-name">{act.project_name}</span>
                     <span className="mini-group-name">{act.group_name}</span>
                   </div>
-                  <div className="mini-activity-name">{act.activity_name}</div>
                 </div>
               ))
             ) : (

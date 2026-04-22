@@ -66,12 +66,17 @@ router.get("/events", verifyToken, async (req, res) => {
               e.end_datetime AS end,
               e.type,
               e.owner_id,
-              cea.activity_id
+              cea.activity_id,
+              p.id AS project_id,
+              p.name AS project_name,
+              g.id AS group_id,
+              g.name AS group_name
        FROM calendar_events e
        LEFT JOIN calendar_event_users eu ON e.id = eu.event_id
        LEFT JOIN calendar_event_activities cea ON e.id = cea.event_id
        LEFT JOIN activities a ON cea.activity_id = a.id
        LEFT JOIN projects p ON a.project_id = p.id
+       LEFT JOIN groups g ON p.group_id = g.id
        LEFT JOIN user_groups ug ON p.group_id = ug.group_id AND ug.user_id = ?
        WHERE eu.user_id = ? OR ug.user_id IS NOT NULL
        ORDER BY e.start_datetime ASC`,

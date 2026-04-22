@@ -135,16 +135,29 @@
   border-color: var(--primary);
 }
 
+.mini-activity-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
 .mini-card-header {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
 }
 
 .mini-project-name {
-  font-size: 14px;
+  font-size: 10px;
   font-weight: 700;
-  color: var(--text-primary);
+  text-transform: uppercase;
+  color: var(--primary);
+  letter-spacing: 0.03em;
 }
 
 .mini-group-name {
@@ -153,15 +166,6 @@
   text-transform: uppercase;
   color: var(--text-tertiary);
   letter-spacing: 0.02em;
-}
-
-.mini-activity-name {
-  font-size: 13px;
-  color: var(--text-secondary);
-  line-height: 1.4;
-  padding-top: 4px;
-  border-top: 1px solid var(--border);
-  margin-top: 4px;
 }
 
 /* Responsividad básica */

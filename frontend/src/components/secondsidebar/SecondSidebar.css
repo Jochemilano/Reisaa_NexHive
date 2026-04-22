@@ -241,3 +241,176 @@
 .second-sidebar.minimized .retract-button button {
   transform: rotate(180deg);
 }
+
+/* -------------------------------------------------------------------------- */
+/*                          CALENDAR SIDEBAR STYLES                           */
+/* -------------------------------------------------------------------------- */
+
+.calendar-sidebar {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.sidebar-section {
+  margin-bottom: 0.5rem;
+}
+
+/* FILTROS */
+.eye-icon {
+  font-size: 14px;
+  color: var(--primary);
+  opacity: 0.8;
+  transition: all 0.2s ease;
+}
+
+.eye-icon.muted {
+  color: var(--text-tertiary);
+  opacity: 0.4;
+}
+
+.filter-label {
+  flex: 1;
+  font-size: 13.5px;
+}
+
+.filter-label.muted {
+  color: var(--text-tertiary);
+  opacity: 0.6;
+}
+
+.color-indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+/* LISTA DE PROYECTOS (Sublist) */
+.project-sublist {
+  margin-top: 1px;
+}
+
+.activity-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 1px 8px 1px 24px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  transition: background 0.15s, color 0.15s;
+}
+
+.activity-item:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.project-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.project-dot.muted {
+  opacity: 0.3;
+}
+
+.project-name.muted {
+  text-decoration: none;
+  opacity: 0.5;
+}
+
+/* CARDS DE EVENTOS PRÓXIMOS */
+.upcoming-section {
+  padding-top: 1rem;
+  border-top: 0.5px solid var(--border);
+  margin: 10px 14px 0;
+}
+
+.upcoming-section h3 {
+  padding-left: 0 !important;
+}
+
+.events-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 0;
+}
+
+.event-sidebar-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  border-radius: 10px;
+  display: flex;
+  overflow: hidden;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.event-sidebar-card:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+  transform: translateY(-1px);
+}
+
+.card-accent {
+  width: 3px;
+}
+
+.card-body {
+  padding: 8px 12px;
+  flex: 1;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2px;
+}
+
+.event-date {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--primary);
+  text-transform: uppercase;
+}
+
+.event-time {
+  font-size: 10px;
+  color: var(--text-tertiary);
+}
+
+.event-title {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.3;
+}
+
+.event-meta {
+  margin-top: 4px;
+}
+
+.project-tag {
+  font-size: 9px;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 1px 5px;
+  border-radius: 3px;
+  text-transform: uppercase;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 1.5rem 0;
+  color: var(--text-tertiary);
+  font-size: 12px;
+  font-style: italic;
+}

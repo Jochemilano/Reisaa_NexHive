@@ -277,6 +277,7 @@ const Chat = ({ roomId, userId, targetUserId, targetUserName, targetUserAvatar, 
     const others = selectedFiles.filter(f => !f.type.startsWith("image/"));
     if (images.length > 0) { setEditorFiles(images); setIsEditorOpen(true); }
     if (others.length > 0) { setPreviewFiles(prev => [...prev, ...others]); }
+    e.target.value = null;
   };
 
   const handlePaste = (e) => {

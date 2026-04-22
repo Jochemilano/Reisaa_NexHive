@@ -33,7 +33,7 @@ const messages = {
   showMore: total => `+ Ver más (${total})`,
 };
 
-const CalendarComponent = ({ events, onSelectSlot, onSelectEvent }) => {
+const CalendarComponent = ({ events, onSelectSlot, onSelectEvent, eventPropGetter }) => {
   // ✅ Estados para controlar vista y fecha
   const [view, setView] = useState('month');
   const [date, setDate] = useState(new Date());
@@ -48,6 +48,7 @@ const CalendarComponent = ({ events, onSelectSlot, onSelectEvent }) => {
         selectable
         onSelectSlot={onSelectSlot}
         onSelectEvent={onSelectEvent}
+        eventPropGetter={eventPropGetter}
         messages={messages}
         view={view}
         onView={setView}

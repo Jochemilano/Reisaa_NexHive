@@ -20,21 +20,31 @@ const ImageEditorModal = ({ files, onSave, onClose, onAddMore }) => {
   const fabricCanvas = useRef(null);
   const containerRef = useRef(null);
 
+  const currentImageIdRef = useRef(null);
+  const isCanvasLoading = useRef(false);
+  const blobUrlsRef = useRef(new Set());
+
   // --- INITIALIZATION ---
   useEffect(() => {
-    if (files && files.length > 0) {
-      const initial = files.map((file, idx) => ({
-        id: `img-${Date.now()}-${idx}-${Math.random()}`,
-        file: file,
-        preview: URL.createObjectURL(file),
-        canvasData: null,
-        initialScale: 1
-      }));
+    // Only initialize if activeFiles is empty to prevent wiping out state when files change
+    if (files && files.length > 0 && activeFiles.length === 0) {
+      const initial = files.map((file, idx) => {
+        const url = URL.createObjectURL(file);
+        blobUrlsRef.current.add(url);
+        return {
+          id: `img-${Date.now()}-${idx}-${Math.random()}`,
+          file: file,
+          preview: url,
+          canvasData: null,
+          initialScale: 1
+        };
+      });
 
       setActiveFiles(initial);
       setCurrentIndex(0);
+      currentImageIdRef.current = null;
     }
-  }, [files]);
+  }, [files, activeFiles.length]);
 
   // --- FABRIC CANVAS SETUP ---
   useEffect(() => {
@@ -68,18 +78,44 @@ const ImageEditorModal = ({ files, onSave, onClose, onAddMore }) => {
         fabricCanvas.current.dispose();
         fabricCanvas.current = null;
       }
-      activeFiles.forEach(f => { if (f.preview.startsWith('blob:')) URL.revokeObjectURL(f.preview); });
+      blobUrlsRef.current.forEach(url => URL.revokeObjectURL(url));
+      blobUrlsRef.current.clear();
     };
   }, []);
 
+  // --- TOOL MANAGEMENT ---
+  const updateBrushState = useCallback(() => {
+    const canvas = fabricCanvas.current;
+    if (!canvas) return;
+
+    // El pincel solo está activo si la herramienta es 'pencil' Y no estamos recortando Y no hay emojis abiertos
+    if (activeTool === 'pencil' && !isCropping && !showEmojis) {
+      canvas.isDrawingMode = true;
+      if (!canvas.freeDrawingBrush) canvas.freeDrawingBrush = new PencilBrush(canvas);
+      canvas.freeDrawingBrush.color = activeColor;
+      canvas.freeDrawingBrush.width = brushWidth;
+    } else {
+      canvas.isDrawingMode = false;
+    }
+  }, [activeTool, isCropping, showEmojis, activeColor, brushWidth]);
+
   // --- IMAGE LOADING & RESIZING ---
-  const setupCanvas = useCallback(async () => {
+  const setupCanvas = useCallback(async (token) => {
     if (!fabricCanvas.current || activeFiles.length === 0 || !containerRef.current) return;
     const canvas = fabricCanvas.current;
     const currentData = activeFiles[currentIndex];
 
+    if (!currentData) return;
+
+    const imgKey = `${currentData.id}-${currentData.preview}`;
+    if (currentImageIdRef.current === imgKey) return;
+
+    isCanvasLoading.current = true;
+
     try {
       const img = await FabricImage.fromURL(currentData.preview);
+      if (token && token.cancelled) return;
+
       const containerWidth = containerRef.current.clientWidth - 80;
       const containerHeight = containerRef.current.clientHeight - 80;
 
@@ -98,21 +134,28 @@ const ImageEditorModal = ({ files, onSave, onClose, onAddMore }) => {
         originX: 'left',
         originY: 'top',
         selectable: false,
-        evented: false
+        evented: false,
+        name: 'bg-img'
       });
 
-      // Update initial scale for the current file
-      setActiveFiles(prev => {
-        const updated = [...prev];
-        if (updated[currentIndex]) updated[currentIndex].initialScale = scale;
-        return updated;
-      });
+      if (currentData.initialScale !== scale) {
+        setActiveFiles(prev => {
+          const updated = [...prev];
+          if (updated[currentIndex]) {
+            updated[currentIndex] = { ...updated[currentIndex], initialScale: scale };
+          }
+          return updated;
+        });
+      }
 
       if (currentData.canvasData) {
         await canvas.loadFromJSON(currentData.canvasData);
-        // Remove duplicate background images from JSON
+        if (token && token.cancelled) return;
+        
         canvas.getObjects().forEach(obj => {
-          if (obj.type === 'image' && obj.selectable === false) canvas.remove(obj);
+          if (obj.name === 'bg-img' || (obj.type === 'image' && obj.selectable === false)) {
+            canvas.remove(obj);
+          }
         });
       }
 
@@ -121,30 +164,21 @@ const ImageEditorModal = ({ files, onSave, onClose, onAddMore }) => {
       canvas.renderAll();
 
       updateBrushState();
+      currentImageIdRef.current = imgKey;
     } catch (err) {
       console.error("Error setting up canvas:", err);
+    } finally {
+      if (!token || !token.cancelled) {
+        isCanvasLoading.current = false;
+      }
     }
-  }, [currentIndex, activeFiles.length, activeFiles[currentIndex]?.preview]);
+  }, [currentIndex, activeFiles, updateBrushState]);
 
   useEffect(() => {
-    setupCanvas();
+    const token = { cancelled: false };
+    setupCanvas(token);
+    return () => { token.cancelled = true; };
   }, [setupCanvas]);
-
-  // --- TOOL MANAGEMENT ---
-  const updateBrushState = useCallback(() => {
-    const canvas = fabricCanvas.current;
-    if (!canvas) return;
-
-    // El pincel solo está activo si la herramienta es 'pencil' Y no estamos recortando Y no hay emojis abiertos
-    if (activeTool === 'pencil' && !isCropping && !showEmojis) {
-      canvas.isDrawingMode = true;
-      if (!canvas.freeDrawingBrush) canvas.freeDrawingBrush = new PencilBrush(canvas);
-      canvas.freeDrawingBrush.color = activeColor;
-      canvas.freeDrawingBrush.width = brushWidth;
-    } else {
-      canvas.isDrawingMode = false;
-    }
-  }, [activeTool, isCropping, showEmojis, activeColor, brushWidth]);
 
   useEffect(() => {
     updateBrushState();
@@ -289,9 +323,12 @@ const ImageEditorModal = ({ files, onSave, onClose, onAddMore }) => {
     setActiveFiles(prev => {
       const updated = [...prev];
       if (updated[currentIndex]) {
-        updated[currentIndex].preview = dataUrl;
-        updated[currentIndex].canvasData = null;
-        updated[currentIndex].initialScale = 1;
+        updated[currentIndex] = {
+          ...updated[currentIndex],
+          preview: dataUrl,
+          canvasData: null,
+          initialScale: 1
+        };
       }
       return updated;
     });
@@ -308,15 +345,17 @@ const ImageEditorModal = ({ files, onSave, onClose, onAddMore }) => {
     canvas.renderAll();
   };
 
-  const saveCurrentState = () => {
-    if (!fabricCanvas.current) return;
-    const json = fabricCanvas.current.toJSON();
+  const saveCurrentState = useCallback(() => {
+    if (!fabricCanvas.current || isCanvasLoading.current) return;
+    const json = fabricCanvas.current.toJSON(['name']);
     setActiveFiles(prev => {
       const updated = [...prev];
-      if (updated[currentIndex]) updated[currentIndex].canvasData = json;
+      if (updated[currentIndex]) {
+        updated[currentIndex] = { ...updated[currentIndex], canvasData: json };
+      }
       return updated;
     });
-  };
+  }, [currentIndex]);
 
   const handleBack = () => {
     // Limpieza agresiva antes de cerrar para asegurar que la próxima apertura sea limpia
@@ -336,13 +375,36 @@ const ImageEditorModal = ({ files, onSave, onClose, onAddMore }) => {
         const tempElement = document.createElement('canvas');
         const tempCanvas = new Canvas(tempElement);
         const bgImg = await FabricImage.fromURL(item.preview);
-        tempCanvas.setDimensions({ width: bgImg.width, height: bgImg.height });
+        
+        const scale = item.initialScale || 1;
+        tempCanvas.setDimensions({ 
+          width: Math.floor(bgImg.width * scale), 
+          height: Math.floor(bgImg.height * scale) 
+        });
+        
         if (item.canvasData) await tempCanvas.loadFromJSON(item.canvasData);
-        bgImg.set({ left: 0, top: 0, selectable: false });
-        tempCanvas.getObjects().forEach(o => { if (o.type === 'image' && !o.selectable) tempCanvas.remove(o); });
+        
+        bgImg.set({ 
+          left: 0, 
+          top: 0, 
+          scaleX: scale, 
+          scaleY: scale, 
+          originX: 'left',
+          originY: 'top',
+          selectable: false,
+          name: 'bg-img'
+        });
+        
+        tempCanvas.getObjects().forEach(o => { 
+          if (o.name === 'bg-img' || (o.type === 'image' && !o.selectable)) {
+            tempCanvas.remove(o); 
+          }
+        });
+        
         tempCanvas.add(bgImg);
         tempCanvas.sendObjectToBack(bgImg);
-        const file = await canvasToFile(tempCanvas, item.file.name, 1);
+        
+        const file = await canvasToFile(tempCanvas, item.file.name, 1 / scale);
         tempCanvas.dispose();
         return file;
       }
@@ -535,7 +597,24 @@ const ImageEditorModal = ({ files, onSave, onClose, onAddMore }) => {
             ))}
             <label className="thumb-v2 thumb-add">
               <FaPlus />
-              <input type="file" multiple accept="image/*" onChange={(e) => onAddMore(Array.from(e.target.files))} hidden />
+              <input type="file" multiple accept="image/*" onChange={(e) => {
+                const newFiles = Array.from(e.target.files);
+                if (newFiles.length > 0) {
+                  const processed = newFiles.map((file, idx) => {
+                    const url = URL.createObjectURL(file);
+                    blobUrlsRef.current.add(url);
+                    return {
+                      id: `img-${Date.now()}-new-${idx}-${Math.random()}`,
+                      file: file,
+                      preview: url,
+                      canvasData: null,
+                      initialScale: 1
+                    };
+                  });
+                  setActiveFiles(prev => [...prev, ...processed]);
+                }
+                e.target.value = null;
+              }} hidden />
             </label>
           </div>
         </div>
