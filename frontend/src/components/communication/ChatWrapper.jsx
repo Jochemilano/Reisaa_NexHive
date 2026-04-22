@@ -5,7 +5,7 @@ import { apiFetch } from "@/utils/apiClient";
 import { useCall } from "@/context/CallContext";
 
 export default function ChatWrapper() {
-  const { chatRoomId, groupId } = useParams(); // ← captura groupId si existe
+  const { chatRoomId, groupId } = useParams();
   const userId = parseInt(localStorage.getItem("userId"));
 
   const [authorized, setAuthorized] = useState(false);
@@ -21,15 +21,13 @@ export default function ChatWrapper() {
         setAuthorized(true);
 
         if (groupId) {
-          // ── Chat grupal: traer info del grupo ──────────────────
           const group = await apiFetch(`groups/${groupId}/details`);
           setTargetUser({
-            id: null,               // no hay un targetUser individual
+            id: null,
             name: group.name,
             avatar: group.avatar,
           });
         } else {
-          // ── Chat privado: traer el otro participante ────────────
           const participants = await apiFetch(`rooms/${chatRoomId}/participants`);
           const other = participants.find(p => p.id !== userId) ?? participants[0];
           if (other) {
@@ -38,10 +36,8 @@ export default function ChatWrapper() {
               name: other.name,
               avatar: other.profile_pic,
             });
-            console.log("Target user for chat:", other);
           }
         }
-
       } catch (err) {
         console.error("Error:", err);
         setAuthorized(false);
@@ -51,11 +47,11 @@ export default function ChatWrapper() {
     };
 
     if (chatRoomId) checkAccess();
-  }, [chatRoomId, groupId]);
+  }, [chatRoomId, groupId, userId]);
 
   useEffect(() => {
     return () => { if (activeCall) setIsMinimized(true); };
-  }, [activeCall]);
+  }, [activeCall, setIsMinimized]);
 
   if (!chatRoomId)  return <p>Chat no encontrado</p>;
   if (loading)      return <p>Cargando...</p>;

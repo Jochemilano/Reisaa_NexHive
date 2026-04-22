@@ -2,30 +2,44 @@ import React, { useEffect, useState } from "react";
 import { fetchAllUsers } from "@/utils/groups";
 import { apiFetch } from "@/utils/apiClient";
 import { useNavigate } from "react-router-dom";
+import { useUnread } from "@/context/UnreadContext";
 
 const HomeSecondSidebar = () => {
   const [users, setUsers] = useState([]);
+  const [rooms, setRooms] = useState([]);
+  const { unreadByRoom } = useUnread();
   const navigate = useNavigate();
   const currentUserId = parseInt(localStorage.getItem("userId"));
 
   useEffect(() => {
-    const loadUsers = async () => {
+    const loadData = async () => {
       try {
-        const data = await fetchAllUsers();
-        setUsers(data.filter(u => u.id !== currentUserId));
+        const usersData = await fetchAllUsers();
+        setUsers(usersData.filter(u => u.id !== currentUserId));
+        
+        const roomsData = await apiFetch("rooms");
+        setRooms(roomsData);
       } catch (err) {
-        console.error("Error cargando usuarios:", err);
+        console.error("Error cargando datos:", err);
       }
     };
-    loadUsers();
-  }, []);
+    loadData();
+  }, [currentUserId]);
+
+  const getUnreadForUser = (userId) => {
+    const userIds = [currentUserId, userId].sort();
+    const roomName = `chat-${userIds.join("-")}`;
+    const room = rooms.find(r => r.name === roomName);
+    if (!room) return 0;
+    // USAR EL CONTEXTO PARA TIEMPO REAL
+    return unreadByRoom[room.id] || 0;
+  };
+
 
   const handleUserClick = async (user) => {
     try {
       const userIds = [currentUserId, user.id].sort();
       const roomName = `chat-${userIds.join("-")}`;
-
-      const rooms = await apiFetch("rooms"); 
       let existingRoom = rooms.find(r => r.name === roomName);
       let roomId;
 
@@ -53,15 +67,22 @@ const HomeSecondSidebar = () => {
     <div className="sidebar-inner">
       <h3>Usuarios</h3>
       <div className="user-list">
-        {users.map(u => (
-          <div
-            key={u.id}
-            className="user-item"
-            onClick={() => handleUserClick(u)}
-          >
-            {u.name}
-          </div>
-        ))}
+        {users.map(u => {
+          const unread = getUnreadForUser(u.id);
+          return (
+            <div
+              key={u.id}
+              className="user-item"
+              onClick={() => handleUserClick(u)}
+              style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+            >
+              <span>{u.name}</span>
+              {unread > 0 && (
+                <span className="unread-badge-small">{unread}</span>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

@@ -41,6 +41,12 @@ module.exports = (io, connectedUsers) => {
       console.log("Usuario", socket.userId, "se unió a sala", roomId);
     });
 
+    // Salir de sala de chat
+    socket.on("leave-room", (roomId) => {
+      socket.leave(roomId.toString());
+      console.log("Usuario", socket.userId, "salió de sala", roomId);
+    });
+
     // Marcar sala como leída vía socket
     socket.on("mark-room-read", async ({ roomId }) => {
       try {
@@ -111,10 +117,26 @@ module.exports = (io, connectedUsers) => {
           read: false,
         };
 
-        // 5️⃣ Emitir mensaje a todos los usuarios en la sala
+        // 5️⃣ Emitir mensaje a la sala de chat (para useChat)
         io.to(roomId.toString()).emit("receive-message", messageData);
 
+        // 6️⃣ Notificar a cada participante individualmente (para UnreadContext)
+        const [participants] = await db.query(
+          "SELECT user_id FROM room_participants WHERE room_id = ?",
+          [roomId]
+        );
+
+        participants.forEach(p => {
+          // No notificar al remitente
+          if (p.user_id === socket.userId) return;
+          io.to(p.user_id.toString()).emit("new-message-notification", {
+            room_id: roomId,
+            sender_id: socket.userId,
+          });
+        });
+
       } catch (err) {
+
         console.error("ERROR SOCKET MESSAGE:", err);
       }
     });

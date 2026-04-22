@@ -11,29 +11,32 @@ import VoiceRoomWrapper from "@/components/communication/VoiceRoomWrapper";
 import { CallProvider } from "@/context/CallContext";
 import IncomingCallModal from "@/components/communication/IncomingCallModal";
 import FloatingCall from "@/components/communication/Floatingcall";
+import { UnreadProvider } from "@/context/UnreadContext";
 
 export default function AppRouter() {
   return (
-    <CallProvider>
-      {/* Visible en CUALQUIER página */}
-      <IncomingCallModal />
-      <FloatingCall />
+    <UnreadProvider>
+      <CallProvider>
+        {/* Visible en CUALQUIER página */}
+        <IncomingCallModal />
+        <FloatingCall />
 
-      <Routes>
-        <Route path="/" element={<Navigate to="/home" />} />
-        
-        <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-          <Route path="/home"                                        element={<Home />} />
-          <Route path="/favorites"                                   element={<Favorites />} />
-          <Route path="/calendar"                                    element={<Calendar />} />
-          <Route path="groups/:groupId"                              element={<GroupPage />} />
-          <Route path="/groups/:groupId/chat/:chatRoomId"            element={<ChatWrapper />} />
-          <Route path="/groups/:groupId/voice/:voiceRoomId"          element={<VoiceRoomWrapper />} />
-          <Route path="/chat/:chatRoomId"                            element={<ChatWrapper />} />
-        </Route>
+        <Routes>
+          <Route path="/" element={<Navigate to="/home" />} />
+          
+          <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+            <Route path="/home"                                        element={<Home />} />
+            <Route path="/favorites"                                   element={<Favorites />} />
+            <Route path="/calendar"                                    element={<Calendar />} />
+            <Route path="groups/:groupId"                              element={<GroupPage />} />
+            <Route path="/groups/:groupId/chat/:chatRoomId"            element={<ChatWrapper />} />
+            <Route path="/groups/:groupId/voice/:voiceRoomId"          element={<VoiceRoomWrapper />} />
+            <Route path="/chat/:chatRoomId"                            element={<ChatWrapper />} />
+          </Route>
 
-        <Route path="/login" element={<Login />} />
-      </Routes>
-    </CallProvider>
+          <Route path="/login" element={<Login />} />
+        </Routes>
+      </CallProvider>
+    </UnreadProvider>
   );
 }

@@ -3,28 +3,38 @@ import { socket, joinRoom, sendMessage, markRoomRead } from "@/utils/socket";
 import { apiFetch } from "@/utils/apiClient";
 import { uploadFile } from "@/utils/rooms";
 
+import { useUnread } from "@/context/UnreadContext";
+
 export const useChat = (roomId, userId) => {
   const [messages, setMessages] = useState([]);
+  const { markAsRead } = useUnread();
 
   useEffect(() => {
+    // Limpiar mensajes del chat anterior
+    setMessages([]);
+
     apiFetch(`rooms/${roomId}/messages`)
       .then((loadedMessages) => {
         setMessages(loadedMessages.map((msg) => ({ ...msg, read: !!msg.read })));
         markRoomRead(roomId);
+        markAsRead(roomId);
       })
       .catch(err => console.error("Error cargando mensajes:", err));
 
     joinRoom(roomId);
     markRoomRead(roomId);
+    markAsRead(roomId);
 
-    socket.on("receive-message", (msg) => {
-      console.log("Received message:", msg);
+    const handleReceiveMessage = (msg) => {
+      // FILTRAR: solo aceptar mensajes de ESTA sala
+      if (String(msg.room_id) !== String(roomId)) return;
       setMessages(prev => [...prev, { ...msg, read: !!msg.read }]);
       markRoomRead(roomId);
-    });
+      markAsRead(roomId);
+    };
 
-    socket.on("room-read", ({ roomId: readRoomId, userId: readerId }) => {
-      if (readRoomId !== roomId) return;
+    const handleRoomReadEvent = ({ roomId: readRoomId, userId: readerId }) => {
+      if (String(readRoomId) !== String(roomId)) return;
       if (Number(readerId) === Number(userId)) return;
       setMessages((prev) => prev.map((msg) => {
         if (msg.sender_id && Number(msg.sender_id) === Number(userId) && !msg.read) {
@@ -32,16 +42,21 @@ export const useChat = (roomId, userId) => {
         }
         return msg;
       }));
-    });
+    };
+
+    socket.on("receive-message", handleReceiveMessage);
+    socket.on("room-read", handleRoomReadEvent);
 
     return () => {
-      socket.off("receive-message");
-      socket.off("room-read");
+      socket.off("receive-message", handleReceiveMessage);
+      socket.off("room-read", handleRoomReadEvent);
+      // Salir de la sala al desmontar para no recibir mensajes de otras salas
+      socket.emit("leave-room", roomId);
     };
-  }, [roomId, userId]);
+
+  }, [roomId, userId, markAsRead]);
 
   const send = (content, replyToId = null) => {
-    console.log("Sending message:", { roomId, type: "text", content, replyToId });
     sendMessage({
       roomId,
       senderId: userId,
@@ -71,7 +86,6 @@ export const useChat = (roomId, userId) => {
       method: "PUT",
       body: JSON.stringify({ content }),
     });
-    // Actualiza localmente
     setMessages((prev) =>
       prev.map((m) => (m.id === messageId ? { ...m, content, edited: 1 } : m))
     );
@@ -82,6 +96,5 @@ export const useChat = (roomId, userId) => {
     setMessages((prev) => prev.filter((m) => m.id !== messageId));
   };
   
-
   return { messages, send, sendFile, editMessage, deleteMessage };
 };

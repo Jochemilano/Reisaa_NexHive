@@ -54,21 +54,49 @@ router.put("/rooms/:roomId/read", verifyToken, async (req, res) => {
   }
 });
 
-// Listar salas del usuario
+// Listar salas del usuario con conteo de no leídos
 router.get("/rooms", verifyToken, async (req, res) => {
   const userId = req.userId;
   try {
     const [rooms] = await db.query(
-      `SELECT r.id, r.name
+      `SELECT 
+          r.id, 
+          r.name, 
+          r.type,
+          (SELECT COUNT(*) FROM messages m 
+           WHERE m.room_id = r.id 
+             AND m.sender_id != ? 
+             AND (rp.last_read_at IS NULL OR m.created_at > rp.last_read_at)
+          ) as unread_count
        FROM rooms r
        JOIN room_participants rp ON r.id = rp.room_id
        WHERE rp.user_id = ?`,
-      [userId]
+      [userId, userId]
     );
     res.json(rooms);
   } catch (err) {
     console.error("ERROR GET USER ROOMS:", err);
     res.status(500).json({ message: "Error obteniendo salas" });
+  }
+});
+
+// Obtener total de mensajes no leídos (global)
+router.get("/rooms/unread/total", verifyToken, async (req, res) => {
+  const userId = req.userId;
+  try {
+    const [result] = await db.query(
+      `SELECT COUNT(*) as total
+       FROM messages m
+       JOIN room_participants rp ON m.room_id = rp.room_id
+       WHERE rp.user_id = ? 
+         AND m.sender_id != ?
+         AND (rp.last_read_at IS NULL OR m.created_at > rp.last_read_at)`,
+      [userId, userId]
+    );
+    res.json({ total: result[0].total });
+  } catch (err) {
+    console.error("ERROR GET UNREAD TOTAL:", err);
+    res.status(500).json({ message: "Error obteniendo total de no leídos" });
   }
 });
 
@@ -263,10 +291,5 @@ router.delete("/messages/:messageId", verifyToken, async (req, res) => {
   }
 });
 
-// Responder mensaje (reply)
-router.post("/messages", verifyToken, async (req, res) => {
-  // ya existe, solo añade reply_to_id al INSERT
-});
-
-
+// responder mensaje (reply) ya existe arriba, se eliminó el duplicado
 module.exports = router;
