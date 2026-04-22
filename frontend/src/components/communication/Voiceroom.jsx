@@ -74,6 +74,8 @@ const VoiceRoom = ({ voiceRoomId, groupId }) => {
   const [groupName, setGroupName] = useState("Cargando...");
 
   const {
+    localStream,
+    currentStream,
     localStreamRef,
     participants,
     isMicOn,
@@ -100,18 +102,17 @@ const VoiceRoom = ({ voiceRoomId, groupId }) => {
 
   // IMPORTANTE: el stream debe re-asignarse si el elemento se remonta (pinnedId cambia)
   useEffect(() => {
-    if (localVideoRef.current && localStreamRef.current) {
-      localVideoRef.current.srcObject = localStreamRef.current;
+    if (localVideoRef.current && currentStream) {
+      localVideoRef.current.srcObject = currentStream;
     }
-  }, [localStreamRef.current, pinnedId]);
+  }, [currentStream, pinnedId]);
 
-  // VAD para local
   useEffect(() => {
     let ctx, analyser, source, raf;
-    if (localStreamRef.current && isMicOn) {
+    if (localStream && isMicOn) {
       try {
         ctx = new (window.AudioContext || window.webkitAudioContext)();
-        source = ctx.createMediaStreamSource(localStreamRef.current);
+        source = ctx.createMediaStreamSource(localStream);
         analyser = ctx.createAnalyser();
         analyser.fftSize = 2048;
         source.connect(analyser);
@@ -133,15 +134,13 @@ const VoiceRoom = ({ voiceRoomId, groupId }) => {
       if (raf) cancelAnimationFrame(raf);
       try { ctx?.close(); } catch (e) {}
     };
-  }, [localStreamRef.current, isMicOn]);
+  }, [localStream, isMicOn]);
 
   const handleScreenShare = async () => {
     if (sharingScreen) {
-      const stream = stopScreenShare();
-      if (localVideoRef.current) localVideoRef.current.srcObject = stream;
+      stopScreenShare();
     } else {
-      const stream = await startScreenShare();
-      if (localVideoRef.current && stream) localVideoRef.current.srcObject = stream;
+      await startScreenShare();
     }
   };
 

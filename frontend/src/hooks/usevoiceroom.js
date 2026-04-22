@@ -8,6 +8,8 @@ export const useVoiceRoom = (voiceRoomId) => {
   const joinedRef      = useRef(false);
 
   const [participants, setParticipants] = useState([]);
+  const [localStream,  setLocalStream]  = useState(null);
+  const [currentStream, setCurrentStream] = useState(null);
   const [isMicOn,      setIsMicOn]      = useState(true);
   const [isCameraOn,   setIsCameraOn]   = useState(true);
   const [sharingScreen, setSharingScreen] = useState(false);
@@ -56,6 +58,7 @@ export const useVoiceRoom = (voiceRoomId) => {
       });
 
       setSharingScreen(true);
+      setCurrentStream(screenStream);
       screenTrack.onended = stopScreenShare;
       return screenStream;
     } catch (err) {
@@ -70,6 +73,7 @@ export const useVoiceRoom = (voiceRoomId) => {
       peer._pc?.getSenders().find(s => s.track?.kind === "video")?.replaceTrack(original);
     });
     setSharingScreen(false);
+    setCurrentStream(localStreamRef.current);
     return localStreamRef.current;
   };
 
@@ -90,6 +94,8 @@ export const useVoiceRoom = (voiceRoomId) => {
       .then(stream => {
         stream.originalVideoTrack = stream.getVideoTracks()[0];
         localStreamRef.current = stream;
+        setLocalStream(stream);
+        setCurrentStream(stream);
         socket.emit("join-voice-room", { voiceRoomId });
       })
       .catch(err => console.error("Error de media:", err));
@@ -110,6 +116,8 @@ export const useVoiceRoom = (voiceRoomId) => {
   }, [voiceRoomId]);
 
   return {
+    localStream,
+    currentStream,
     localStreamRef,
     participants,
     isMicOn,

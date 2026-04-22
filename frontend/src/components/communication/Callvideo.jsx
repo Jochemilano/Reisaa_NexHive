@@ -6,7 +6,7 @@ const CallVideo = ({ expanded = true }) => {
   const {
     activeCall, callAccepted,
     isMinimized, setIsMinimized,
-    localStreamRef, peerRef,
+    localStream, currentStream, setCurrentStream, localStreamRef, peerRef,
     remoteStream, expandCall, hangUp,
   } = useCall();
 
@@ -20,13 +20,12 @@ const CallVideo = ({ expanded = true }) => {
     isCameraOn, isMicOn, sharingScreen,
     toggleMic, toggleCamera,
     startScreenShare, stopScreenShare,
-  } = useCallMedia(localStreamRef, peerRef, localVidRef);
+  } = useCallMedia(localStreamRef, peerRef, setCurrentStream);
 
-  // Asignar streams
   useEffect(() => {
-    if (localVidRef.current && localStreamRef.current)
-      localVidRef.current.srcObject = localStreamRef.current;
-  }, [activeCall, isMinimized, pinned]);
+    if (localVidRef.current && currentStream)
+      localVidRef.current.srcObject = currentStream;
+  }, [currentStream, activeCall, callAccepted, isMinimized, pinned]);
 
   useEffect(() => {
     if (remoteVidRef.current && remoteStream)
@@ -34,13 +33,12 @@ const CallVideo = ({ expanded = true }) => {
   }, [remoteStream, callAccepted, isMinimized, pinned]);
 
 
-  // Simple VAD (Voice Activity Detection) using WebAudio Analyser
   useEffect(() => {
     let localCtx, localAnalyser, localSource, localRAF;
-    if (localStreamRef.current) {
+    if (localStream) {
       try {
         localCtx = new (window.AudioContext || window.webkitAudioContext)();
-        localSource = localCtx.createMediaStreamSource(localStreamRef.current);
+        localSource = localCtx.createMediaStreamSource(localStream);
         localAnalyser = localCtx.createAnalyser();
         localAnalyser.fftSize = 2048;
         localSource.connect(localAnalyser);
@@ -60,7 +58,7 @@ const CallVideo = ({ expanded = true }) => {
       if (localRAF) cancelAnimationFrame(localRAF);
       try { localCtx?.close(); } catch (e) {}
     };
-  }, [localStreamRef.current]);
+  }, [localStream]);
 
   useEffect(() => {
     let remoteCtx, remoteAnalyser, remoteSource, remoteRAF;
@@ -176,7 +174,7 @@ const CallVideo = ({ expanded = true }) => {
           autoPlay
           playsInline
           muted={pinned !== 'remote'}
-          className={`video-stream ${(pinned === 'remote' ? isRemoteSpeaking : isLocalSpeaking) ? 'speaking' : ''}`}
+          className={`video-stream ${(pinned === 'remote' ? isRemoteSpeaking : isLocalSpeaking) ? 'speaking' : ''} ${(!pinned && sharingScreen) ? 'sharing-screen' : ''}`}
         />
         <div className="video-label">
           {pinned === 'remote' ? activeCall.targetUserName : `Tú ${!isMicOn ? "🔇" : ""}`}
@@ -224,7 +222,7 @@ const CallVideo = ({ expanded = true }) => {
 
       <div className={`video-grid ${pinned ? 'pinned' : ''}`}>
         <div className={`video-wrapper ${isLocalSpeaking ? 'speaking' : ''} ${pinned === 'local' ? 'pinned-active' : ''}`} style={{ order: pinned === 'local' ? 0 : 1 }}>
-          <video ref={localVidRef} autoPlay playsInline muted className="video-stream" />
+          <video ref={localVidRef} autoPlay playsInline muted className={`video-stream ${sharingScreen ? 'sharing-screen' : ''}`} />
           <div className="video-label">
             Tú {isMicOn ? <FaMicrophone /> : <FaMicrophoneSlash />}
             {isCameraOn ? <FaVideo /> : <FaVideoSlash />}

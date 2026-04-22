@@ -110,6 +110,8 @@ const ImageEditorModal = ({ files, onSave, onClose, onAddMore }) => {
     const imgKey = `${currentData.id}-${currentData.preview}`;
     if (currentImageIdRef.current === imgKey) return;
 
+    // UPDATE IMMEDIATELY to prevent concurrent starts for the same target
+    currentImageIdRef.current = imgKey;
     isCanvasLoading.current = true;
 
     try {
@@ -152,19 +154,22 @@ const ImageEditorModal = ({ files, onSave, onClose, onAddMore }) => {
         await canvas.loadFromJSON(currentData.canvasData);
         if (token && token.cancelled) return;
         
-        canvas.getObjects().forEach(obj => {
+        // Use a copied array to safely remove elements!
+        const objects = [...canvas.getObjects()];
+        objects.forEach(obj => {
           if (obj.name === 'bg-img' || (obj.type === 'image' && obj.selectable === false)) {
             canvas.remove(obj);
           }
         });
       }
 
+      if (token && token.cancelled) return; // ONE FINAL CHECK BEFORE ADDING!
+
       canvas.add(img);
       canvas.sendObjectToBack(img);
       canvas.renderAll();
 
       updateBrushState();
-      currentImageIdRef.current = imgKey;
     } catch (err) {
       console.error("Error setting up canvas:", err);
     } finally {
@@ -395,7 +400,8 @@ const ImageEditorModal = ({ files, onSave, onClose, onAddMore }) => {
           name: 'bg-img'
         });
         
-        tempCanvas.getObjects().forEach(o => { 
+        const objects = [...tempCanvas.getObjects()];
+        objects.forEach(o => { 
           if (o.name === 'bg-img' || (o.type === 'image' && !o.selectable)) {
             tempCanvas.remove(o); 
           }
@@ -429,7 +435,7 @@ const ImageEditorModal = ({ files, onSave, onClose, onAddMore }) => {
         {/* TOP BAR */}
         <div className="editor-top-bar">
           <div className="top-left-group">
-            <button className="tool-btn-v2" onClick={handleBack} title="Atrás"><FaArrowLeft /></button>
+            <button className="tool-btn-v2" onClick={handleBack} disabled={isCropping} title="Atrás"><FaArrowLeft /></button>
             <div className="active-tool-indicator">
               {isCropping ? 'Modo: Recortar' :
                 showEmojis ? 'Modo: Stickers' :
@@ -590,14 +596,38 @@ const ImageEditorModal = ({ files, onSave, onClose, onAddMore }) => {
         <div className="editor-footer-v2">
           <div className="thumbnails-v2">
             {activeFiles.map((item, idx) => (
-              <div key={item.id} className={`thumb-v2 ${idx === currentIndex ? 'active' : ''}`} onClick={() => { saveCurrentState(); setCurrentIndex(idx); }}>
+              <div 
+                key={item.id} 
+                className={`thumb-v2 ${idx === currentIndex ? 'active' : ''}`} 
+                style={isCropping ? { opacity: 0.5, pointerEvents: 'none' } : {}}
+                onClick={() => { 
+                  if (isCropping) return;
+                  saveCurrentState(); 
+                  setCurrentIndex(idx); 
+                }}
+              >
                 <img src={item.preview} alt="" />
-                <button className="btn-remove-thumb" onClick={(e) => { e.stopPropagation(); const n = activeFiles.filter((_, i) => i !== idx); if (n.length === 0) onClose(); else { setActiveFiles(n); if (currentIndex >= n.length) setCurrentIndex(n.length - 1); } }}><FaTimes /></button>
+                <button 
+                  className="btn-remove-thumb" 
+                  disabled={isCropping}
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    if (isCropping) return;
+                    const n = activeFiles.filter((_, i) => i !== idx); 
+                    if (n.length === 0) onClose(); 
+                    else { 
+                      setActiveFiles(n); 
+                      if (currentIndex >= n.length) setCurrentIndex(n.length - 1); 
+                    } 
+                  }}
+                >
+                  <FaTimes />
+                </button>
               </div>
             ))}
-            <label className="thumb-v2 thumb-add">
+            <label className="thumb-v2 thumb-add" style={isCropping ? { opacity: 0.5, pointerEvents: 'none' } : {}}>
               <FaPlus />
-              <input type="file" multiple accept="image/*" onChange={(e) => {
+              <input type="file" multiple accept="image/*" disabled={isCropping} onChange={(e) => {
                 const newFiles = Array.from(e.target.files);
                 if (newFiles.length > 0) {
                   const processed = newFiles.map((file, idx) => {

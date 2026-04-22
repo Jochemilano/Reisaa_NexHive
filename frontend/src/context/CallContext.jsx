@@ -12,6 +12,8 @@ export const CallProvider = ({ children }) => {
   const [callAccepted, setCallAccepted] = useState(false);
   const [isMinimized, setIsMinimized]   = useState(false);
   const [remoteStream, setRemoteStream] = useState(null);
+  const [localStream, setLocalStream]   = useState(null);
+  const [currentStream, setCurrentStream] = useState(null);
 
   const localStreamRef = useRef(null);
   const peerRef        = useRef(null);
@@ -27,6 +29,8 @@ export const CallProvider = ({ children }) => {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
       stream.originalVideoTrack = stream.getVideoTracks()[0];
       localStreamRef.current = stream;
+      setLocalStream(stream);
+      setCurrentStream(stream);
       return stream;
     } catch (err) {
       console.error("Error de media:", err);
@@ -37,6 +41,8 @@ export const CallProvider = ({ children }) => {
   const stopMedia = () => {
     localStreamRef.current?.getTracks().forEach(t => t.stop());
     localStreamRef.current = null;
+    setLocalStream(null);
+    setCurrentStream(null);
   };
 
   useEffect(() => {
@@ -153,6 +159,9 @@ export const CallProvider = ({ children }) => {
       isMinimized,
       remoteStream,
       setIsMinimized,
+      localStream,
+      currentStream,
+      setCurrentStream,
       localStreamRef,
       peerRef,
       startCall,

@@ -16,7 +16,7 @@ import "./call.css";
 import { smoothScroll } from "@/utils/smoothScroll";
 import { getAvatarUrl } from "@/utils/media";
 
-const normalizeText = (str) => 
+const normalizeText = (str) =>
   str?.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() || "";
 
 const highlightText = (text, search) => {
@@ -89,13 +89,13 @@ const MessageContent = ({ msg, onImageClick, onVideoClick, isMine, onReply, onEd
               <video className="content-video" src={src} />
               <div className="video-play-overlay">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
-                  <path d="M8 5v14l11-7z"/>
+                  <path d="M8 5v14l11-7z" />
                 </svg>
               </div>
             </div>
           ),
           audio: <audio className="content-audio" src={src} controls />,
-          file:  <a className="content-file" href={src} target="_blank" rel="noreferrer">{getFileName(msg.content)}</a>,
+          file: <a className="content-file" href={src} target="_blank" rel="noreferrer">{getFileName(msg.content)}</a>,
           text: <p className="content">{highlightText(msg.content, searchTerm)}</p>,
         }[msg.type]}
 
@@ -123,15 +123,15 @@ const MessageContent = ({ msg, onImageClick, onVideoClick, isMine, onReply, onEd
                 </li>
               )}
               <li onClick={() => { handleFavorite(); setMenuOpen(false); }}>
-                <FaStar style={{color: favorite ? "gold" : "gray", marginRight: 6}} /> Favoritos
+                <FaStar style={{ color: favorite ? "gold" : "gray", marginRight: 6 }} /> Favoritos
               </li>
               {isMine && (
                 <>
                   <li onClick={() => { onEdit(msg); setMenuOpen(false); }}>
-                    <FaEdit style={{marginRight: 6}} /> Editar
+                    <FaEdit style={{ marginRight: 6 }} /> Editar
                   </li>
                   <li onClick={() => { onDelete(msg.id); setMenuOpen(false); }}>
-                    <FaTrash style={{marginRight: 6}} /> Eliminar
+                    <FaTrash style={{ marginRight: 6 }} /> Eliminar
                   </li>
                 </>
               )}
@@ -146,9 +146,9 @@ const MessageContent = ({ msg, onImageClick, onVideoClick, isMine, onReply, onEd
 };
 
 const Chat = ({ roomId, userId, targetUserId, targetUserName, targetUserAvatar, initialUnreadCount }) => {
-  const location = useLocation(); 
+  const location = useLocation();
   const navigate = useNavigate();
-  
+
   const initialUnreadRef = useRef(initialUnreadCount);
   const [firstUnreadId, setFirstUnreadId] = useState(null);
   const [showUnreadSep, setShowUnreadSep] = useState(initialUnreadCount > 0);
@@ -242,7 +242,7 @@ const Chat = ({ roomId, userId, targetUserId, targetUserName, targetUserAvatar, 
       const timer = setTimeout(() => {
         handleScrollToOriginal(targetId);
         navigate(location.pathname, { replace: true, state: {} });
-      }, 300);     
+      }, 300);
       return () => clearTimeout(timer);
     }
   }, [location.state, messages, navigate, location.pathname]);
@@ -410,12 +410,12 @@ const Chat = ({ roomId, userId, targetUserId, targetUserName, targetUserAvatar, 
             ) : (
               <div key={item.key} ref={(el) => (messageRefs.current[item.id] = el)} className={`chat-message ${Number(item.sender_id) === Number(userId) ? "mine" : "other"}`}>
                 <span className="sender">{item.sender_name || item.sender_id}</span>
-                <MessageContent msg={item} searchTerm={searchTerm} onImageClick={(src) => setModalMedia({src, type: 'image'})} onVideoClick={(src) => setModalMedia({src, type: 'video'})} isMine={Number(item.sender_id) === Number(userId)} onReply={handleReply} onReplyToOriginal={handleScrollToOriginal} onEdit={handleEdit} onDelete={deleteMessage} />
+                <MessageContent msg={item} searchTerm={searchTerm} onImageClick={(src) => setModalMedia({ src, type: 'image' })} onVideoClick={(src) => setModalMedia({ src, type: 'video' })} isMine={Number(item.sender_id) === Number(userId)} onReply={handleReply} onReplyToOriginal={handleScrollToOriginal} onEdit={handleEdit} onDelete={deleteMessage} />
               </div>
             )
           ))}
         </div>
-        {showMediaPanel && <MediaPanel messages={messages} onClose={() => setShowMediaPanel(false)} onImageClick={(src) => setModalMedia({src, type: 'image'})} onVideoClick={(src) => setModalMedia({src, type: 'video'})} onGoToMessage={handleScrollToOriginal} />}
+        {showMediaPanel && <MediaPanel messages={messages} onClose={() => setShowMediaPanel(false)} onImageClick={(src) => setModalMedia({ src, type: 'image' })} onVideoClick={(src) => setModalMedia({ src, type: 'video' })} onGoToMessage={handleScrollToOriginal} />}
         <div className="chat-footer">
           {previewFiles.length > 0 && (
             <div className="preview-multi-container">

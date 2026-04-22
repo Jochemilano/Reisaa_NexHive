@@ -81,6 +81,14 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: object-fit 0.3s ease;
+}
+
+/* Pantalla compartida o video fijado: mostrar completo sin recortar */
+.video-stream.sharing-screen,
+.video-grid.pinned .video-wrapper.pinned-active .video-stream {
+  object-fit: contain;
+  background-color: #000;
 }
 
 /* Etiquetas de video */
