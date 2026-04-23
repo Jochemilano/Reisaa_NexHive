@@ -20,23 +20,6 @@ const LoginBox = ({
   return (
     <div className="login-container">
       <div className="center-box">
-        <div className="tab-container">
-          <button
-            type="button"
-            className={`tab-button ${activeTab === "login" ? "active" : ""}`}
-            onClick={() => setActiveTab("login")}
-          >
-            Login
-          </button>
-          <button
-            type="button"
-            className={`tab-button ${activeTab === "register" ? "active" : ""}`}
-            onClick={() => setActiveTab("register")}
-          >
-            Registro
-          </button>
-        </div>
-
         <h2>{title}</h2>
 
         <form onSubmit={onSubmit}>
@@ -76,9 +59,27 @@ const LoginBox = ({
             />
           )}
 
-          <button type="submit">
+          <button type="submit" className="submit-button">
             {activeTab === "login" ? "Entrar" : "Registrarme"}
           </button>
+
+          <div className="toggle-container">
+            {activeTab === "login" ? (
+              <p>
+                ¿No tienes cuenta?{" "}
+                <span className="toggle-link" onClick={() => setActiveTab("register")}>
+                  Regístrate
+                </span>
+              </p>
+            ) : (
+              <p>
+                ¿Ya tienes cuenta?{" "}
+                <span className="toggle-link" onClick={() => setActiveTab("login")}>
+                  Inicia sesión
+                </span>
+              </p>
+            )}
+          </div>
 
           {error && <p className="error-message active">{error}</p>}
           {success && (
