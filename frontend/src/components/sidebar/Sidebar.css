@@ -156,3 +156,35 @@
 .sidebar-tooltip.visible {
   opacity: 1;
 }
+
+/* ── Edit Button on Hover ── */
+.sidebar-item-edit {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background-color: var(--bg-elevated);
+  color: var(--primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-circle);
+  width: 1.4rem;
+  height: 1.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s, transform 0.2s, background-color 0.2s;
+  box-shadow: 0 2px 5px var(--shadow);
+  z-index: 10;
+}
+
+.sidebar-item-wrapper:hover .sidebar-item-edit {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.sidebar-item-edit:hover {
+  background-color: var(--primary);
+  color: #ffffff;
+}

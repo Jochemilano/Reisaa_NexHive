@@ -29,6 +29,69 @@
   font-size: 0.85rem;
 }
 
+/* Breadcrumbs */
+.group-page__breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--text-tertiary);
+}
+
+.breadcrumb-item {
+  cursor: default;
+}
+
+.breadcrumb-item--active {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.breadcrumb-separator {
+  font-size: 0.7rem;
+  opacity: 0.5;
+}
+
+.header-main-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+/* Project Stats */
+.project-stats {
+  display: flex;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background-color: var(--bg-hover);
+  cursor: help;
+  transition: transform 0.15s, background-color 0.15s;
+}
+
+.stat-item:hover {
+  background-color: var(--bg-active);
+  transform: translateY(-1px);
+}
+
+.stat-item svg {
+  font-size: 0.9em;
+}
+
+.stat-item--done { color: var(--success); }
+.stat-item--progress { color: var(--primary); }
+.stat-item--pending { color: var(--text-tertiary); }
+
 .group-page__header .modal-button {
   width: auto !important;
   height: auto !important;
@@ -114,6 +177,21 @@
   font-weight: 700;
   text-transform: uppercase;
   border-bottom: 2px solid var(--border);
+  transition: background 0.2s;
+}
+
+.sortable-th {
+  cursor: pointer;
+  user-select: none;
+}
+
+.sortable-th:hover {
+  background-color: var(--bg-hover);
+  color: var(--primary);
+}
+
+.sort-icon-inactive {
+  opacity: 0.3;
 }
 
 .activity-table td {
@@ -137,6 +215,11 @@
 
 .activity-table tr:hover {
   z-index: 50;
+}
+
+.date-overdue {
+  color: var(--error) !important;
+  font-weight: 700;
 }
 
 /* ==========================================================================

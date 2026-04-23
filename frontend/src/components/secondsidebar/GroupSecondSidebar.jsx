@@ -4,7 +4,7 @@ import { fetchGroupProjects } from "@/utils/projects";
 import Modal from "@/components/modal/Modal";
 import CreateProjectModal from "@/components/groups/CreateProjectModal";
 import EditProjectModal from "@/components/groups/EditProjectModal";
-import { FaHashtag, FaVolumeUp } from "react-icons/fa";
+import { FaHashtag, FaVolumeUp, FaEdit } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useGroup } from "@/context/GroupContext";
 
@@ -129,7 +129,14 @@ const GroupSecondSidebar = ({ groupId }) => {
               onTouchEnd={cancelPress}
               onClick={() => handleProjectClick(p)}
             >
-              {p.name}
+              <span>{p.name}</span>
+              <button 
+                className="project-edit-btn"
+                onClick={(e) => { e.stopPropagation(); setEditingProject(p); }}
+                title="Editar proyecto"
+              >
+                <FaEdit />
+              </button>
             </div>
           ))}
         </div>

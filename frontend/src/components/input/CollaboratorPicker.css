@@ -2,8 +2,84 @@
   margin-top: 20px;
 }
 
-.collaborator-picker__select-wrapper {
+.collaborator-picker__search-wrapper {
   margin-bottom: 6px;
+  position: relative;
+}
+
+.collaborator-picker__input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.collaborator-picker__search-icon {
+  position: absolute;
+  top: calc(50% - 0.2rem);
+  left: 12px;
+  transform: translateY(-50%);
+  color: var(--text-tertiary);
+  pointer-events: none;
+}
+
+.collaborator-picker__input {
+  padding-left: 36px !important;
+  cursor: text !important;
+}
+
+.collaborator-picker__dropdown {
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.collaborator-picker__dropdown-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.collaborator-picker__dropdown-item {
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  transition: background-color 0.2s;
+}
+
+.collaborator-picker__dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.collaborator-picker__dropdown-item:hover {
+  background-color: var(--bg-hover);
+}
+
+.collaborator-picker__dropdown-item .user-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.collaborator-picker__dropdown-item .user-email {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+
+.collaborator-picker__dropdown-empty {
+  padding: 12px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-tertiary);
 }
 
 .collaborator-picker__list-wrapper {
@@ -20,27 +96,33 @@
   list-style: none;
   padding: 0;
   margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .collaborator-picker__item {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 8px 12px;
-  margin-bottom: 6px;
-  border-radius: 6px;
-  font-size: 14px;
-  background-color: var(--bg-secondary);
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 16px;
+  font-size: 13px;
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
 }
 
 .collaborator-picker__remove-btn {
   background: transparent;
   border: none;
-  color: var(--text-primary);
+  color: var(--text-tertiary);
   cursor: pointer;
   display: flex;
   align-items: center;
   padding: 0;
+  font-size: 12px;
+  transition: color 0.2s;
 }
 
 .collaborator-picker__remove-btn:hover {

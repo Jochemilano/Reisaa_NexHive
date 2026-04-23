@@ -6,7 +6,9 @@
 }
 
 .input-label {
+  display: block;
   margin-left: 0.2rem;
+  margin-bottom: 0.2rem;
   font-size: 14px;
   color: var(--text-primary);
   font-weight: 700;

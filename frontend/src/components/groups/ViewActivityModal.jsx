@@ -68,7 +68,7 @@ const ViewActivityModal = ({ isOpen, onClose, activityId }) => {
             </div>
 
             <div className="activity-detail__field">
-             <span className="activity-detail__label">
+              <span className="activity-detail__label">
                 <FaUserTie style={{ marginRight: "6px" }} />
                 Responsable:
               </span>
@@ -86,7 +86,7 @@ const ViewActivityModal = ({ isOpen, onClose, activityId }) => {
                 <span className="activity-detail__value">{formatDate(activity.start_date, true)}</span>
               </div>
               <div className="activity-detail__field">
-               <span className="activity-detail__label">
+                <span className="activity-detail__label">
                   <FaFlagCheckered style={{ marginRight: "6px" }} />
                   Fecha límite:
                 </span>
@@ -95,7 +95,7 @@ const ViewActivityModal = ({ isOpen, onClose, activityId }) => {
             </div>
 
             <div className="activity-detail__field">
-               <span className="activity-detail__label">
+              <span className="activity-detail__label">
                 <FaClock style={{ marginRight: "6px" }} />
                 Estado:
               </span>
@@ -103,6 +103,7 @@ const ViewActivityModal = ({ isOpen, onClose, activityId }) => {
                 {STATUS_LABELS[activity.status] ?? activity.status}
               </span>
             </div>
+
           </div>
         )}
       </Modal.Body>

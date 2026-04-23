@@ -7,7 +7,8 @@ import { useGroup } from "@/context/GroupContext";
 import "./Home.css"
 
 export default function Home() {
-  const [onlineUsers, setOnlineUsers] = useState([]);
+  const [allOnlineUsers, setAllOnlineUsers] = useState([]);
+  const [friends, setFriends] = useState([]);
   const [activities, setActivities] = useState([]);
   const [loadingActivities, setLoadingActivities] = useState(true);
   const navigate = useNavigate();
@@ -15,12 +16,23 @@ export default function Home() {
   const currentUserId = parseInt(localStorage.getItem("userId"));
 
   useEffect(() => {
-    // Escuchar usuarios conectados
-    socket.on("usuarios:lista", (lista) => {
-      setOnlineUsers(lista.filter((u) => u.id !== currentUserId));
-    });
+    // Cargar amigos
+    const loadFriends = async () => {
+      try {
+        const friendsData = await apiFetch("friends");
+        setFriends(friendsData);
+      } catch (err) {
+        console.error("Error cargando amigos:", err);
+      }
+    };
 
-    // Cargar mis actividades "En progreso"
+    loadFriends();
+
+    // Escuchar usuarios conectados
+    const handleUserList = (lista) => setAllOnlineUsers(lista);
+    socket.on("usuarios:lista", handleUserList);
+
+    // Cargar mis actividades
     const loadActivities = async () => {
       try {
         const data = await apiFetch("my-activities");
@@ -34,8 +46,12 @@ export default function Home() {
 
     loadActivities();
 
-    return () => socket.off("usuarios:lista");
+    return () => socket.off("usuarios:lista", handleUserList);
   }, [currentUserId]);
+
+  const onlineUsers = allOnlineUsers.filter(u => 
+    u.id !== currentUserId && friends.some(f => f.id === u.id)
+  );
 
   const handleUserClick = async (user) => {
     try {

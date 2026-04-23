@@ -273,8 +273,8 @@
 }
 
 .vertical-size-slider input {
-  writing-mode: bt-lr;
-  -webkit-appearance: slider-vertical;
+  writing-mode: vertical-lr;
+  direction: rtl;
   width: 8px;
   height: 100px;
   background: var(--bg-soft);

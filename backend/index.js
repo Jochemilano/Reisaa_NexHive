@@ -32,6 +32,7 @@ const profileController    = require("./controllers/profile");
 const activitiesController = require("./controllers/activities");
 const favoritesController  = require("./controllers/favorites");
 const preferencesController  = require("./controllers/preferences");
+const friendsController      = require("./controllers/friends");
 
 // ============================================================
 // CORS — Orígenes permitidos
@@ -93,6 +94,7 @@ app.use("/api", profileController);
 app.use("/api", activitiesController);
 app.use("/api", favoritesController);
 app.use("/api", preferencesController);
+app.use("/api", friendsController);
 
 // ============================================================
 // SERVIDOR HTTP + SOCKET.IO

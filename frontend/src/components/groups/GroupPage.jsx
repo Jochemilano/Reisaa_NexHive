@@ -7,7 +7,8 @@ import ViewActivityModal from "@/components/groups/ViewActivityModal";
 import Modal from "@/components/modal/Modal";
 import { BsThreeDots } from "react-icons/bs";
 import { useGroup } from "@/context/GroupContext";
-import { FaEye, FaEdit, FaTrash } from "react-icons/fa";
+import { FaEye, FaEdit, FaTrash, FaSort, FaSortUp, FaSortDown, FaCalendarAlt, FaCheck, FaClock, FaThumbtack, FaChevronRight } from "react-icons/fa";
+import { apiFetch } from "@/utils/apiClient";
 import "./GroupPage.css";
 
 const STATUS_LABELS = {
@@ -50,6 +51,16 @@ const GroupPage = () => {
   const [openMenuId, setOpenMenuId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [groupName, setGroupName] = useState("");
+  const [sortConfig, setSortConfig] = useState({ key: "id", direction: "desc" });
+
+  // Cargar nombre del grupo para breadcrumbs
+  useEffect(() => {
+    if (!groupId) return;
+    apiFetch(`groups/${groupId}/details`)
+      .then(g => setGroupName(g.name))
+      .catch(err => console.error("Error cargando nombre del grupo:", err));
+  }, [groupId]);
 
   // Cargar lista de proyectos del grupo
   useEffect(() => {
@@ -84,15 +95,63 @@ const GroupPage = () => {
   const activities = selectedProject?.activities || [];
 
   const filteredActivities = useMemo(() => {
-    const result = activities.filter((a) => {
+    let result = activities.filter((a) => {
       const matchesSearch =
         normalizeText(a.name).includes(normalizeText(searchTerm)) ||
         normalizeText(a.owner_name).includes(normalizeText(searchTerm));
       const matchesStatus = statusFilter === "all" || a.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
-    return [...result].sort((a, b) => b.id - a.id);
-  }, [activities, searchTerm, statusFilter]);
+
+    // Aplicar ordenamiento
+    if (sortConfig.key) {
+      result.sort((a, b) => {
+        let valA = a[sortConfig.key];
+        let valB = b[sortConfig.key];
+
+        if (sortConfig.key === "start_date" || sortConfig.key === "deadline") {
+          valA = valA ? new Date(valA).getTime() : 0;
+          valB = valB ? new Date(valB).getTime() : 0;
+        } else if (typeof valA === "string") {
+          valA = normalizeText(valA);
+          valB = normalizeText(valB);
+        }
+
+        if (valA < valB) return sortConfig.direction === "asc" ? -1 : 1;
+        if (valA > valB) return sortConfig.direction === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return result;
+  }, [activities, searchTerm, statusFilter, sortConfig]);
+
+  const requestSort = (key) => {
+    let direction = "asc";
+    if (sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc";
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const getSortIcon = (key) => {
+    if (sortConfig.key !== key) return <FaSort className="sort-icon-inactive" />;
+    return sortConfig.direction === "asc" ? <FaSortUp /> : <FaSortDown />;
+  };
+
+  const isOverdue = (date, status) => {
+    if (!date) return false;
+    const isCompleted = status === "done" || status === "completed";
+    return new Date(date) < new Date() && !isCompleted;
+  };
+
+  const stats = useMemo(() => {
+    return {
+      done: activities.filter(a => a.status === "done" || a.status === "completed").length,
+      inProgress: activities.filter(a => a.status === "in-progress" || a.status === "in_progress").length,
+      pending: activities.filter(a => a.status === "pending").length
+    };
+  }, [activities]);
 
   const handleDelete = (activity) => {
     const confirmed = window.confirm(`¿Eliminar la actividad "${activity.name}"?`);
@@ -109,15 +168,31 @@ const GroupPage = () => {
   return (
     <div className="group-page">
       <div className="main-content">
+        <div className="group-page__breadcrumbs">
+          <span className="breadcrumb-item">{groupName || "Cargando..."}</span>
+          <FaChevronRight className="breadcrumb-separator" />
+          <span className="breadcrumb-item breadcrumb-item--active">
+            {selectedProject?.name || "Proyecto"}
+          </span>
+        </div>
+
         <div className="group-page__header">
-          <div>
+          <div className="header-main-info">
             <h1 className="group-page__title">
               {selectedProject?.name ?? "Selecciona un proyecto"}
             </h1>
             {selectedProject && (
-              <p className="group-page__subtitle">
-                {filteredActivities.length} actividades encontradas
-              </p>
+              <div className="project-stats">
+                <span className="stat-item stat-item--done" title="Completadas">
+                  <FaCheck /> {stats.done}
+                </span>
+                <span className="stat-item stat-item--progress" title="En progreso">
+                  <FaClock /> {stats.inProgress}
+                </span>
+                <span className="stat-item stat-item--pending" title="Pendientes">
+                  <FaThumbtack /> {stats.pending}
+                </span>
+              </div>
             )}
           </div>
           {selectedProject && (
@@ -153,11 +228,21 @@ const GroupPage = () => {
               <table className="activity-table">
                 <thead>
                   <tr>
-                    <th>Nombre</th>
-                    <th>Responsable</th>
-                    <th>Estado</th>
-                    <th>Inicio</th>
-                    <th>Fecha límite</th>
+                    <th onClick={() => requestSort("name")} className="sortable-th">
+                      Nombre {getSortIcon("name")}
+                    </th>
+                    <th onClick={() => requestSort("owner_name")} className="sortable-th">
+                      Responsable {getSortIcon("owner_name")}
+                    </th>
+                    <th onClick={() => requestSort("status")} className="sortable-th">
+                      Estado {getSortIcon("status")}
+                    </th>
+                    <th onClick={() => requestSort("start_date")} className="sortable-th">
+                      Inicio {getSortIcon("start_date")}
+                    </th>
+                    <th onClick={() => requestSort("deadline")} className="sortable-th">
+                      Fecha límite {getSortIcon("deadline")}
+                    </th>
                     <th></th>
                   </tr>
                 </thead>
@@ -181,7 +266,10 @@ const GroupPage = () => {
                           </span>
                         </td>
                         <td>{formatDate(a.start_date)}</td>
-                        <td>{formatDate(a.deadline)}</td>
+                        <td className={isOverdue(a.deadline, a.status) ? "date-overdue" : ""}>
+                          {isOverdue(a.deadline, a.status) && <FaCalendarAlt style={{ marginRight: "4px", fontSize: "0.8em" }} />}
+                          {formatDate(a.deadline)}
+                        </td>
                         <td className="activity-table__actions">
                           <div className="activity-menu">
                             <button

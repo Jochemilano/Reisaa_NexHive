@@ -41,3 +41,50 @@
 .activity-detail__row .activity-detail__value {
   margin-left: 0.25rem;
 }
+
+/* History Styles */
+.activity-detail__history {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.history-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.history-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.8rem;
+}
+
+.history-dot {
+  width: 6px;
+  height: 6px;
+  background-color: var(--primary);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.history-text {
+  flex: 1;
+  color: var(--text-primary);
+}
+
+.history-date {
+  color: var(--text-tertiary);
+  font-size: 0.75rem;
+}

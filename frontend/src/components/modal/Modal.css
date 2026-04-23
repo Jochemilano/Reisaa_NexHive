@@ -138,7 +138,7 @@
   font-size: 14px;
   outline: none;
   transition: all 0.2s ease;
-  margin-bottom: 1rem;
+  margin-bottom: 0.3rem;
 }
 
 .modal-body input:focus,

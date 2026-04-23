@@ -94,6 +94,15 @@ const SidebarItem = ({
         {badge > 0 && (
           <div className="sidebar-badge">{badge > 99 ? '99+' : badge}</div>
         )}
+        {onLongPress && (
+          <button 
+            className="sidebar-item-edit" 
+            onClick={(e) => { e.stopPropagation(); onLongPress(); }}
+            title="Editar"
+          >
+            <FaCog />
+          </button>
+        )}
       </div>
       {tooltip && (
         <div

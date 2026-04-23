@@ -36,6 +36,53 @@
   font-weight: 600;
 }
 
+/* Tabs */
+.media-tabs {
+  display: flex;
+  padding: 0 1.25rem;
+  border-bottom: 1px solid var(--border);
+  background-color: var(--bg-base);
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 0.75rem 0;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s;
+}
+
+.tab-btn.active {
+  color: var(--primary);
+}
+
+.tab-btn.active::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: var(--primary);
+}
+
+.tab-btn:hover:not(.active) {
+  color: var(--text-primary);
+  background-color: var(--bg-hover);
+}
+
+.media-content-area {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
 .close-btn {
   background: none;
   border: none;
@@ -183,4 +230,78 @@
   color: var(--text-tertiary);
   margin-bottom: 1rem;
   opacity: 0.5;
+}
+
+/* Docs List */
+.docs-list {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.doc-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0.75rem;
+  background-color: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.doc-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px var(--shadow);
+  border-color: var(--primary);
+}
+
+.doc-info {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.doc-icon {
+  font-size: 1.5rem;
+  color: var(--primary);
+}
+
+.doc-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.doc-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.doc-type {
+  font-size: 0.7rem;
+  color: var(--text-tertiary);
+}
+
+.goto-msg-btn-inline {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.goto-msg-btn-inline:hover {
+  background-color: var(--bg-hover);
+  color: var(--primary);
+  transform: scale(1.1);
 }
