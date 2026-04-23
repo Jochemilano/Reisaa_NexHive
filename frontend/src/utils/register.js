@@ -7,6 +7,19 @@ export async function register(name, email, password) {
       body: JSON.stringify({ name, email, password }),
     });
 
+    return data;
+  } catch (err) {
+    throw new Error(err.message || "Error de conexión con el servidor");
+  }
+}
+
+export async function verifyCode(email, code) {
+  try {
+    const data = await apiFetch("verify-code", {
+      method: "POST",
+      body: JSON.stringify({ email, code }),
+    });
+
     if (data.token) {
       localStorage.setItem("token", data.token);
       localStorage.setItem("userId", data.user.id);
@@ -14,6 +27,6 @@ export async function register(name, email, password) {
 
     return data;
   } catch (err) {
-    throw new Error(err.message || "Error de conexión con el servidor");
+    throw new Error(err.message || "Error al verificar el código");
   }
 }

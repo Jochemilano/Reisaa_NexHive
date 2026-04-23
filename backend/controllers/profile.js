@@ -7,7 +7,7 @@ const verifyToken = require("../middleware/verifyToken");
 router.get("/profile", verifyToken, async (req, res) => {
   try {
     const [results] = await db.query(
-      `SELECT id, name, email, rol, status, profile_pic FROM users WHERE id = ?`,
+      `SELECT id, name, email, rol, profile_pic FROM users WHERE id = ?`,
       [req.userId]
     );
     if (!results.length) return res.status(404).json({ error: "Usuario no encontrado" });
@@ -22,7 +22,7 @@ router.get("/profile", verifyToken, async (req, res) => {
 router.get("/users", async (req, res) => {
   try {
     const [results] = await db.query(
-      `SELECT id, name, profile_pic FROM users WHERE status = 1`
+      `SELECT id, name, profile_pic FROM users`
     );
     res.json(results);
   } catch (err) {

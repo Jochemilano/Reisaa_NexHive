@@ -139,7 +139,8 @@ const ImageEditorModal = ({ files, onSave, onClose, onAddMore }) => {
         originY: 'top',
         selectable: false,
         evented: false,
-        name: 'bg-img'
+        name: 'bg-img',
+        excludeFromExport: true
       });
 
       if (currentData.initialScale !== scale) {
@@ -159,7 +160,7 @@ const ImageEditorModal = ({ files, onSave, onClose, onAddMore }) => {
         // Use a copied array to safely remove elements!
         const objects = [...canvas.getObjects()];
         objects.forEach(obj => {
-          if (obj.name === 'bg-img' || (obj.type === 'image' && obj.selectable === false)) {
+          if (obj.name === 'bg-img') {
             canvas.remove(obj);
           }
         });
@@ -175,7 +176,7 @@ const ImageEditorModal = ({ files, onSave, onClose, onAddMore }) => {
     } catch (err) {
       console.error("Error setting up canvas:", err);
     } finally {
-      if (!token || !token.cancelled) {
+      if (currentImageIdRef.current === imgKey) {
         isCanvasLoading.current = false;
       }
     }
@@ -357,6 +358,13 @@ const ImageEditorModal = ({ files, onSave, onClose, onAddMore }) => {
   const saveCurrentState = useCallback(() => {
     if (!fabricCanvas.current || isCanvasLoading.current || isCanvasDirty.current) return;
     const json = fabricCanvas.current.toJSON(['name']);
+    
+    // LIMPIEZA EXTREMA: Garantizar que el fondo nunca se guarde en el JSON
+    if (json.objects) {
+      json.objects = json.objects.filter(obj => obj.name !== 'bg-img');
+    }
+    delete json.backgroundImage;
+
     setActiveFiles(prev => {
       const updated = [...prev];
       if (updated[currentIndex]) {
@@ -401,12 +409,13 @@ const ImageEditorModal = ({ files, onSave, onClose, onAddMore }) => {
           originX: 'left',
           originY: 'top',
           selectable: false,
-          name: 'bg-img'
+          name: 'bg-img',
+          excludeFromExport: true
         });
         
         const objects = [...tempCanvas.getObjects()];
         objects.forEach(o => { 
-          if (o.name === 'bg-img' || (o.type === 'image' && !o.selectable)) {
+          if (o.name === 'bg-img') {
             tempCanvas.remove(o); 
           }
         });

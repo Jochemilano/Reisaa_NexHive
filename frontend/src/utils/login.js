@@ -21,3 +21,25 @@ export async function login(email, password) {
     throw new Error(err.message || "Error de conexión con el servidor");
   }
 }
+
+export async function forgotPassword(email) {
+  try {
+    return await apiFetch("forgot-password", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    });
+  } catch (err) {
+    throw new Error(err.message || "Error al solicitar recuperación");
+  }
+}
+
+export async function resetPassword(email, code, newPassword) {
+  try {
+    return await apiFetch("reset-password", {
+      method: "POST",
+      body: JSON.stringify({ email, code, newPassword }),
+    });
+  } catch (err) {
+    throw new Error(err.message || "Error al restablecer contraseña");
+  }
+}
