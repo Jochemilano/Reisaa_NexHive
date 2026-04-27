@@ -55,6 +55,7 @@
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
   margin-top: 0.2rem;
+  animation: slideDown 0.3s ease;
 }
 
 .mode-card {
@@ -101,6 +102,7 @@
   flex-wrap: wrap;
   gap: 1rem;
   margin-top: 0.2rem;
+  animation: slideDown 0.3s ease;
 }
 
 .color-swatch {
@@ -128,7 +130,72 @@
 .color-swatch-check {
   color: #ffffff;
   font-size: 1rem;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.accordion-icon {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.preferences-accordion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  padding: 0.8rem 1rem;
+  background-color: var(--bg-soft);
+  border-radius: var(--radius-search);
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+  margin-bottom: 0.5rem;
+}
+
+.preferences-accordion-header:hover {
+  background-color: var(--bg-base);
+  border-color: var(--border);
+}
+
+.preferences-accordion-header:hover .preferences-icon,
+.preferences-accordion-header:hover .accordion-icon {
+  color: var(--primary);
+}
+
+/* Tipografía (Píldoras) */
+.font-pill-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.4rem;
+  animation: slideDown 0.3s ease;
+}
+
+.font-pill {
+  padding: 0.5rem 1rem;
+  border-radius: 2rem;
+  border: 1px solid var(--border);
+  background-color: var(--bg-soft);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.font-pill:hover {
+  background-color: var(--bg-hover);
+  border-color: var(--primary);
+}
+
+.font-pill.active {
+  background-color: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+  box-shadow: 0 2px 5px var(--shadow);
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* Checkbox de Notificaciones */

@@ -15,7 +15,8 @@ function App() {
         // Parsear preferencias de tema
         let themeMode = "light";
         let accentColor = "blue";
-        
+        let fontFamily = "system";
+
         if (prefs.theme) {
           if (prefs.theme.includes("-")) {
             const parts = prefs.theme.split("-");
@@ -30,21 +31,24 @@ function App() {
                 themeMode = (accent === "blue" || accent === "purple") ? "dark" : "light";
               }
             } else {
-              
               themeMode = parts[0];
               accentColor = parts[1];
+              if (parts[2]) {
+                fontFamily = parts[2];
+              }
             }
           } else if (prefs.theme === "light") {
-             themeMode = "light";
-             accentColor = "blue";
+            themeMode = "light";
+            accentColor = "blue";
           } else {
-             themeMode = "light";
-             accentColor = "blue";
+            themeMode = "light";
+            accentColor = "blue";
           }
         }
-        
+
         document.documentElement.setAttribute('data-theme', themeMode);
         document.documentElement.setAttribute('data-accent', accentColor);
+        document.documentElement.setAttribute('data-font', fontFamily);
         document.body.className = "";
       }
     };
