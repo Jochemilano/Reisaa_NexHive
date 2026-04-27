@@ -1,8 +1,14 @@
+/* ----------------- VARIABLES GLOBALES ----------------- */
 :root {
   --radius-circle: 50%;
   --radius-pill: 40rem;
   --radius-search: 8px;
+}
 
+/* ----------------- MODO DE APARIENCIA (FONDO Y TEXTO) ----------------- */
+
+/* Claro (Default) */
+:root, :root[data-theme="light"] {
   --bg-base: #ffffff;
   --bg-soft: #F4F7F9;
   --bg-elevated: #ffffff;
@@ -13,20 +19,12 @@
   --text-secondary: #5C6B7A;
   --text-tertiary: #9BAAB8;
 
-  --primary: #3B82F6;
-  --primary-hover: #2563EB;
-  --secondary: #60A5FA;
-  --secondary-hover: #3B82F6;
-
-  --success: #16A34A;
-  --error: #DC2626;
-
   --border: rgba(0, 0, 0, 0.1);
   --shadow: rgba(0, 0, 0, 0.2);
 }
 
-/* ----------------- OSCURO ----------------- */
-.theme-dark {
+/* Oscuro */
+:root[data-theme="dark"] {
   --bg-base: #141414;
   --bg-soft: #1A1A1A;
   --bg-elevated: #242424;
@@ -37,110 +35,268 @@
   --text-secondary: #A3A3A3;
   --text-tertiary: #525252;
 
-  --primary: #F59E0B;
-  --primary-hover: #D97706;
-  --secondary: #FBB740;
-  --secondary-hover: #F59E0B;
-
-  --success: #22C55E;
-  --error: #EF4444;
-
   --border: rgba(255, 255, 255, 0.07);
   --shadow: rgba(0, 0, 0, 0.7);
 }
 
-/* ----------------- AZUL ----------------- */
-.theme-blue {
-  --bg-base: #0F172A;
-  --bg-soft: #0B1120;
-  --bg-elevated: #1E293B;
-  --bg-hover: rgba(59, 130, 246, 0.08);
-  --bg-active: rgba(59, 130, 246, 0.15);
+/* ----------------- COLORES DE ACENTO (BOTONES, DETALLES) ----------------- */
 
-  --text-primary: #F8FAFC;
-  --text-secondary: #94A3B8;
-  --text-tertiary: #475569;
-
+/* Azul (Default) */
+:root, :root[data-accent="blue"] {
   --primary: #3B82F6;
   --primary-hover: #2563EB;
   --secondary: #60A5FA;
   --secondary-hover: #3B82F6;
-
-  --success: #22C55E;
-  --error: #EF4444;
-
-  --border: rgba(255, 255, 255, 0.07);
-  --shadow: rgba(0, 0, 0, 0.5);
+  --success: #16A34A;
+  --error: #DC2626;
 }
 
-/* ----------------- MORADO ----------------- */
-.theme-purple {
-  --bg-base: #18181B;
-  --bg-soft: #111113;
-  --bg-elevated: #27272A;
-  --bg-hover: rgba(167, 139, 250, 0.08);
-  --bg-active: rgba(167, 139, 250, 0.15);
+/* Ámbar / Naranja */
+:root[data-accent="amber"] {
+  --primary: #F59E0B;
+  --primary-hover: #D97706;
+  --secondary: #FBB740;
+  --secondary-hover: #F59E0B;
+  --success: #22C55E;
+  --error: #EF4444;
+}
 
-  --text-primary: #FAFAFA;
-  --text-secondary: #A1A1AA;
-  --text-tertiary: #52525B;
-
+/* Morado */
+:root[data-accent="purple"] {
   --primary: #8B5CF6;
   --primary-hover: #7C3AED;
   --secondary: #A78BFA;
   --secondary-hover: #8B5CF6;
-
   --success: #22C55E;
   --error: #EF4444;
-
-  --border: rgba(255, 255, 255, 0.07);
-  --shadow: rgba(0, 0, 0, 0.4);
 }
 
-/* ----------------- ROSA ----------------- */
-.theme-pink {
-  --bg-base: #FFFFFF;
-  --bg-soft: #FAFAFA;
-  --bg-elevated: #FFFFFF;
-  --bg-hover: rgba(214, 51, 132, 0.06);
-  --bg-active: rgba(214, 51, 132, 0.12);
-
-  --text-primary: #18181B;
-  --text-secondary: #71717A;
-  --text-tertiary: #A1A1AA;
-
+/* Rosa */
+:root[data-accent="pink"] {
   --primary: #DB2777;
   --primary-hover: #BE185D;
   --secondary: #F472B6;
   --secondary-hover: #DB2777;
-
   --success: #22C55E;
   --error: #F43F5E;
-
-  --border: rgba(0, 0, 0, 0.08);
-  --shadow: rgba(0, 0, 0, 0.15);
 }
 
-/* ----------------- GRIS ----------------- */
-.theme-gray {
-  --bg-base: #F9FAFB;
-  --bg-soft: #F3F4F6;
-  --bg-elevated: #FFFFFF;
-  --bg-hover: rgba(0, 0, 0, 0.05);
-  --bg-active: rgba(0, 0, 0, 0.09);
-
-  --text-primary: #111827;
-  --text-secondary: #6B7280;
-  --text-tertiary: #9CA3AF;
-
+/* Gris */
+:root[data-accent="gray"] {
   --primary: #4B5563;
   --primary-hover: #374151;
   --secondary: #9CA3AF;
   --secondary-hover: #6B7280;
-
   --success: #16A34A;
   --error: #DC2626;
+}
 
-  --border: rgba(0, 0, 0, 0.09);
-  --shadow: rgba(0, 0, 0, 0.15);
+/* Rojo */
+:root[data-accent="red"] {
+  --primary: #EF4444;
+  --primary-hover: #DC2626;
+  --secondary: #F87171;
+  --secondary-hover: #EF4444;
+  --success: #22C55E;
+  --error: #B91C1C;
+}
+
+/* Amarillo */
+:root[data-accent="yellow"] {
+  --primary: #EAB308;
+  --primary-hover: #CA8A04;
+  --secondary: #FDE047;
+  --secondary-hover: #EAB308;
+  --success: #22C55E;
+  --error: #EF4444;
+}
+
+/* Verde (Esmeralda) */
+:root[data-accent="green"] {
+  --primary: #10B981;
+  --primary-hover: #059669;
+  --secondary: #34D399;
+  --secondary-hover: #10B981;
+  --success: #059669;
+  --error: #EF4444;
+}
+
+/* Cyan / Turquesa */
+:root[data-accent="cyan"] {
+  --primary: #06B6D4;
+  --primary-hover: #0891B2;
+  --secondary: #22D3EE;
+  --secondary-hover: #06B6D4;
+  --success: #22C55E;
+  --error: #EF4444;
+}
+
+/* Índigo */
+:root[data-accent="indigo"] {
+  --primary: #6366F1;
+  --primary-hover: #4F46E5;
+  --secondary: #818CF8;
+  --secondary-hover: #6366F1;
+  --success: #22C55E;
+  --error: #EF4444;
+}
+
+/* Naranja */
+:root[data-accent="orange"] {
+  --primary: #F97316;
+  --primary-hover: #EA580C;
+  --secondary: #FB923C;
+  --secondary-hover: #F97316;
+  --success: #22C55E;
+  --error: #EF4444;
+}
+
+/* Lima */
+:root[data-accent="lime"] {
+  --primary: #84CC16;
+  --primary-hover: #65A30D;
+  --secondary: #A3E635;
+  --secondary-hover: #84CC16;
+  --success: #22C55E;
+  --error: #EF4444;
+}
+
+/* Teal */
+:root[data-accent="teal"] {
+  --primary: #14B8A6;
+  --primary-hover: #0D9488;
+  --secondary: #2DD4BF;
+  --secondary-hover: #14B8A6;
+  --success: #22C55E;
+  --error: #EF4444;
+}
+
+/* Celeste / Sky */
+:root[data-accent="sky"] {
+  --primary: #0EA5E9;
+  --primary-hover: #0284C7;
+  --secondary: #38BDF8;
+  --secondary-hover: #0EA5E9;
+  --success: #22C55E;
+  --error: #EF4444;
+}
+
+/* Fucsia */
+:root[data-accent="fuchsia"] {
+  --primary: #D946EF;
+  --primary-hover: #C026D3;
+  --secondary: #E879F9;
+  --secondary-hover: #D946EF;
+  --success: #22C55E;
+  --error: #EF4444;
+}
+
+/* Rosa Fuerte / Rose */
+:root[data-accent="rose"] {
+  --primary: #F43F5E;
+  --primary-hover: #E11D48;
+  --secondary: #FB7185;
+  --secondary-hover: #F43F5E;
+  --success: #22C55E;
+  --error: #EF4444;
+}
+
+/* Pizarra / Slate */
+:root[data-accent="slate"] {
+  --primary: #64748B;
+  --primary-hover: #475569;
+  --secondary: #94A3B8;
+  --secondary-hover: #64748B;
+  --success: #22C55E;
+  --error: #EF4444;
+}
+
+/* Zinc */
+:root[data-accent="zinc"] {
+  --primary: #52525B;
+  --primary-hover: #3F3F46;
+  --secondary: #A1A1AA;
+  --secondary-hover: #52525B;
+  --success: #22C55E;
+  --error: #EF4444;
+}
+
+/* Neutro / Neutral */
+:root[data-accent="neutral"] {
+  --primary: #525252;
+  --primary-hover: #404040;
+  --secondary: #A3A3A3;
+  --secondary-hover: #525252;
+  --success: #22C55E;
+  --error: #EF4444;
+}
+
+/* Piedra / Stone */
+:root[data-accent="stone"] {
+  --primary: #57534E;
+  --primary-hover: #44403C;
+  --secondary: #A8A29E;
+  --secondary-hover: #57534E;
+  --success: #22C55E;
+  --error: #EF4444;
+}
+
+/* Coral */
+:root[data-accent="coral"] {
+  --primary: #FF7F50;
+  --primary-hover: #FF6347;
+  --secondary: #FFA07A;
+  --secondary-hover: #FF7F50;
+  --success: #22C55E;
+  --error: #EF4444;
+}
+
+/* Menta / Mint */
+:root[data-accent="mint"] {
+  --primary: #20C997;
+  --primary-hover: #1AA179;
+  --secondary: #63DFB9;
+  --secondary-hover: #20C997;
+  --success: #22C55E;
+  --error: #EF4444;
+}
+
+/* Oro / Gold */
+:root[data-accent="gold"] {
+  --primary: #FFC107;
+  --primary-hover: #E0A800;
+  --secondary: #FFD54F;
+  --secondary-hover: #FFC107;
+  --success: #22C55E;
+  --error: #EF4444;
+}
+
+/* Salmón / Salmon */
+:root[data-accent="salmon"] {
+  --primary: #FA8072;
+  --primary-hover: #E9967A;
+  --secondary: #FFA07A;
+  --secondary-hover: #FA8072;
+  --success: #22C55E;
+  --error: #EF4444;
+}
+
+/* Azul Real / Royal Blue */
+:root[data-accent="royalblue"] {
+  --primary: #4169E1;
+  --primary-hover: #3152B3;
+  --secondary: #6B8EFE;
+  --secondary-hover: #4169E1;
+  --success: #22C55E;
+  --error: #EF4444;
+}
+
+/* Orquídea / Orchid */
+:root[data-accent="orchid"] {
+  --primary: #DA70D6;
+  --primary-hover: #C044BA;
+  --secondary: #EEAEEA;
+  --secondary-hover: #DA70D6;
+  --success: #22C55E;
+  --error: #EF4444;
 }

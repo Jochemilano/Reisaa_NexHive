@@ -125,13 +125,11 @@ const EditActivityModal = ({ isOpen, onClose, activityId, onUpdated, onDeleted }
               label="Nombre de la actividad"
               value={activityData.name}
               onChange={e => handleChange("name", e.target.value)}
-              disabled={!isOwner}
             />
             <Textarea
               label="Descripción"
               value={activityData.description}
               onChange={e => handleChange("description", e.target.value)}
-              disabled={!isOwner}
             />
             <Select
               label="Estado"
@@ -142,39 +140,33 @@ const EditActivityModal = ({ isOpen, onClose, activityId, onUpdated, onDeleted }
                 { value: "in_progress", label: "In Progress" },
                 { value: "done", label: "Done" },
               ]}
-              disabled={!isOwner}
             />
             <Input
               label="Fecha de inicio"
               type="datetime-local"
               value={activityData.start_date}
               onChange={e => handleChange("start_date", e.target.value)}
-              disabled={!isOwner}
             />
             <Input
               label="Fecha de entrega"
               type="datetime-local"
               value={activityData.deadline}
               onChange={e => handleChange("deadline", e.target.value)}
-              disabled={!isOwner}
             />
             <CollaboratorPicker
               availableUsers={availableUsers}
               selectedCollaborators={selectedCollaborators}
               onSelect={selectCollaborator}
               onRemove={removeCollaborator}
-              disabled={!isOwner}
             />
           </>
         )}
       </Modal.Body>
       <Modal.Footer onClose={onClose}>
-        {isOwner && (
-          <button className="calendar-delete-btn" onClick={handleDelete}>
-            Eliminar
-          </button>
-        )}
-        <Modal.AcceptButton onClick={handleSave} disabled={!isOwner}>
+        <button className="calendar-delete-btn" onClick={handleDelete}>
+          Eliminar
+        </button>
+        <Modal.AcceptButton onClick={handleSave}>
           Guardar cambios
         </Modal.AcceptButton>
       </Modal.Footer>

@@ -157,12 +157,19 @@ router.patch("/projects/:projectId", verifyToken, async (req, res) => {
   const userId = req.userId;
 
   try {
-    const project = await query(
-      "SELECT * FROM projects WHERE id=? AND owner_id=?",
-      [projectId, userId]
+    const projectRows = await query(
+      "SELECT * FROM projects WHERE id=?",
+      [projectId]
     );
-    if (project.length === 0)
-      return res.status(403).json({ message: "No eres owner del proyecto" });
+    if (projectRows.length === 0)
+      return res.status(404).json({ message: "Proyecto no encontrado" });
+
+    const [user] = await query("SELECT rol FROM users WHERE id=?", [userId]);
+    const isAdmin = user?.rol === 'admin';
+    const isOwner = projectRows[0].owner_id === userId;
+
+    if (!isOwner && !isAdmin)
+      return res.status(403).json({ message: "No tienes permisos (No eres owner ni admin)" });
 
     await query(
       `UPDATE projects
@@ -235,12 +242,19 @@ router.delete("/projects/:projectId", verifyToken, async (req, res) => {
   const userId = req.userId;
 
   try {
-    const project = await query(
-      "SELECT * FROM projects WHERE id=? AND owner_id=?",
-      [projectId, userId]
+    const projectRows = await query(
+      "SELECT * FROM projects WHERE id=?",
+      [projectId]
     );
-    if (project.length === 0)
-      return res.status(403).json({ message: "No eres owner del proyecto" });
+    if (projectRows.length === 0)
+      return res.status(404).json({ message: "Proyecto no encontrado" });
+
+    const [user] = await query("SELECT rol FROM users WHERE id=?", [userId]);
+    const isAdmin = user?.rol === 'admin';
+    const isOwner = projectRows[0].owner_id === userId;
+
+    if (!isOwner && !isAdmin)
+      return res.status(403).json({ message: "No tienes permisos (No eres owner ni admin)" });
 
     await query("DELETE FROM users_projects WHERE project_id=?", [projectId]);
     

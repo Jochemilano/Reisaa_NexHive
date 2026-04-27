@@ -206,17 +206,20 @@ const Sidebar = () => {
           </Modal.Button>
         </SidebarItem>
 
-        {groups.map(group => (
-          <SidebarItem
-            key={group.id}
-            label={group.name[0].toUpperCase()}
-            avatar={getAvatarUrl(group.avatar)}
-            tooltip={group.name}
-            isActive={location.pathname === `/groups/${group.id}`}
-            onClick={() => navigate(`/groups/${group.id}`)}
-            onLongPress={() => setEditingGroup(group)}
-          />
-        ))}
+        {groups.map(group => {
+          const canEdit = perfil?.rol === 'admin' || perfil?.id === group.owner_id;
+          return (
+            <SidebarItem
+              key={group.id}
+              label={group.name[0].toUpperCase()}
+              avatar={getAvatarUrl(group.avatar)}
+              tooltip={group.name}
+              isActive={location.pathname === `/groups/${group.id}`}
+              onClick={() => navigate(`/groups/${group.id}`)}
+              onLongPress={canEdit ? () => setEditingGroup(group) : null}
+            />
+          );
+        })}
       </div>
 
       <div className="sidebar-footer">

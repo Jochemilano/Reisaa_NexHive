@@ -12,9 +12,40 @@ function App() {
       if (prefs) {
         setUserPreferences(prefs);
 
-        // Aplicar tema globalmente
-        const themeClass = prefs.theme === "light" ? "" : prefs.theme;
-        document.body.className = themeClass;
+        // Parsear preferencias de tema
+        let themeMode = "light";
+        let accentColor = "blue";
+        
+        if (prefs.theme) {
+          if (prefs.theme.includes("-")) {
+            const parts = prefs.theme.split("-");
+            if (parts[0] === "theme") {
+              // Formato heredado: "theme-dark", "theme-blue"
+              const accent = parts[1];
+              if (accent === "dark") {
+                themeMode = "dark";
+                accentColor = "amber";
+              } else {
+                accentColor = accent;
+                themeMode = (accent === "blue" || accent === "purple") ? "dark" : "light";
+              }
+            } else {
+              
+              themeMode = parts[0];
+              accentColor = parts[1];
+            }
+          } else if (prefs.theme === "light") {
+             themeMode = "light";
+             accentColor = "blue";
+          } else {
+             themeMode = "light";
+             accentColor = "blue";
+          }
+        }
+        
+        document.documentElement.setAttribute('data-theme', themeMode);
+        document.documentElement.setAttribute('data-accent', accentColor);
+        document.body.className = "";
       }
     };
 

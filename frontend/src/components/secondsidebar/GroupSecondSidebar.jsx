@@ -8,6 +8,7 @@ import { FaHashtag, FaVolumeUp, FaEdit } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useGroup } from "@/context/GroupContext";
 import { useCalendar } from "@/context/CalendarContext";
+import { getProfile } from "@/utils/profile";
 
 const GroupSecondSidebar = ({ groupId }) => {
   const [details, setDetails] = useState({ channels: [], members: [] });
@@ -21,6 +22,8 @@ const GroupSecondSidebar = ({ groupId }) => {
   const myId = Number(localStorage.getItem("userId"));
   const filteredAvailableUsers = availableUsers.filter(u => u.id !== myId);
 
+  const [userRole, setUserRole] = useState(null);
+
   const loadDetails = async () => {
     if (!groupId) return;
     try {
@@ -31,6 +34,12 @@ const GroupSecondSidebar = ({ groupId }) => {
       setDetails({ channels: [], members: [] });
     }
   };
+
+  useEffect(() => {
+    getProfile()
+      .then(p => setUserRole(p.rol))
+      .catch(console.error);
+  }, []);
 
   const loadProjects = async () => {
     if (!groupId) return;
@@ -69,12 +78,15 @@ const GroupSecondSidebar = ({ groupId }) => {
   const longPressTriggered = useRef(false);
 
   const startPress = useCallback((project) => {
+    const canEdit = userRole === 'admin' || myId === project.owner_id;
+    if (!canEdit) return;
+
     longPressTriggered.current = false;
     longPressTimer.current = setTimeout(() => {
       longPressTriggered.current = true;
       setEditingProject(project);
     }, 500);
-  }, []);
+  }, [userRole, myId]);
 
   const cancelPress = useCallback(() => {
     clearTimeout(longPressTimer.current);
@@ -120,27 +132,32 @@ const GroupSecondSidebar = ({ groupId }) => {
           {projects.length === 0 && (
             <span className="empty-activities">Sin proyectos</span>
           )}
-          {projects.map((p) => (
-            <div
-              key={`project-${p.id}`}
-              className={`user-item ${selectedProjectId === p.id ? "project-item--active" : ""}`}
-              onMouseDown={() => startPress(p)}
-              onMouseUp={cancelPress}
-              onMouseLeave={cancelPress}
-              onTouchStart={() => startPress(p)}
-              onTouchEnd={cancelPress}
-              onClick={() => handleProjectClick(p)}
-            >
-              <span>{p.name}</span>
-              <button 
-                className="project-edit-btn"
-                onClick={(e) => { e.stopPropagation(); setEditingProject(p); }}
-                title="Editar proyecto"
+          {projects.map((p) => {
+            const canEdit = userRole === 'admin' || myId === p.owner_id;
+            return (
+              <div
+                key={`project-${p.id}`}
+                className={`user-item ${selectedProjectId === p.id ? "project-item--active" : ""}`}
+                onMouseDown={() => startPress(p)}
+                onMouseUp={cancelPress}
+                onMouseLeave={cancelPress}
+                onTouchStart={() => startPress(p)}
+                onTouchEnd={cancelPress}
+                onClick={() => handleProjectClick(p)}
               >
-                <FaEdit />
-              </button>
-            </div>
-          ))}
+                <span>{p.name}</span>
+                {canEdit && (
+                  <button 
+                    className="project-edit-btn"
+                    onClick={(e) => { e.stopPropagation(); setEditingProject(p); }}
+                    title="Editar proyecto"
+                  >
+                    <FaEdit />
+                  </button>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
 

@@ -157,12 +157,6 @@ const GroupPage = () => {
   }, [activities]);
 
   const handleDelete = async (activity) => {
-    const userId = Number(localStorage.getItem("userId"));
-    if (activity.owner_id !== userId) {
-      alert("Solo el propietario puede eliminar esta actividad.");
-      return;
-    }
-
     const confirmed = window.confirm(`¿Eliminar la actividad "${activity.name}"? Esta acción no se puede deshacer.`);
     if (confirmed) {
       try {

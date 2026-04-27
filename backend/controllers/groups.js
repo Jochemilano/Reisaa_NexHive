@@ -174,12 +174,19 @@ router.patch("/groups/:groupId", verifyToken, async (req, res) => {
   const userId = req.userId;
 
   try {
-    const group = await query(
-      "SELECT * FROM groups WHERE id=? AND owner_id=?",
-      [groupId, userId]
+    const groupRows = await query(
+      "SELECT * FROM groups WHERE id=?",
+      [groupId]
     );
-    if (group.length === 0)
-      return res.status(403).json({ message: "No eres owner del grupo" });
+    if (groupRows.length === 0)
+      return res.status(404).json({ message: "Grupo no encontrado" });
+    
+    const [user] = await query("SELECT rol FROM users WHERE id=?", [userId]);
+    const isAdmin = user?.rol === 'admin';
+    const isOwner = groupRows[0].owner_id === userId;
+
+    if (!isOwner && !isAdmin)
+      return res.status(403).json({ message: "No tienes permisos (No eres owner ni admin)" });
 
     await query(
       `UPDATE groups 
@@ -270,12 +277,19 @@ router.delete("/groups/:groupId", verifyToken, async (req, res) => {
   const userId = req.userId;
 
   try {
-    const group = await query(
-      "SELECT * FROM groups WHERE id=? AND owner_id=?",
-      [groupId, userId]
+    const groupRows = await query(
+      "SELECT * FROM groups WHERE id=?",
+      [groupId]
     );
-    if (group.length === 0)
-      return res.status(403).json({ message: "No eres owner del grupo" });
+    if (groupRows.length === 0)
+      return res.status(404).json({ message: "Grupo no encontrado" });
+
+    const [user] = await query("SELECT rol FROM users WHERE id=?", [userId]);
+    const isAdmin = user?.rol === 'admin';
+    const isOwner = groupRows[0].owner_id === userId;
+
+    if (!isOwner && !isAdmin)
+      return res.status(403).json({ message: "No tienes permisos (No eres owner ni admin)" });
 
     // Traer canales para limpiar rooms y participantes
     const channels = await query("SELECT chat_room_id, voice_room_id FROM channels WHERE group_id=?", [groupId]);

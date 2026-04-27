@@ -212,9 +212,6 @@ router.put("/activities/:id", verifyToken, async (req, res) => {
     if (!activity)
       return res.status(404).json({ message: "Actividad no encontrada" });
 
-    if (activity.owner_id !== userId)
-      return res.status(403).json({ message: "No eres owner de esta actividad" });
-
     await db.query(
       `UPDATE activities SET name=?, description=?, status=?, start_date=?, deadline=? WHERE id=?`,
       [name, description || "", status || "pending",
@@ -302,11 +299,11 @@ router.delete("/activities/:id", verifyToken, async (req, res) => {
 
   try {
     const [rows] = await db.query(
-      "SELECT * FROM activities WHERE id=? AND owner_id=?",
-      [activityId, userId]
+      "SELECT * FROM activities WHERE id=?",
+      [activityId]
     );
     if (rows.length === 0)
-      return res.status(403).json({ message: "No eres owner de esta actividad" });
+      return res.status(404).json({ message: "Actividad no encontrada" });
 
     // 1. Obtener IDs de eventos vinculados
     const [events] = await db.query(
