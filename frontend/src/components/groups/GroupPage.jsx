@@ -9,6 +9,7 @@ import { BsThreeDots } from "react-icons/bs";
 import { useGroup } from "@/context/GroupContext";
 import { FaEye, FaEdit, FaTrash, FaSort, FaSortUp, FaSortDown, FaCalendarAlt, FaCheck, FaClock, FaThumbtack, FaChevronRight } from "react-icons/fa";
 import { apiFetch } from "@/utils/apiClient";
+import { deleteActivity } from "@/utils/activities";
 import "./GroupPage.css";
 
 const STATUS_LABELS = {
@@ -153,10 +154,23 @@ const GroupPage = () => {
     };
   }, [activities]);
 
-  const handleDelete = (activity) => {
-    const confirmed = window.confirm(`¿Eliminar la actividad "${activity.name}"?`);
+  const handleDelete = async (activity) => {
+    const userId = Number(localStorage.getItem("userId"));
+    if (activity.owner_id !== userId) {
+      alert("Solo el propietario puede eliminar esta actividad.");
+      return;
+    }
+
+    const confirmed = window.confirm(`¿Eliminar la actividad "${activity.name}"? Esta acción no se puede deshacer.`);
     if (confirmed) {
-      console.log("Eliminar actividad:", activity.id);
+      try {
+        await deleteActivity(activity.id);
+        loadProjectDetails();
+        setOpenMenuId(null);
+      } catch (err) {
+        console.error("Error al eliminar actividad:", err);
+        alert("No se pudo eliminar la actividad");
+      }
     }
   };
 

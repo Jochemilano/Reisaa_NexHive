@@ -30,3 +30,9 @@ export const updateProject = (projectId, name, description, start_date, deadline
 
   export const fetchProjectDetails = (projectId) =>
   apiFetch(`projects/${projectId}`);
+
+// Eliminar proyecto
+export const deleteProject = (projectId) =>
+  apiFetch(`projects/${projectId}`, {
+    method: "DELETE",
+  });

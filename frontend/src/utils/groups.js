@@ -60,3 +60,8 @@ export const fetchGroupUsers = (groupId) => apiFetch(`groups/${groupId}/users`);
 
 export const fetchAllUsers = () => apiFetch("allusers");
 
+// Eliminar grupo
+export const deleteGroup = (groupId) =>
+  apiFetch(`groups/${groupId}`, {
+    method: "DELETE",
+  });

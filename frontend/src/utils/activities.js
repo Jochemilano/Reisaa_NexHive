@@ -26,3 +26,9 @@ export const getActivities = (projectId) =>
 //traer usuarios de actividades
 export const fetchActivityUsers = (activityId) =>
   apiFetch(`activities/${activityId}/users`);
+
+// Eliminar actividad
+export const deleteActivity = (activityId) =>
+  apiFetch(`activities/${activityId}`, {
+    method: "DELETE",
+  });

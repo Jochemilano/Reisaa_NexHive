@@ -3,7 +3,7 @@ import Modal from "@/components/modal/Modal";
 import Input from "@/components/input/Input";
 import AvatarInput from "./AvatarInput";
 import CollaboratorPicker from "@/components/input/CollaboratorPicker";
-import { updateGroup, fetchAllUsers, fetchGroupUsers } from "@/utils/groups";
+import { updateGroup, fetchAllUsers, fetchGroupUsers, deleteGroup } from "@/utils/groups";
 import { getAvatarUrl } from "@/utils/media";
 
 const EditGroupModal = ({
@@ -68,6 +68,21 @@ const EditGroupModal = ({
     }
   };
 
+  const isOwner = group?.owner_id === Number(localStorage.getItem("userId"));
+
+  const handleDelete = async () => {
+    if (window.confirm(`¿Estás seguro de que deseas eliminar el grupo "${group.name}"? Esta acción no se puede deshacer.`)) {
+      try {
+        await deleteGroup(group.id);
+        handleClose();
+        window.location.reload(); 
+      } catch (err) {
+        console.error("Error eliminando grupo:", err);
+        alert("No se pudo eliminar el grupo");
+      }
+    }
+  };
+
   return (
     <Modal isOpen={isOpen} onClose={handleClose}>
       <Modal.Header onClose={handleClose}>Editar grupo</Modal.Header>
@@ -91,6 +106,11 @@ const EditGroupModal = ({
         />
       </Modal.Body>
       <Modal.Footer onClose={handleClose}>
+        {isOwner && (
+          <button className="modal-danger" onClick={handleDelete}>
+            Eliminar grupo
+          </button>
+        )}
         <Modal.AcceptButton onClick={handleSave}>
           Guardar cambios
         </Modal.AcceptButton>

@@ -264,4 +264,38 @@ router.patch("/groups/:groupId/transfer", verifyToken, async (req, res) => {
   }
 });
 
+// Eliminar grupo — solo owner
+router.delete("/groups/:groupId", verifyToken, async (req, res) => {
+  const { groupId } = req.params;
+  const userId = req.userId;
+
+  try {
+    const group = await query(
+      "SELECT * FROM groups WHERE id=? AND owner_id=?",
+      [groupId, userId]
+    );
+    if (group.length === 0)
+      return res.status(403).json({ message: "No eres owner del grupo" });
+
+    // Traer canales para limpiar rooms y participantes
+    const channels = await query("SELECT chat_room_id, voice_room_id FROM channels WHERE group_id=?", [groupId]);
+    
+    for (const channel of channels) {
+      await query("DELETE FROM room_participants WHERE room_id IN (?, ?)", [channel.chat_room_id, channel.voice_room_id]);
+      await query("DELETE FROM rooms WHERE id IN (?, ?)", [channel.chat_room_id, channel.voice_room_id]);
+    }
+
+    await query("DELETE FROM channels WHERE group_id=?", [groupId]);
+    await query("DELETE FROM user_groups WHERE group_id=?", [groupId]);
+    
+    // Eliminar el grupo
+    await query("DELETE FROM groups WHERE id=?", [groupId]);
+
+    res.json({ message: "Grupo eliminado correctamente" });
+  } catch (err) {
+    console.error("ERROR DB DELETE GROUP:", err);
+    res.status(500).json({ message: "Error al eliminar grupo" });
+  }
+});
+
 module.exports = router;

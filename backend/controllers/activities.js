@@ -295,4 +295,45 @@ router.patch("/activities/:id/transfer", verifyToken, async (req, res) => {
   }
 });
 
+// Eliminar actividad — solo owner
+router.delete("/activities/:id", verifyToken, async (req, res) => {
+  const activityId = req.params.id;
+  const userId = req.userId;
+
+  try {
+    const [rows] = await db.query(
+      "SELECT * FROM activities WHERE id=? AND owner_id=?",
+      [activityId, userId]
+    );
+    if (rows.length === 0)
+      return res.status(403).json({ message: "No eres owner de esta actividad" });
+
+    // 1. Obtener IDs de eventos vinculados
+    const [events] = await db.query(
+      "SELECT event_id FROM calendar_event_activities WHERE activity_id = ?",
+      [activityId]
+    );
+
+    // 2. Limpiar tabla pivot
+    await db.query("DELETE FROM calendar_event_activities WHERE activity_id=?", [activityId]);
+
+    // 3. Limpiar eventos de calendario
+    if (events.length > 0) {
+      const eventIds = events.map(e => e.event_id);
+      await db.query("DELETE FROM calendar_events WHERE id IN (?)", [eventIds]);
+    }
+    
+    // 4. Limpiar usuarios
+    await db.query("DELETE FROM user_activities WHERE activity_id=?", [activityId]);
+
+    // 5. Eliminar actividad
+    await db.query("DELETE FROM activities WHERE id=?", [activityId]);
+
+    res.json({ message: "Actividad eliminada correctamente" });
+  } catch (err) {
+    console.error("ERROR DB DELETE ACTIVITY:", err);
+    res.status(500).json({ message: "Error al eliminar actividad", error: err.message });
+  }
+});
+
 module.exports = router;

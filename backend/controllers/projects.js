@@ -229,4 +229,29 @@ router.patch("/projects/:projectId/transfer", verifyToken, async (req, res) => {
   }
 });
 
+// Eliminar proyecto — solo owner
+router.delete("/projects/:projectId", verifyToken, async (req, res) => {
+  const { projectId } = req.params;
+  const userId = req.userId;
+
+  try {
+    const project = await query(
+      "SELECT * FROM projects WHERE id=? AND owner_id=?",
+      [projectId, userId]
+    );
+    if (project.length === 0)
+      return res.status(403).json({ message: "No eres owner del proyecto" });
+
+    await query("DELETE FROM users_projects WHERE project_id=?", [projectId]);
+    
+    // Eliminar el proyecto
+    await query("DELETE FROM projects WHERE id=?", [projectId]);
+
+    res.json({ message: "Proyecto eliminado correctamente" });
+  } catch (err) {
+    console.error("ERROR DB DELETE PROJECT:", err);
+    res.status(500).json({ message: "Error al eliminar proyecto" });
+  }
+});
+
 module.exports = router;

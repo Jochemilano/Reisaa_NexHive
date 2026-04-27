@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import Modal from "@/components/modal/Modal";
 import { Input, Textarea } from "@/components/input/Input";
 import CollaboratorPicker from "@/components/input/CollaboratorPicker";
-import { updateProject, fetchProjectUsers } from "@/utils/projects";
+import { updateProject, fetchProjectUsers, deleteProject } from "@/utils/projects";
 import { fetchGroupUsers } from "@/utils/groups";
 
 const EditProjectModal = ({ isOpen, onClose, project, groupId, onUpdated }) => {
@@ -63,6 +63,21 @@ const EditProjectModal = ({ isOpen, onClose, project, groupId, onUpdated }) => {
       console.error("Error actualizando proyecto:", err);
     }
   };
+  
+  const isOwner = project?.owner_id === Number(localStorage.getItem("userId"));
+
+  const handleDelete = async () => {
+    if (window.confirm(`¿Estás seguro de que deseas eliminar el proyecto "${project.name}"? Esta acción no se puede deshacer.`)) {
+      try {
+        await deleteProject(project.id);
+        onUpdated(); // Refresh parent
+        onClose();
+      } catch (err) {
+        console.error("Error eliminando proyecto:", err);
+        alert("No se pudo eliminar el proyecto");
+      }
+    }
+  };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
@@ -84,6 +99,11 @@ const EditProjectModal = ({ isOpen, onClose, project, groupId, onUpdated }) => {
         />
       </Modal.Body>
       <Modal.Footer onClose={onClose}>
+        {isOwner && (
+          <button className="modal-danger" onClick={handleDelete}>
+            Eliminar proyecto
+          </button>
+        )}
         <Modal.AcceptButton onClick={handleSave}>Guardar cambios</Modal.AcceptButton>
       </Modal.Footer>
     </Modal>
