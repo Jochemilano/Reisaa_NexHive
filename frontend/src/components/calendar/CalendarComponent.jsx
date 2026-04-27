@@ -1,6 +1,7 @@
 // src/components/CalendarComponent.jsx
 import "./CalendarComponent.css";
-import React, { useState } from 'react'; // ✅ Importar useState
+import React, { useState } from 'react';
+import { useCalendar } from '@/context/CalendarContext';
 import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
 import { format, parse, getDay } from 'date-fns';
 import { startOfWeek as dateFnsStartOfWeek } from 'date-fns';
@@ -34,9 +35,8 @@ const messages = {
 };
 
 const CalendarComponent = ({ events, onSelectSlot, onSelectEvent, eventPropGetter }) => {
-  // ✅ Estados para controlar vista y fecha
+  const { currentDate, setCurrentDate } = useCalendar();
   const [view, setView] = useState('month');
-  const [date, setDate] = useState(new Date());
 
   return (
     <div className='calendar-container'>
@@ -52,8 +52,8 @@ const CalendarComponent = ({ events, onSelectSlot, onSelectEvent, eventPropGette
         messages={messages}
         view={view}
         onView={setView}
-        date={date}
-        onNavigate={setDate}
+        date={currentDate}
+        onNavigate={setCurrentDate}
         style={{ height: '80vh' }}
       />
     </div>

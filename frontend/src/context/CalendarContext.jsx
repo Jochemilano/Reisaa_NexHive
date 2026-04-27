@@ -17,6 +17,10 @@ export const CalendarProvider = ({ children }) => {
     showActivities: true,
     selectedProjects: [], 
   });
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [initialDate, setInitialDate] = useState(null);
+  const [highlightedEventId, setHighlightedEventId] = useState(null);
 
   const currentUserId = parseInt(localStorage.getItem('userId')) || null;
 
@@ -70,7 +74,15 @@ export const CalendarProvider = ({ children }) => {
     setFilters,
     refreshEvents,
     projects,
-    currentUserId
+    currentUserId,
+    currentDate,
+    setCurrentDate,
+    isCreateOpen,
+    setIsCreateOpen,
+    initialDate,
+    setInitialDate,
+    highlightedEventId,
+    setHighlightedEventId
   };
 
   return (

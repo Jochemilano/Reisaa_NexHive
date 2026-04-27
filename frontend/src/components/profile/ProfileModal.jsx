@@ -6,7 +6,10 @@ import { CONFIG } from "@/utils/config";
 import "./ProfileModal.css";
 import { getAvatarUrl } from "@/utils/media";
 
-const ROL_LABEL = { 1: "Owner", 2: "Admin", 3: "IT", 4: "Técnico" };
+const ROL_LABEL = {
+  admin: "Admin",
+  user: "Usuario",
+};
 
 const ProfileModal = ({ isOpen, onClose, perfil, onPicUpdated, onLogout }) => {
   const fileRef = useRef(null);
@@ -62,7 +65,9 @@ const ProfileModal = ({ isOpen, onClose, perfil, onPicUpdated, onLogout }) => {
         <div className="user-details">
             <h2 className="name">{perfil?.name}</h2>
             <p className="email">{perfil?.email}</p>
-            <span className="role-badge">{ROL_LABEL[perfil?.rol] ?? "Invitado"}</span>
+            <span className="role-badge">
+              {perfil?.rol ? (ROL_LABEL[perfil.rol.toLowerCase()] || perfil.rol) : "Invitado"}
+            </span>
           </div>
 
           <div className="divider" />

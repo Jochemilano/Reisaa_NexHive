@@ -48,6 +48,7 @@ El proyecto sigue una arquitectura de **Cliente-Servidor (MERN Stack simplificad
 | **React Big Calendar** | Visualización y gestión de calendarios. |
 | **Date-fns** | Manipulación y formateo de fechas. |
 | **React Icons** | Librería de iconos vectoriales. |
+| **React Calendar** | Mini calendario para navegación rápida. |
 | **Fabric.js** | Manipulación de canvas interactivos. |
 | **Craco** | Configuración personalizada de Create React App. |
 

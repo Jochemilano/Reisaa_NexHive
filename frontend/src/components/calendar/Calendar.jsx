@@ -8,13 +8,20 @@ import { useCalendar } from '@/context/CalendarContext';
 import '@/styles.css';
 
 const Calendar = () => {
-  const { filteredEvents, refreshEvents, currentUserId } = useCalendar();
+  const { 
+    filteredEvents, 
+    refreshEvents, 
+    currentUserId,
+    isCreateOpen,
+    setIsCreateOpen,
+    initialDate,
+    setInitialDate,
+    highlightedEventId
+  } = useCalendar();
   const [selectedPersonalEvent, setSelectedPersonalEvent] = useState(null);
   const [isPersonalModalOpen, setIsPersonalModalOpen] = useState(false);
   const [isEditActivityOpen, setIsEditActivityOpen] = useState(false);
   const [editingActivityId, setEditingActivityId] = useState(null);
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [initialDate, setInitialDate] = useState(null);
 
   //Guardar evento nuevo
   const handleSaveEvent = async (newEvent) => {
@@ -77,9 +84,11 @@ const Calendar = () => {
     <div>
       <CalendarComponent
         events={filteredEvents}
-        eventPropGetter={(event) => ({
-          style: getEventStyle(event)
-        })}
+        eventPropGetter={(event) => {
+          const style = getEventStyle(event);
+          const className = event.id === highlightedEventId ? 'highlight-event' : '';
+          return { style, className };
+        }}
         onSelectSlot={(slotInfo) => {
           setInitialDate(slotInfo.start);
           setIsCreateOpen(true);
