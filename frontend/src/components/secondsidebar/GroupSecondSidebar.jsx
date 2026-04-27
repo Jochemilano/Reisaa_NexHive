@@ -7,6 +7,7 @@ import EditProjectModal from "@/components/groups/EditProjectModal";
 import { FaHashtag, FaVolumeUp, FaEdit } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useGroup } from "@/context/GroupContext";
+import { useCalendar } from "@/context/CalendarContext";
 
 const GroupSecondSidebar = ({ groupId }) => {
   const [details, setDetails] = useState({ channels: [], members: [] });
@@ -14,6 +15,7 @@ const GroupSecondSidebar = ({ groupId }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [editingProject, setEditingProject] = useState(null);
   const { selectedProjectId, setSelectedProjectId } = useGroup();
+  const { refreshEvents } = useCalendar();
   const navigate = useNavigate();
   const [availableUsers, setAvailableUsers] = useState([]);
   const myId = Number(localStorage.getItem("userId"));
@@ -150,6 +152,7 @@ const GroupSecondSidebar = ({ groupId }) => {
         onCreated={(newProject) => {
           setProjects(prev => [...prev, newProject]);
           setSelectedProjectId(newProject.id);
+          refreshEvents();
           setIsOpen(false);
         }}
       />
@@ -161,6 +164,7 @@ const GroupSecondSidebar = ({ groupId }) => {
         groupId={groupId}
         onUpdated={() => {
           loadProjects();
+          refreshEvents();
           setEditingProject(null);
         }}
       />

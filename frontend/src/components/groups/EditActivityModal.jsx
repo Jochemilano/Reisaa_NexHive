@@ -5,13 +5,14 @@ import CollaboratorPicker from "@/components/input/CollaboratorPicker";
 import { getActivityDetails, updateActivity } from "@/utils/activities";
 import { fetchProjectUsers } from "@/utils/projects";
 
-const EditActivityModal = ({ isOpen, onClose, activityId, onUpdated }) => {
+const EditActivityModal = ({ isOpen, onClose, activityId, onUpdated, onDeleted }) => {
   const [loading, setLoading] = useState(true);
   const [activityData, setActivityData] = useState({
     name: "", description: "", status: "pending", start_date: "", deadline: ""
   });
   const [selectedCollaborators, setSelectedCollaborators] = useState([]);
   const [availableUsers, setAvailableUsers] = useState([]);
+  const [isOwner, setIsOwner] = useState(false);
 
   function toLocalDateTimeInput(isoDate) {
     if (!isoDate) return "";
@@ -37,6 +38,7 @@ const EditActivityModal = ({ isOpen, onClose, activityId, onUpdated }) => {
           start_date: toLocalDateTimeInput(data.start_date),
           deadline: toLocalDateTimeInput(data.deadline)
         });
+        setIsOwner(data.owner_id === myId);
 
         // Traer usuarios de la actividad
         const { fetchActivityUsers } = await import("@/utils/activities");
@@ -96,6 +98,23 @@ const EditActivityModal = ({ isOpen, onClose, activityId, onUpdated }) => {
     }
   };
 
+  const handleDelete = async () => {
+    if (!window.confirm(`¿Eliminar la actividad "${activityData.name}"? Esta acción no se puede deshacer.`)) return;
+    try {
+      const { deleteActivity } = await import("@/utils/activities");
+      await deleteActivity(activityId);
+      if (onDeleted) {
+        onDeleted(activityId);
+      } else {
+        onUpdated();
+      }
+      onClose();
+    } catch (err) {
+      alert("Error al eliminar actividad");
+      console.error(err);
+    }
+  };
+
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <Modal.Header onClose={onClose}>Editar Actividad</Modal.Header>
@@ -106,11 +125,13 @@ const EditActivityModal = ({ isOpen, onClose, activityId, onUpdated }) => {
               label="Nombre de la actividad"
               value={activityData.name}
               onChange={e => handleChange("name", e.target.value)}
+              disabled={!isOwner}
             />
             <Textarea
               label="Descripción"
               value={activityData.description}
               onChange={e => handleChange("description", e.target.value)}
+              disabled={!isOwner}
             />
             <Select
               label="Estado"
@@ -121,30 +142,41 @@ const EditActivityModal = ({ isOpen, onClose, activityId, onUpdated }) => {
                 { value: "in_progress", label: "In Progress" },
                 { value: "done", label: "Done" },
               ]}
+              disabled={!isOwner}
             />
             <Input
               label="Fecha de inicio"
               type="datetime-local"
               value={activityData.start_date}
               onChange={e => handleChange("start_date", e.target.value)}
+              disabled={!isOwner}
             />
             <Input
               label="Fecha de entrega"
               type="datetime-local"
               value={activityData.deadline}
               onChange={e => handleChange("deadline", e.target.value)}
+              disabled={!isOwner}
             />
             <CollaboratorPicker
               availableUsers={availableUsers}
               selectedCollaborators={selectedCollaborators}
               onSelect={selectCollaborator}
               onRemove={removeCollaborator}
+              disabled={!isOwner}
             />
           </>
         )}
       </Modal.Body>
       <Modal.Footer onClose={onClose}>
-        <Modal.AcceptButton onClick={handleSave}>Guardar cambios</Modal.AcceptButton>
+        {isOwner && (
+          <button className="calendar-delete-btn" onClick={handleDelete}>
+            Eliminar
+          </button>
+        )}
+        <Modal.AcceptButton onClick={handleSave} disabled={!isOwner}>
+          Guardar cambios
+        </Modal.AcceptButton>
       </Modal.Footer>
     </Modal>
   );

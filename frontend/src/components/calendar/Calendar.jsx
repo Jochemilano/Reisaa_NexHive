@@ -108,6 +108,7 @@ const Calendar = () => {
         onClose={() => setIsEditActivityOpen(false)}
         activityId={editingActivityId}
         onUpdated={refreshEvents}
+        onDeleted={refreshEvents}
       />
     </div>
   );

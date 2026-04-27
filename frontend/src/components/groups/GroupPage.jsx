@@ -10,6 +10,7 @@ import { useGroup } from "@/context/GroupContext";
 import { FaEye, FaEdit, FaTrash, FaSort, FaSortUp, FaSortDown, FaCalendarAlt, FaCheck, FaClock, FaThumbtack, FaChevronRight } from "react-icons/fa";
 import { apiFetch } from "@/utils/apiClient";
 import { deleteActivity } from "@/utils/activities";
+import { useCalendar } from "@/context/CalendarContext";
 import "./GroupPage.css";
 
 const STATUS_LABELS = {
@@ -43,6 +44,7 @@ const highlightText = (text, search) => {
 const GroupPage = () => {
   const { groupId } = useParams();
   const { selectedProjectId } = useGroup();
+  const { refreshEvents } = useCalendar();
 
   const [selectedProject, setSelectedProject] = useState(null);
   const [projects, setProjects] = useState([]);
@@ -166,6 +168,7 @@ const GroupPage = () => {
       try {
         await deleteActivity(activity.id);
         loadProjectDetails();
+        refreshEvents();
         setOpenMenuId(null);
       } catch (err) {
         console.error("Error al eliminar actividad:", err);
@@ -348,6 +351,7 @@ const GroupPage = () => {
         currentProjectId={selectedProjectId}
         onCreated={() => {
           loadProjectDetails();
+          refreshEvents();
           setCreateModal(false);
         }}
       />
@@ -356,7 +360,10 @@ const GroupPage = () => {
         isOpen={editModal.open}
         onClose={() => setEditModal({ open: false, activityId: null })}
         activityId={editModal.activityId}
-        onUpdated={loadProjectDetails}
+        onUpdated={() => {
+          loadProjectDetails();
+          refreshEvents();
+        }}
       />
 
       <ViewActivityModal
