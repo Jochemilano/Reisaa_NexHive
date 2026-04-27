@@ -62,6 +62,7 @@ router.get("/groups/:groupId/projects", verifyToken, async (req, res) => {
   const userId = req.userId;
 
   try {
+    // 1. Verificar si el usuario pertenece al grupo
     const userGroup = await query(
       "SELECT * FROM user_groups WHERE user_id=? AND group_id=?",
       [userId, groupId]
@@ -69,14 +70,35 @@ router.get("/groups/:groupId/projects", verifyToken, async (req, res) => {
     if (userGroup.length === 0)
       return res.status(403).json({ message: "No pertenece al grupo" });
 
-    const projects = await query(
-      `SELECT p.id, p.name, p.description, p.start_date, p.deadline, p.owner_id, u.name AS owner_name
-       FROM projects p
-       LEFT JOIN users u ON u.id = p.owner_id
-       WHERE p.group_id = ?
-       ORDER BY p.id`,
-      [groupId]
-    );
+    const [group] = await query("SELECT owner_id FROM groups WHERE id=?", [groupId]);
+    const [user] = await query("SELECT rol FROM users WHERE id=?", [userId]);
+
+    const isGroupOwner = group && group.owner_id == userId;
+    const isAdmin = user && (user.rol === 'admin' || user.rol === 'Admin');
+
+    let projects;
+    if (isGroupOwner || isAdmin) {
+      // Owner del grupo o Admin ve todos los proyectos del grupo
+      projects = await query(
+        `SELECT p.id, p.name, p.description, p.start_date, p.deadline, p.owner_id, u.name AS owner_name
+         FROM projects p
+         LEFT JOIN users u ON u.id = p.owner_id
+         WHERE p.group_id = ?
+         ORDER BY p.id`,
+        [groupId]
+      );
+    } else {
+      // Usuario normal solo ve proyectos donde es owner o colaborador
+      projects = await query(
+        `SELECT p.id, p.name, p.description, p.start_date, p.deadline, p.owner_id, u.name AS owner_name
+         FROM projects p
+         LEFT JOIN users u ON u.id = p.owner_id
+         WHERE p.group_id = ? 
+           AND (p.owner_id = ? OR p.id IN (SELECT project_id FROM users_projects WHERE user_id = ?))
+         ORDER BY p.id`,
+        [groupId, userId, userId]
+      );
+    }
 
     res.json(projects);
   } catch (err) {
@@ -91,15 +113,8 @@ router.get("/projects/:projectId", verifyToken, async (req, res) => {
   const userId = req.userId;
 
   try {
-    const member = await query(
-      "SELECT * FROM users_projects WHERE user_id=? AND project_id=?",
-      [userId, projectId]
-    );
-    if (member.length === 0)
-      return res.status(403).json({ message: "No pertenece al proyecto" });
-
     const projectRows = await query(
-      `SELECT p.id, p.name, p.description, p.start_date, p.deadline, p.owner_id, u.name AS owner_name
+      `SELECT p.id, p.name, p.description, p.start_date, p.deadline, p.owner_id, p.group_id, u.name AS owner_name
        FROM projects p
        LEFT JOIN users u ON u.id = p.owner_id
        WHERE p.id = ?`,
@@ -107,6 +122,22 @@ router.get("/projects/:projectId", verifyToken, async (req, res) => {
     );
     if (projectRows.length === 0)
       return res.status(404).json({ message: "Proyecto no encontrado" });
+
+    const project = projectRows[0];
+
+    const member = await query(
+      "SELECT * FROM users_projects WHERE user_id=? AND project_id=?",
+      [userId, projectId]
+    );
+
+    const [user] = await query("SELECT rol FROM users WHERE id=?", [userId]);
+    const isAdmin = user && (user.rol === 'admin' || user.rol === 'Admin');
+
+    const [group] = await query("SELECT owner_id FROM groups WHERE id=?", [project.group_id]);
+    const isGroupOwner = group && group.owner_id == userId;
+
+    if (member.length === 0 && !isAdmin && !isGroupOwner)
+      return res.status(403).json({ message: "No pertenece al proyecto" });
 
     const activities = await query(
       `SELECT a.id, a.name, a.description, a.status, a.start_date, a.deadline, a.owner_id, u.name AS owner_name
@@ -130,11 +161,21 @@ router.get("/projects/:projectId/users", verifyToken, async (req, res) => {
   const userId = req.userId;
 
   try {
+    const [projectRows] = await query("SELECT group_id FROM projects WHERE id=?", [projectId]);
+    if (!projectRows) return res.status(404).json({ message: "Proyecto no encontrado" });
+
     const member = await query(
       "SELECT * FROM users_projects WHERE user_id=? AND project_id=?",
       [userId, projectId]
     );
-    if (member.length === 0)
+
+    const [user] = await query("SELECT rol FROM users WHERE id=?", [userId]);
+    const isAdmin = user?.rol === 'admin';
+
+    const [group] = await query("SELECT owner_id FROM groups WHERE id=?", [projectRows.group_id]);
+    const isGroupOwner = group?.owner_id === userId;
+
+    if (member.length === 0 && !isAdmin && !isGroupOwner)
       return res.status(403).json({ message: "No pertenece al proyecto" });
 
     const users = await query(
@@ -168,8 +209,12 @@ router.patch("/projects/:projectId", verifyToken, async (req, res) => {
     const isAdmin = user?.rol === 'admin';
     const isOwner = projectRows[0].owner_id === userId;
 
-    if (!isOwner && !isAdmin)
-      return res.status(403).json({ message: "No tienes permisos (No eres owner ni admin)" });
+    // Verificar si es owner del grupo
+    const [group] = await query("SELECT owner_id FROM groups WHERE id=?", [projectRows[0].group_id]);
+    const isGroupOwner = group?.owner_id === userId;
+
+    if (!isOwner && !isAdmin && !isGroupOwner)
+      return res.status(403).json({ message: "No tienes permisos (No eres owner del proyecto, admin ni owner del grupo)" });
 
     await query(
       `UPDATE projects
@@ -253,8 +298,12 @@ router.delete("/projects/:projectId", verifyToken, async (req, res) => {
     const isAdmin = user?.rol === 'admin';
     const isOwner = projectRows[0].owner_id === userId;
 
-    if (!isOwner && !isAdmin)
-      return res.status(403).json({ message: "No tienes permisos (No eres owner ni admin)" });
+    // Verificar si es owner del grupo
+    const [group] = await query("SELECT owner_id FROM groups WHERE id=?", [projectRows[0].group_id]);
+    const isGroupOwner = group?.owner_id === userId;
+
+    if (!isOwner && !isAdmin && !isGroupOwner)
+      return res.status(403).json({ message: "No tienes permisos (No eres owner del proyecto, admin ni owner del grupo)" });
 
     await query("DELETE FROM users_projects WHERE project_id=?", [projectId]);
     

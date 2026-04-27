@@ -1,15 +1,14 @@
 import { useState, useEffect } from "react";
 import Modal from "@/components/modal/Modal";
-import { FaGlobe, FaPalette, FaBell, FaCheck, FaSun, FaMoon } from "react-icons/fa";
+import { FaPalette, FaBell, FaCheck, FaSun, FaMoon } from "react-icons/fa";
 import "./UserPreferencesModal.css";
 
 const UserPreferencesModal = ({ isOpen, handleClose, initialData, onSave }) => {
-  const [language, setLanguage] = useState("es");
   const [themeMode, setThemeMode] = useState("light");
   const [accentColor, setAccentColor] = useState("blue");
   const [notifications, setNotifications] = useState(true);
 
-  // colores de acento disponibles (26)
+  // Los colores de acento disponibles (26 opciones)
   const ACCENT_COLORS = [
     { id: "red", hex: "#EF4444" },
     { id: "rose", hex: "#F43F5E" },
@@ -41,7 +40,6 @@ const UserPreferencesModal = ({ isOpen, handleClose, initialData, onSave }) => {
 
   useEffect(() => {
     if (initialData) {
-      setLanguage(initialData.language || "es");
       setNotifications(initialData.notifications_enabled ?? true);
       
       let initialThemeMode = "light";
@@ -112,7 +110,6 @@ const UserPreferencesModal = ({ isOpen, handleClose, initialData, onSave }) => {
 
   const handleSubmit = () => {
     onSave({
-      language,
       theme: `${themeMode}-${accentColor}`,
       notifications_enabled: notifications,
     });
@@ -125,17 +122,6 @@ const UserPreferencesModal = ({ isOpen, handleClose, initialData, onSave }) => {
       </Modal.Header>
 
       <Modal.Body>
-        <div className="preferences-field">
-            <label className="preferences-label">
-              <FaGlobe className="preferences-icon" />
-              Idioma
-            </label>
-            <select value={language} onChange={(e) => setLanguage(e.target.value)}>
-              <option value="es">Español</option>
-              <option value="en">English</option>
-            </select>
-          </div>
-
         {/* Sección de Tema Claro / Oscuro */}
         <div className="preferences-field">
             <label className="preferences-label">

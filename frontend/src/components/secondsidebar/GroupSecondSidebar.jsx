@@ -56,6 +56,7 @@ const GroupSecondSidebar = ({ groupId }) => {
   };
 
   useEffect(() => {
+    setSelectedProjectId(null);
     loadDetails();
     loadProjects();
   }, [groupId]);
@@ -78,7 +79,7 @@ const GroupSecondSidebar = ({ groupId }) => {
   const longPressTriggered = useRef(false);
 
   const startPress = useCallback((project) => {
-    const canEdit = userRole === 'admin' || myId === project.owner_id;
+    const canEdit = userRole === 'admin' || myId === project.owner_id || myId === details.owner_id;
     if (!canEdit) return;
 
     longPressTriggered.current = false;
@@ -86,7 +87,7 @@ const GroupSecondSidebar = ({ groupId }) => {
       longPressTriggered.current = true;
       setEditingProject(project);
     }, 500);
-  }, [userRole, myId]);
+  }, [userRole, myId, details.owner_id]);
 
   const cancelPress = useCallback(() => {
     clearTimeout(longPressTimer.current);
@@ -133,7 +134,7 @@ const GroupSecondSidebar = ({ groupId }) => {
             <span className="empty-activities">Sin proyectos</span>
           )}
           {projects.map((p) => {
-            const canEdit = userRole === 'admin' || myId === p.owner_id;
+            const canEdit = userRole === 'admin' || myId === p.owner_id || myId === details.owner_id;
             return (
               <div
                 key={`project-${p.id}`}
