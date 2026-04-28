@@ -44,12 +44,19 @@ export const useChat = (roomId, userId) => {
       }));
     };
 
+    const handleConnect = () => {
+      console.log("Re-joining room after reconnect:", roomId);
+      joinRoom(roomId);
+    };
+
     socket.on("receive-message", handleReceiveMessage);
     socket.on("room-read", handleRoomReadEvent);
+    socket.on("connect", handleConnect);
 
     return () => {
       socket.off("receive-message", handleReceiveMessage);
       socket.off("room-read", handleRoomReadEvent);
+      socket.off("connect", handleConnect);
       // Salir de la sala al desmontar para no recibir mensajes de otras salas
       socket.emit("leave-room", roomId);
     };

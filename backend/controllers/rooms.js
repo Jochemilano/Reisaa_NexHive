@@ -6,16 +6,26 @@ const verifyToken = require("../middleware/verifyToken");
 
 // Crear sala
 router.post("/rooms", verifyToken, async (req, res) => {
-  const { name, type, userIds } = req.body;
+  const { name, type, userIds, avatar = null } = req.body;
   const createdBy = req.userId;
 
-  if (!name || !type || !userIds || !Array.isArray(userIds))
+  if (!type || !userIds || !Array.isArray(userIds))
     return res.status(400).json({ message: "Datos incompletos" });
+
+  // Validaciones para Chat de Grupo (Discord style)
+  if (userIds.length > 2) {
+    if (userIds.length > 10) {
+      return res.status(400).json({ message: "Máximo 10 participantes permitidos" });
+    }
+    if (!name) {
+      return res.status(400).json({ message: "Nombre de grupo requerido" });
+    }
+  }
 
   try {
     const roomResult = await query(
-      "INSERT INTO rooms (name, type, owner_id) VALUES (?, ?, ?)",
-      [name, type, createdBy]
+      "INSERT INTO rooms (name, type, owner_id, avatar) VALUES (?, ?, ?, ?)",
+      [name || null, type, createdBy, avatar]
     );
 
     const roomId = roomResult.insertId;
@@ -54,7 +64,7 @@ router.put("/rooms/:roomId/read", verifyToken, async (req, res) => {
   }
 });
 
-// Listar salas del usuario con conteo de no leídos
+// Listar salas del usuario con conteo de no leídos y metadata enriquecida
 router.get("/rooms", verifyToken, async (req, res) => {
   const userId = req.userId;
   try {
@@ -63,6 +73,8 @@ router.get("/rooms", verifyToken, async (req, res) => {
           r.id, 
           r.name, 
           r.type,
+          r.avatar,
+          (SELECT COUNT(*) FROM room_participants WHERE room_id = r.id) as participant_count,
           (SELECT COUNT(*) FROM messages m 
            WHERE m.room_id = r.id 
              AND m.sender_id != ? 
@@ -70,10 +82,38 @@ router.get("/rooms", verifyToken, async (req, res) => {
           ) as unread_count
        FROM rooms r
        JOIN room_participants rp ON r.id = rp.room_id
-       WHERE rp.user_id = ?`,
+       LEFT JOIN channels c ON (r.id = c.chat_room_id OR r.id = c.voice_room_id)
+       WHERE rp.user_id = ? AND c.id IS NULL AND r.type = 'chat'`,
       [userId, userId]
     );
-    res.json(rooms);
+
+    // Enriquecer salas: si es DM (2 participantes), buscar el nombre/avatar del otro
+    const enrichedRooms = await Promise.all(rooms.map(async (room) => {
+      if (room.participant_count === 2 && room.type === 'chat') {
+        const [other] = await db.query(
+          `SELECT u.name, u.profile_pic 
+           FROM room_participants rp
+           JOIN users u ON u.id = rp.user_id
+           WHERE rp.room_id = ? AND rp.user_id != ?`,
+          [room.id, userId]
+        );
+        if (other[0]) {
+          return {
+            ...room,
+            display_name: other[0].name,
+            display_avatar: other[0].profile_pic
+          };
+        }
+      }
+      // Para grupos (>2) o si no se encontró el otro, usar info de la sala
+      return {
+        ...room,
+        display_name: room.name || "Grupo sin nombre",
+        display_avatar: room.avatar
+      };
+    }));
+
+    res.json(enrichedRooms);
   } catch (err) {
     console.error("ERROR GET USER ROOMS:", err);
     res.status(500).json({ message: "Error obteniendo salas" });

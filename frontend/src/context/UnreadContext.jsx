@@ -50,10 +50,12 @@ export const UnreadProvider = ({ children }) => {
 
     socket.on("new-message-notification", handleNotification);
     socket.on("room-read", handleRoomRead);
+    socket.on("connect", fetchUnreadData);
 
     return () => {
       socket.off("new-message-notification", handleNotification);
       socket.off("room-read", handleRoomRead);
+      socket.off("connect", fetchUnreadData);
     };
   }, [fetchUnreadData]);
 

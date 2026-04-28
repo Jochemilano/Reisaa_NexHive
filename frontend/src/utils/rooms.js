@@ -4,10 +4,10 @@ import { apiFetch } from "./apiClient";
 // Traer todas las salas del usuario
 export const fetchUserRooms = () => apiFetch("rooms");
 
-// Crear sala privada
-export const createPrivateRoom = async (userIds) => {
+// Crear sala (DM o Grupo)
+export const createRoom = async (userIds, name = null) => {
   const roomData = {
-    name: `chat-${userIds.join("-")}`,
+    name: name || `chat-${userIds.sort().join("-")}`,
     type: "chat",
     userIds
   };
