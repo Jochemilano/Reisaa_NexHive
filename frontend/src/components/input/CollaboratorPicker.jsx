@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
-import { FaTimes, FaSearch } from "react-icons/fa";
+import { FaTimes, FaSearch, FaUserPlus, FaCheck } from "react-icons/fa";
+import { addFriend } from "@/utils/friends";
 import "./CollaboratorPicker.css";
 
 const CollaboratorPicker = ({ availableUsers = [], selectedCollaborators = [], onSelect, onRemove }) => {
@@ -12,8 +13,22 @@ const CollaboratorPicker = ({ availableUsers = [], selectedCollaborators = [], o
     const name = user.name || user.username || `Usuario ${user.id}`;
     const email = user.email || "";
     const searchLower = searchQuery.toLowerCase();
+    
+    // Si no hay búsqueda, solo mostramos amigos
+    if (searchQuery.trim() === "") {
+      return user.isFriend;
+    }
+
     return name.toLowerCase().includes(searchLower) || email.toLowerCase().includes(searchLower);
   });
+
+  // Ordenar para que los amigos salgan primero si hay búsqueda
+  if (searchQuery.trim() !== "") {
+    filteredUsers.sort((a, b) => {
+      if (a.isFriend === b.isFriend) return 0;
+      return a.isFriend ? -1 : 1;
+    });
+  }
 
   // Cerrar el dropdown al hacer click afuera
   useEffect(() => {
@@ -29,10 +44,24 @@ const CollaboratorPicker = ({ availableUsers = [], selectedCollaborators = [], o
   }, [wrapperRef]);
 
   const handleSelect = (user) => {
-    // Simulamos el evento 'e.target.value' para no romper los componentes padres
     onSelect({ target: { value: user.id } });
     setSearchQuery("");
     setIsDropdownOpen(false);
+  };
+
+  const handleAddFriend = async (e, userId) => {
+    e.stopPropagation();
+    try {
+      await addFriend(userId);
+      // Actualizar localmente para mostrar que ya es amigo (aunque lo ideal sería recargar la lista)
+      // En este caso, como availableUsers viene de props, el padre debería refrescar.
+      // Pero para feedback inmediato podemos intentar algo, o simplemente confiar en que el usuario verá el cambio al reabrir.
+      // Por simplicidad, alertamos éxito.
+      alert("Solicitud de amistad enviada");
+    } catch (err) {
+      console.error(err);
+      alert("Error al agregar amigo");
+    }
   };
 
   return (
@@ -61,14 +90,34 @@ const CollaboratorPicker = ({ availableUsers = [], selectedCollaborators = [], o
                     className="collaborator-picker__dropdown-item"
                     onClick={() => handleSelect(user)}
                   >
-                    <span className="user-name">{user.name || user.username || `Usuario ${user.id}`}</span>
-                    {user.email && <span className="user-email">{user.email}</span>}
+                    <div className="user-info">
+                      <span className="user-name">{user.name || user.username || `Usuario ${user.id}`}</span>
+                      {user.email && <span className="user-email">{user.email}</span>}
+                    </div>
+                    
+                    <div className="user-actions">
+                      {user.isFriend ? (
+                        <span className="friend-badge" title="Es tu amigo">
+                          <FaCheck /> Amigo
+                        </span>
+                      ) : (
+                        <button 
+                          className="add-friend-btn" 
+                          title="Agregar a amigos"
+                          onClick={(e) => handleAddFriend(e, user.id)}
+                        >
+                          <FaUserPlus />
+                        </button>
+                      )}
+                    </div>
                   </li>
                 ))}
               </ul>
             ) : (
               <div className="collaborator-picker__dropdown-empty">
-                {availableUsers.length === 0 ? "No hay más usuarios disponibles" : "No se encontraron usuarios"}
+                {searchQuery.trim() === "" 
+                  ? "Busca usuarios por nombre o correo para agregarlos" 
+                  : "No se encontraron usuarios"}
               </div>
             )}
           </div>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { fetchAllUsers } from "@/utils/groups";
+import { fetchFriends } from "@/utils/friends";
 
 export const useCreateGroupModal = (isOpen) => {
   const [name, setName] = useState("");
@@ -9,9 +10,15 @@ export const useCreateGroupModal = (isOpen) => {
 
   useEffect(() => {
     if (!isOpen) return;
-    fetchAllUsers()
-      .then(users => {
-        setAllUsers(users);
+    
+    Promise.all([fetchAllUsers(), fetchFriends()])
+      .then(([users, friends]) => {
+        const friendIds = new Set(friends.map(f => f.id));
+        const taggedUsers = users.map(u => ({
+          ...u,
+          isFriend: friendIds.has(u.id)
+        }));
+        setAllUsers(taggedUsers);
         setCurrentUserId(parseInt(localStorage.getItem("userId")) || null);
       })
       .catch(err => console.error("Error cargando usuarios:", err));

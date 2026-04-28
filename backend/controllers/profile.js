@@ -34,7 +34,7 @@ router.get("/users", async (req, res) => {
 // Traer todos los usuarios
 router.get("/allusers", async (req, res) => {
   try {
-    const [results] = await db.query(`SELECT id, name FROM users`);
+    const [results] = await db.query(`SELECT id, name, email FROM users`);
     res.json(results);
   } catch (err) {
     console.error("ERROR GET USERS:", err);

@@ -4,6 +4,7 @@ import Input from "@/components/input/Input";
 import AvatarInput from "./AvatarInput";
 import CollaboratorPicker from "@/components/input/CollaboratorPicker";
 import { updateGroup, fetchAllUsers, fetchGroupUsers, deleteGroup } from "@/utils/groups";
+import { fetchFriends } from "@/utils/friends";
 import { getAvatarUrl } from "@/utils/media";
 
 const EditGroupModal = ({
@@ -24,19 +25,23 @@ const EditGroupModal = ({
 
       setName(group.name);
 
-      fetchGroupUsers(group.id)
-        .then(groupUsers => {
+      Promise.all([fetchGroupUsers(group.id), fetchAllUsers(), fetchFriends()])
+        .then(([groupUsers, allUsers, friends]) => {
           // Los que ya están en el grupo (menos yo)
           setSelectedCollaborators(groupUsers.filter(u => u.id !== myId));
 
           const alreadyIn = new Set(groupUsers.map(u => u.id));
+          const friendIds = new Set(friends.map(f => f.id));
 
-          // Todos los usuarios menos los que ya están y menos yo
-          return fetchAllUsers().then(allUsers => {
-            setAvailableUsers(
-              allUsers.filter(u => !alreadyIn.has(u.id) && u.id !== myId)
-            );
-          });
+          // Todos los usuarios menos los que ya están y menos yo, marcando amigos
+          const filtered = allUsers
+            .filter(u => !alreadyIn.has(u.id) && u.id !== myId)
+            .map(u => ({
+              ...u,
+              isFriend: friendIds.has(u.id)
+            }));
+          
+          setAvailableUsers(filtered);
         })
         .catch(console.error);
     }
