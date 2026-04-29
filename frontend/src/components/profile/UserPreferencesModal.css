@@ -194,8 +194,15 @@
 }
 
 @keyframes slideDown {
-  from { opacity: 0; transform: translateY(-5px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Checkbox de Notificaciones */
@@ -226,4 +233,51 @@
   height: 1.2rem;
   accent-color: var(--primary);
   cursor: pointer;
+}
+
+/* Selección de Sonidos en Píldoras */
+.sound-pill-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.4rem;
+  animation: slideDown 0.3s ease;
+}
+
+.sound-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 1rem;
+  border-radius: 2rem;
+  border: 1px solid var(--border);
+  background-color: var(--bg-soft);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.sound-pill:hover {
+  background-color: var(--bg-hover);
+  border-color: var(--primary);
+}
+
+.sound-pill.active {
+  background-color: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+  box-shadow: 0 2px 5px var(--shadow);
+}
+
+.sound-pill-icon {
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sound-pill.active .sound-pill-icon {
+  color: #fff !important;
 }

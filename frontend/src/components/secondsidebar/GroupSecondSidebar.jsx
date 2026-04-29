@@ -101,7 +101,9 @@ const GroupSecondSidebar = ({ groupId }) => {
       return;
     }
     setSelectedProjectId(project.id);
-  }, []);
+    // Asegurar que navegamos a la página del grupo para ver el proyecto
+    navigate(`/groups/${groupId}`);
+  }, [groupId, navigate, setSelectedProjectId]);
 
   return (
     <>

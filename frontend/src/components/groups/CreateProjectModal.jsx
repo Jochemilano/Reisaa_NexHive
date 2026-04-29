@@ -58,6 +58,7 @@ const CreateProjectModal = ({ isOpen, onClose, groupId, availableUsers = [], onC
           selectedCollaborators={selectedCollaborators}
           onSelect={selectCollaborator}
           onRemove={removeCollaborator}
+          showAllByDefault={true}
         />
       </Modal.Body>
       <Modal.Footer onClose={onClose}>

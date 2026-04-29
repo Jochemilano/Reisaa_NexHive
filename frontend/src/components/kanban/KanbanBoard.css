@@ -311,13 +311,41 @@
 .kanban-card__owner {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 8px;
   font-size: 0.72rem;
   color: var(--text-tertiary);
   font-weight: 500;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.kanban-card__owner:hover {
+  color: var(--primary);
+}
+
+.kanban-card__avatar {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.kanban-card__avatar-placeholder {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--bg-active);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
+  font-weight: 800;
+  color: var(--text-secondary);
+  flex-shrink: 0;
 }
 
 .kanban-card__owner svg,

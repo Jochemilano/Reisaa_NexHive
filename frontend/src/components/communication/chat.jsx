@@ -11,6 +11,7 @@ import { FaPaperclip, FaPaperPlane, FaStar, FaPhone, FaReply, FaEdit, FaTrash, F
 import { MdDoneAll } from "react-icons/md";
 import { FiCheck } from "react-icons/fi";
 import { useUnread } from "@/context/UnreadContext";
+import { useUserDetail } from "@/context/UserDetailContext";
 import { getFileUrl, getFileName, toggleFavoriteMessage } from "@/utils/chat";
 import "./chat.css";
 import "./call.css";
@@ -146,7 +147,7 @@ const MessageContent = ({ msg, onImageClick, onVideoClick, isMine, onReply, onEd
   );
 };
 
-const Chat = ({ roomId, userId, targetUserId, targetUserName, targetUserAvatar, initialUnreadCount }) => {
+const Chat = ({ roomId, userId, groupId, targetUserId, targetUserName, targetUserAvatar, initialUnreadCount }) => {
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -178,6 +179,7 @@ const Chat = ({ roomId, userId, targetUserId, targetUserName, targetUserAvatar, 
   const { messages, send, sendFile, deleteMessage, editMessage } = useChat(roomId, userId);
   const { startCall, activeCall, isMinimized } = useCall();
   const { mutedRooms = [], toggleMuteRoom } = useUnread();
+  const { showUserProfile, showGroupProfile, showRoomProfile } = useUserDetail();
   const isRoomMuted = mutedRooms?.includes(roomId) || false;
 
   const isInitialLoad = useRef(true);
@@ -391,7 +393,15 @@ const Chat = ({ roomId, userId, targetUserId, targetUserName, targetUserAvatar, 
       <div className="chat-section" onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop} style={{ position: 'relative' }}>
         {isDragging && <div className="drag-drop-overlay"><div className="drag-drop-content"><FaImages size={50} color="#00a884" /><p>Suelta las imágenes aquí</p></div></div>}
         <div className="chat-header">
-          <div className="chat-header-info">
+          <div 
+            className="chat-header-info" 
+            style={{ cursor: (targetUserId || groupId || roomId) ? "pointer" : "default" }}
+            onClick={() => {
+              if (groupId) showGroupProfile(groupId);
+              else if (targetUserId) showUserProfile(targetUserId);
+              else showRoomProfile(roomId);
+            }}
+          >
             <div className="chat-avatar">{targetUserAvatar ? <img src={getAvatarUrl(targetUserAvatar)} alt={targetUserName} className="avatar-img" /> : targetUserName?.[0] || "C"}</div>
             <span className="chat-username">{targetUserName || "Chat"}</span>
           </div>
@@ -419,7 +429,13 @@ const Chat = ({ roomId, userId, targetUserId, targetUserName, targetUserAvatar, 
               </div>
             ) : (
               <div key={item.key} ref={(el) => (messageRefs.current[item.id] = el)} className={`chat-message ${Number(item.sender_id) === Number(userId) ? "mine" : "other"}`}>
-                <span className="sender">{item.sender_name || item.sender_id}</span>
+                <span 
+                  className="sender" 
+                  style={{ cursor: "pointer" }}
+                  onClick={() => showUserProfile(item.sender_id)}
+                >
+                  {item.sender_name || item.sender_id}
+                </span>
                 <MessageContent msg={item} searchTerm={searchTerm} onImageClick={(src) => setModalMedia({ src, type: 'image' })} onVideoClick={(src) => setModalMedia({ src, type: 'video' })} isMine={Number(item.sender_id) === Number(userId)} onReply={handleReply} onReplyToOriginal={handleScrollToOriginal} onEdit={handleEdit} onDelete={deleteMessage} />
               </div>
             )

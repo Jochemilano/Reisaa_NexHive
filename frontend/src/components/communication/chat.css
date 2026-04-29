@@ -150,10 +150,17 @@
 .chat-message.other { align-self: flex-start; align-items: flex-start; }
 
 .chat-message .sender {
-  font-size: 11px;
-  opacity: 0.7;
-  margin-bottom: 3px;
-  padding: 0 4px;
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: #00a884;
+  margin-bottom: 4px;
+  transition: color 0.2s;
+}
+
+.chat-message .sender:hover {
+  color: #008f72;
+  text-decoration: underline;
 }
 
 .message-wrapper {
@@ -222,11 +229,11 @@
 }
 
 .read-status.read {
-  color: var(--success);
+  color: var(--read-check, #00e5ff);
 }
 
 .read-status.sent {
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .check-mark {

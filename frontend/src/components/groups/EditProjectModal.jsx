@@ -96,6 +96,7 @@ const EditProjectModal = ({ isOpen, onClose, project, groupId, onUpdated }) => {
           selectedCollaborators={selectedCollaborators}
           onSelect={selectCollaborator}
           onRemove={removeCollaborator}
+          showAllByDefault={true}
         />
       </Modal.Body>
       <Modal.Footer onClose={onClose}>

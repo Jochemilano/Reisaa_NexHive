@@ -13,12 +13,14 @@ import IncomingCallModal from "@/components/communication/IncomingCallModal";
 import FloatingCall from "@/components/communication/Floatingcall";
 import { UnreadProvider } from "@/context/UnreadContext";
 import { SocketProvider } from "@/context/SocketContext";
+import { UserDetailProvider } from "@/context/UserDetailContext";
 
 export default function AppRouter() {
   return (
     <SocketProvider>
       <UnreadProvider>
-        <CallProvider>
+        <UserDetailProvider>
+          <CallProvider>
           {/* Visible en CUALQUIER página */}
           <IncomingCallModal />
           <FloatingCall />
@@ -38,7 +40,8 @@ export default function AppRouter() {
 
             <Route path="/login" element={<Login />} />
           </Routes>
-        </CallProvider>
+          </CallProvider>
+        </UserDetailProvider>
       </UnreadProvider>
     </SocketProvider>
   );

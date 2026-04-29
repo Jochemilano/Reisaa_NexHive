@@ -29,8 +29,18 @@ export default function ChatWrapper() {
           });
         } else {
           const participants = await apiFetch(`rooms/${chatRoomId}/participants`);
-          const other = participants.find(p => p.id !== userId) ?? participants[0];
-          if (other) {
+          
+          if (participants.length > 1) {
+            // Es un grupo pequeño (room group)
+            const roomData = await apiFetch(`rooms/${chatRoomId}/details`);
+            setTargetUser({
+              id: null,
+              name: roomData.name || "Grupo",
+              avatar: roomData.avatar,
+            });
+          } else if (participants.length === 1) {
+            // Es un DM
+            const other = participants[0];
             setTargetUser({
               id: other.id,
               name: other.name,
@@ -61,6 +71,7 @@ export default function ChatWrapper() {
     <Chat
       roomId={chatRoomId}
       userId={userId}
+      groupId={groupId}
       targetUserId={targetUser.id}
       targetUserName={targetUser.name}
       targetUserAvatar={targetUser.avatar}

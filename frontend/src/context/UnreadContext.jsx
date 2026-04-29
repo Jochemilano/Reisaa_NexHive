@@ -12,10 +12,18 @@ export function UnreadProvider({ children }) {
     const saved = localStorage.getItem("muted_rooms");
     return saved ? JSON.parse(saved) : [];
   });
+  const [selectedSound, setSelectedSound] = useState(() => {
+    return localStorage.getItem("notification_sound") || "crystal";
+  });
   
   const soundEnabledRef = useRef(true);
   const setSoundEnabled = useCallback((enabled) => {
     soundEnabledRef.current = !!enabled;
+  }, []);
+
+  const changeNotificationSound = useCallback((soundType) => {
+    setSelectedSound(soundType);
+    localStorage.setItem("notification_sound", soundType);
   }, []);
 
   const toggleMuteRoom = useCallback((roomId) => {
@@ -54,7 +62,7 @@ export function UnreadProvider({ children }) {
     const handleNotification = (data) => {
       const isRoomMuted = mutedRooms.includes(data.room_id);
       if (soundEnabledRef.current && !isRoomMuted) {
-        playNotificationSound();
+        playNotificationSound(selectedSound);
       }
       setUnreadByRoom(prev => ({
         ...prev,
@@ -81,7 +89,7 @@ export function UnreadProvider({ children }) {
       socket.off("new-message-notification", handleNotification);
       socket.off("room-read", handleRoomRead);
     };
-  }, [fetchUnreadData, mutedRooms]);
+  }, [fetchUnreadData, mutedRooms, selectedSound]);
 
   const markAsRead = useCallback((roomId) => {
     setUnreadByRoom(prev => {
@@ -93,8 +101,16 @@ export function UnreadProvider({ children }) {
   }, []);
 
   const value = useMemo(() => ({
-    unreadTotal, unreadByRoom, fetchUnreadData, markAsRead, setSoundEnabled, mutedRooms, toggleMuteRoom
-  }), [unreadTotal, unreadByRoom, fetchUnreadData, markAsRead, setSoundEnabled, mutedRooms, toggleMuteRoom]);
+    unreadTotal, 
+    unreadByRoom, 
+    fetchUnreadData, 
+    markAsRead, 
+    setSoundEnabled, 
+    mutedRooms, 
+    toggleMuteRoom,
+    selectedSound,
+    changeNotificationSound
+  }), [unreadTotal, unreadByRoom, fetchUnreadData, markAsRead, setSoundEnabled, mutedRooms, toggleMuteRoom, selectedSound, changeNotificationSound]);
 
   return (
     <UnreadContext.Provider value={value}>
@@ -104,4 +120,3 @@ export function UnreadProvider({ children }) {
 }
 
 export const useUnread = () => useContext(UnreadContext);
-

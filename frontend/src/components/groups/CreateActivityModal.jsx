@@ -109,6 +109,7 @@ const CreateActivityModal = ({ isOpen, onClose, currentProjectId, onCreated }) =
           selectedCollaborators={selectedCollaborators}
           onSelect={selectCollaborator}
           onRemove={removeCollaborator}
+          showAllByDefault={true}
         />
       </Modal.Body>
       <Modal.Footer onClose={onClose}>

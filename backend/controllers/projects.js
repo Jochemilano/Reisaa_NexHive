@@ -140,7 +140,7 @@ router.get("/projects/:projectId", verifyToken, async (req, res) => {
       return res.status(403).json({ message: "No pertenece al proyecto" });
 
     const activities = await query(
-      `SELECT a.id, a.name, a.description, a.status, a.start_date, a.deadline, a.owner_id, u.name AS owner_name
+      `SELECT a.id, a.name, a.description, a.status, a.start_date, a.deadline, a.owner_id, u.name AS owner_name, u.profile_pic
        FROM activities a
        LEFT JOIN users u ON u.id = a.owner_id
        WHERE a.project_id = ?

@@ -12,6 +12,8 @@ import { apiFetch } from "@/utils/apiClient";
 import { deleteActivity } from "@/utils/activities";
 import { useCalendar } from "@/context/CalendarContext";
 import KanbanBoard from "@/components/kanban/KanbanBoard";
+import { useUserDetail } from "@/context/UserDetailContext";
+import { getAvatarUrl } from "@/utils/media";
 import "./GroupPage.css";
 import "@/components/kanban/KanbanBoard.css";
 
@@ -47,6 +49,7 @@ const GroupPage = () => {
   const { groupId } = useParams();
   const { selectedProjectId } = useGroup();
   const { refreshEvents } = useCalendar();
+  const { showUserProfile } = useUserDetail();
 
   const [selectedProject, setSelectedProject] = useState(null);
   const [projects, setProjects] = useState([]);
@@ -313,9 +316,27 @@ const GroupPage = () => {
                       </tr>
                     ) : (
                       filteredActivities.map((a) => (
-                        <tr key={`activity-${a.id}`}>
-                          <td>{highlightText(a.name || "Sin nombre", searchTerm)}</td>
-                          <td>{highlightText(a.owner_name || "—", searchTerm)}</td>
+                         <tr key={`activity-${a.id}`}>
+                           <td>{highlightText(a.name || "Sin nombre", searchTerm)}</td>
+                           <td>
+                             <div 
+                               className="activity-owner-cell" 
+                               onClick={() => a.owner_id && showUserProfile(a.owner_id)}
+                             >
+                               {a.profile_pic ? (
+                                 <img 
+                                   src={getAvatarUrl(a.profile_pic)} 
+                                   alt={a.owner_name} 
+                                   className="activity-table-avatar" 
+                                 />
+                               ) : (
+                                 <div className="activity-table-avatar-placeholder">
+                                   {a.owner_name?.[0]?.toUpperCase() || "?"}
+                                 </div>
+                               )}
+                               <span>{highlightText(a.owner_name || "—", searchTerm)}</span>
+                             </div>
+                           </td>
                           <td>
                             <span className={`activity-status activity-status--${a.status}`}>
                               {STATUS_LABELS[a.status] ?? "—"}

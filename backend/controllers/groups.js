@@ -123,7 +123,7 @@ router.get("/groups/:groupId/details", verifyToken, async (req, res) => {
 
     // Miembros
     const members = await query(
-      `SELECT u.id, u.name
+      `SELECT u.id, u.name, u.profile_pic
        FROM users u
        JOIN user_groups ug ON u.id = ug.user_id
        WHERE ug.group_id = ?`,
@@ -313,4 +313,53 @@ router.delete("/groups/:groupId", verifyToken, async (req, res) => {
   }
 });
 
-module.exports = router;
+// Salirse de un grupo
+router.post("/groups/:groupId/leave", verifyToken, async (req, res) => {
+  const { groupId } = req.params;
+  const userId = req.userId;
+
+  try {
+    const groupRows = await query(
+      "SELECT owner_id FROM groups WHERE id=?",
+      [groupId]
+    );
+    if (groupRows.length === 0)
+      return res.status(404).json({ message: "Grupo no encontrado" });
+
+    if (groupRows[0].owner_id === userId) {
+      return res.status(400).json({ 
+        message: "No puedes salirte siendo el owner. Transfiere el mando antes de salir." 
+      });
+    }
+
+    // Traer canales para limpiar participantes de los rooms asociados
+    const channels = await query(
+      "SELECT chat_room_id, voice_room_id FROM channels WHERE group_id=?",
+      [groupId]
+    );
+
+    for (const channel of channels) {
+      await query(
+        "DELETE FROM room_participants WHERE room_id IN (?, ?) AND user_id = ?",
+        [channel.chat_room_id, channel.voice_room_id, userId]
+      );
+    }
+
+    // Eliminar de user_groups
+    const result = await query(
+      "DELETE FROM user_groups WHERE group_id = ? AND user_id = ?",
+      [groupId, userId]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "No eres miembro de este grupo" });
+    }
+
+    res.json({ success: true, message: "Has salido del grupo" });
+  } catch (err) {
+    console.error("ERROR LEAVE GROUP:", err);
+    res.status(500).json({ message: "Error al salir del grupo" });
+  }
+});
+
+module.exports = router;

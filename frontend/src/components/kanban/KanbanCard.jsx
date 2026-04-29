@@ -1,8 +1,10 @@
 import React, { useRef, useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 import { Draggable } from "@hello-pangea/dnd";
-import { FaCalendarAlt, FaEye, FaEdit, FaTrash, FaUser } from "react-icons/fa";
+import { FaCalendarAlt, FaEye, FaEdit, FaTrash } from "react-icons/fa";
 import { BsThreeDots } from "react-icons/bs";
+import { useUserDetail } from "@/context/UserDetailContext";
+import { getAvatarUrl } from "@/utils/media";
 import "./KanbanBoard.css";
 
 const formatDate = (d) => {
@@ -72,6 +74,14 @@ const KanbanCard = ({ activity, index, onView, onEdit, onDelete }) => {
   const overdue = isOverdue(activity.deadline, activity.status);
   const [menuOpen, setMenuOpen] = useState(false);
   const btnRef = useRef(null);
+  const { showUserProfile } = useUserDetail();
+
+  const handleOwnerClick = (e) => {
+    e.stopPropagation();
+    if (activity.owner_id) {
+      showUserProfile(activity.owner_id);
+    }
+  };
 
   return (
     <Draggable draggableId={String(activity.id)} index={index}>
@@ -119,10 +129,22 @@ const KanbanCard = ({ activity, index, onView, onEdit, onDelete }) => {
 
           {/* Footer */}
           <div className="kanban-card__footer">
-            <span className="kanban-card__owner">
-              <FaUser />
-              {activity.owner_name || "—"}
-            </span>
+            <div className="kanban-card__owner" onClick={handleOwnerClick}>
+              {activity.profile_pic ? (
+                <img
+                  src={getAvatarUrl(activity.profile_pic)}
+                  alt={activity.owner_name}
+                  className="kanban-card__avatar"
+                />
+              ) : (
+                <div className="kanban-card__avatar-placeholder">
+                  {activity.owner_name?.[0]?.toUpperCase() || "?"}
+                </div>
+              )}
+              <span className="kanban-card__owner-name">
+                {activity.owner_name || "—"}
+              </span>
+            </div>
             {activity.deadline && (
               <span className={`kanban-card__date ${overdue ? "kanban-card__date--overdue" : ""}`}>
                 <FaCalendarAlt />

@@ -4,6 +4,7 @@ import { socket } from "@/utils/socket";
 import { apiFetch } from "@/utils/apiClient";
 import { getAvatarUrl } from "@/utils/media"; 
 import { useGroup } from "@/context/GroupContext";
+import { useUserDetail } from "@/context/UserDetailContext";
 import "./Home.css"
 
 export default function Home() {
@@ -13,6 +14,7 @@ export default function Home() {
   const [loadingActivities, setLoadingActivities] = useState(true);
   const navigate = useNavigate();
   const { setSelectedProjectId } = useGroup();
+  const { showUserProfile } = useUserDetail();
   const currentUserId = parseInt(localStorage.getItem("userId"));
 
   useEffect(() => {
@@ -31,6 +33,9 @@ export default function Home() {
     // Escuchar usuarios conectados
     const handleUserList = (lista) => setAllOnlineUsers(lista);
     socket.on("usuarios:lista", handleUserList);
+
+    // Pedir lista inicial al montar
+    socket.emit("get-online-users");
 
     // Cargar mis actividades
     const loadActivities = async () => {
@@ -92,8 +97,19 @@ export default function Home() {
             {onlineUsers.map((u) => {
               const avatarUrl = getAvatarUrl(u.profile_pic);
               return (
-                <li key={u.id} className="online-user-item" onClick={() => handleUserClick(u)}>
-                  <div className="avatar-wrapper">
+                <li 
+                  key={u.id} 
+                  className="online-user-item" 
+                  onClick={() => handleUserClick(u)}
+                >
+                  <div 
+                    className="avatar-wrapper"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      showUserProfile(u.id);
+                    }}
+                    style={{ cursor: 'pointer' }}
+                  >
                     {avatarUrl ? (
                       <img src={avatarUrl} alt={u.name} className="avatar" />
                     ) : (

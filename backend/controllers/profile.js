@@ -31,6 +31,21 @@ router.get("/users", async (req, res) => {
   }
 });
 
+// Traer datos de un usuario específico por ID
+router.get("/users/:id", async (req, res) => {
+  try {
+    const [results] = await db.query(
+      `SELECT id, name, email, rol, profile_pic FROM users WHERE id = ?`,
+      [req.params.id]
+    );
+    if (!results.length) return res.status(404).json({ error: "Usuario no encontrado" });
+    res.json(results[0]);
+  } catch (err) {
+    console.error("ERROR GET USER BY ID:", err);
+    res.status(500).json({ error: "Error al obtener perfil del usuario" });
+  }
+});
+
 // Traer todos los usuarios
 router.get("/allusers", async (req, res) => {
   try {

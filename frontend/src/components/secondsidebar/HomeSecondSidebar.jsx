@@ -6,6 +6,7 @@ import Modal from "@/components/modal/Modal";
 import { FiPlus, FiSearch, FiUserPlus } from "react-icons/fi";
 import { CONFIG } from "@/utils/config";
 import { getAvatarUrl } from "@/utils/media";
+import { useUserDetail } from "@/context/UserDetailContext";
 
 const HomeSecondSidebar = () => {
   const [rooms, setRooms] = useState([]);
@@ -20,6 +21,7 @@ const HomeSecondSidebar = () => {
   const [groupName, setGroupName] = useState("");
   
   const { unreadByRoom } = useUnread();
+  const { showUserProfile, showRoomProfile } = useUserDetail();
   const navigate = useNavigate();
   const currentUserId = parseInt(localStorage.getItem("userId"));
 
@@ -152,7 +154,18 @@ const HomeSecondSidebar = () => {
                 onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-hover)'}
                 onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
               >
-                <div className="avatar-wrapper" style={{ position: 'relative', width: '32px', height: '32px' }}>
+                <div 
+                  className="avatar-wrapper" 
+                  style={{ position: 'relative', width: '32px', height: '32px', cursor: 'pointer' }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (r.participant_count > 2) {
+                      showRoomProfile(r.id);
+                    } else if (r.display_id) {
+                      showUserProfile(r.display_id);
+                    }
+                  }}
+                >
                   {avatarUrl ? (
                     <img 
                       src={avatarUrl} 

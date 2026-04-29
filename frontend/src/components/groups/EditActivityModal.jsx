@@ -158,6 +158,7 @@ const EditActivityModal = ({ isOpen, onClose, activityId, onUpdated, onDeleted }
               selectedCollaborators={selectedCollaborators}
               onSelect={selectCollaborator}
               onRemove={removeCollaborator}
+              showAllByDefault={true}
             />
           </>
         )}

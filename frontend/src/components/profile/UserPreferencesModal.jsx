@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import Modal from "@/components/modal/Modal";
-import { FaPalette, FaBell, FaCheck, FaSun, FaMoon, FaFont, FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { FaPalette, FaBell, FaCheck, FaSun, FaMoon, FaFont, FaChevronDown, FaChevronUp, FaVolumeUp, FaMusic, FaGem, FaCloud, FaBolt, FaWaveSquare, FaTint, FaMicrophoneAlt, FaBroadcastTower, FaFingerprint, FaCircle } from "react-icons/fa";
+import { useUnread } from "@/context/UnreadContext";
+import { playNotificationSound } from "@/utils/audio";
 import "./UserPreferencesModal.css";
 
 const UserPreferencesModal = ({ isOpen, handleClose, initialData, onSave }) => {
@@ -8,8 +10,10 @@ const UserPreferencesModal = ({ isOpen, handleClose, initialData, onSave }) => {
   const [accentColor, setAccentColor] = useState("blue");
   const [fontFamily, setFontFamily] = useState("system");
   const [notifications, setNotifications] = useState(true);
+  const { selectedSound, changeNotificationSound } = useUnread();
+  const [localSound, setLocalSound] = useState(selectedSound);
 
-  const [openSections, setOpenSections] = useState({ appearance: true, colors: false, fonts: false });
+  const [openSections, setOpenSections] = useState({ appearance: true, colors: false, fonts: false, sounds: false });
   const toggleSection = (section) => {
     setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
   };
@@ -52,6 +56,17 @@ const UserPreferencesModal = ({ isOpen, handleClose, initialData, onSave }) => {
     { id: "pixel", label: "Pixel", family: "'Pixelify Sans', monospace" }
   ];
 
+  const SOUND_OPTIONS = [
+    { id: "crystal", label: "Cristal", icon: <FaGem />, color: "#00d2ff" },
+    { id: "bubble", label: "Burbuja", icon: <FaCloud />, color: "#a8e063" },
+    { id: "pop", label: "Toque", icon: <FaFingerprint />, color: "#ff9a9e" },
+    { id: "chime", label: "Campana", icon: <FaBell />, color: "#f6d365" },
+    { id: "echo", label: "Radar", icon: <FaBroadcastTower />, color: "#8e44ad" },
+    { id: "zap", label: "Zap", icon: <FaBolt />, color: "#f1c40f" },
+    { id: "tink", label: "Gota", icon: <FaTint />, color: "#3498db" },
+    { id: "bloop", label: "Bloop", icon: <FaCircle />, color: "#95a5a6" }
+  ];
+
   useEffect(() => {
     if (initialData) {
       setNotifications(initialData.notifications_enabled ?? true);
@@ -87,8 +102,9 @@ const UserPreferencesModal = ({ isOpen, handleClose, initialData, onSave }) => {
       setThemeMode(initialThemeMode);
       setAccentColor(initialAccent);
       setFontFamily(initialFont);
+      setLocalSound(selectedSound);
     }
-  }, [initialData, isOpen]);
+  }, [initialData, isOpen, selectedSound]);
 
   // Aplicar temporalmente los estilos al root para la previsualización
   useEffect(() => {
@@ -134,11 +150,18 @@ const UserPreferencesModal = ({ isOpen, handleClose, initialData, onSave }) => {
   }, [isOpen, initialData]);
 
   const handleSubmit = () => {
+    changeNotificationSound(localSound);
     onSave({
       language: initialData?.language || "es",
       theme: `${themeMode}-${accentColor}-${fontFamily}`,
       notifications_enabled: notifications,
     });
+  };
+
+  const handlePreviewSound = (e, soundId) => {
+    e.stopPropagation();
+    setLocalSound(soundId);
+    playNotificationSound(soundId);
   };
 
   return (
@@ -149,7 +172,7 @@ const UserPreferencesModal = ({ isOpen, handleClose, initialData, onSave }) => {
 
       <Modal.Body>
         <div className="preferences-accordion-wrapper">
-          
+
           {/* Sección de Tema Claro / Oscuro */}
           <div className="preferences-field">
             <div className="preferences-accordion-header" onClick={() => toggleSection('appearance')}>
@@ -159,7 +182,7 @@ const UserPreferencesModal = ({ isOpen, handleClose, initialData, onSave }) => {
               </label>
               {openSections.appearance ? <FaChevronUp className="accordion-icon" /> : <FaChevronDown className="accordion-icon" />}
             </div>
-            
+
             {openSections.appearance && (
               <div className="mode-selector-grid">
                 <button
@@ -225,12 +248,43 @@ const UserPreferencesModal = ({ isOpen, handleClose, initialData, onSave }) => {
                     key={font.id}
                     className={`font-pill ${fontFamily === font.id ? 'active' : ''}`}
                     onClick={() => setFontFamily(font.id)}
-                    style={{ 
-                      fontFamily: font.family, 
-                      fontSize: font.id === 'pixel' ? '1.15rem' : '0.95rem' 
+                    style={{
+                      fontFamily: font.family,
+                      fontSize: font.id === 'pixel' ? '1.15rem' : '0.95rem'
                     }}
                   >
                     {font.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Sección de Sonidos de Notificación */}
+          <div className="preferences-field">
+            <div className="preferences-accordion-header" onClick={() => toggleSection('sounds')}>
+              <label className="preferences-label">
+                <FaMusic className="preferences-icon" />
+                Sonido de Notificación
+              </label>
+              {openSections.sounds ? <FaChevronUp className="accordion-icon" /> : <FaChevronDown className="accordion-icon" />}
+            </div>
+
+            {openSections.sounds && (
+              <div className="sound-pill-list">
+                {SOUND_OPTIONS.map((sound) => (
+                  <button
+                    key={sound.id}
+                    className={`sound-pill ${localSound === sound.id ? 'active' : ''}`}
+                    onClick={() => {
+                      setLocalSound(sound.id);
+                      playNotificationSound(sound.id);
+                    }}
+                  >
+                    <span className="sound-pill-icon" style={{ color: sound.color }}>
+                      {sound.icon}
+                    </span>
+                    {sound.label}
                   </button>
                 ))}
               </div>

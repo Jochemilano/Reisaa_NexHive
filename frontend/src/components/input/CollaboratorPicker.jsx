@@ -3,7 +3,7 @@ import { FaTimes, FaSearch, FaUserPlus, FaCheck } from "react-icons/fa";
 import { addFriend } from "@/utils/friends";
 import "./CollaboratorPicker.css";
 
-const CollaboratorPicker = ({ availableUsers = [], selectedCollaborators = [], onSelect, onRemove }) => {
+const CollaboratorPicker = ({ availableUsers = [], selectedCollaborators = [], onSelect, onRemove, showAllByDefault = false }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const wrapperRef = useRef(null);
@@ -14,9 +14,9 @@ const CollaboratorPicker = ({ availableUsers = [], selectedCollaborators = [], o
     const email = user.email || "";
     const searchLower = searchQuery.toLowerCase();
     
-    // Si no hay búsqueda, solo mostramos amigos
+    // Si no hay búsqueda
     if (searchQuery.trim() === "") {
-      return user.isFriend;
+      return showAllByDefault || user.isFriend;
     }
 
     return name.toLowerCase().includes(searchLower) || email.toLowerCase().includes(searchLower);
@@ -90,19 +90,19 @@ const CollaboratorPicker = ({ availableUsers = [], selectedCollaborators = [], o
                     className="collaborator-picker__dropdown-item"
                     onClick={() => handleSelect(user)}
                   >
-                    <div className="user-info">
-                      <span className="user-name">{user.name || user.username || `Usuario ${user.id}`}</span>
-                      {user.email && <span className="user-email">{user.email}</span>}
+                    <div className="collaborator-picker__user-info">
+                      <div className="collaborator-picker__user-name">{user.name || user.username || `Usuario ${user.id}`}</div>
+                      {user.email && <div className="collaborator-picker__user-email">{user.email}</div>}
                     </div>
                     
-                    <div className="user-actions">
+                    <div className="collaborator-picker__user-actions">
                       {user.isFriend ? (
-                        <span className="friend-badge" title="Es tu amigo">
+                        <span className="collaborator-picker__friend-badge" title="Es tu amigo">
                           <FaCheck /> Amigo
                         </span>
                       ) : (
                         <button 
-                          className="add-friend-btn" 
+                          className="collaborator-picker__add-btn" 
                           title="Agregar a amigos"
                           onClick={(e) => handleAddFriend(e, user.id)}
                         >

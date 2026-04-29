@@ -27,7 +27,7 @@ const NAV_ITEMS = [
 // ─── SidebarItem ──────────────────────────────────────────────────────────────
 const SidebarItem = ({
   label, tooltip, isActive, onClick, children, avatar,
-  onLongPress, badge,
+  onLongPress, showDot
 }) => {
   const [show, setShow] = useState(false);
   const [y, setY] = useState(0);
@@ -91,8 +91,8 @@ const SidebarItem = ({
           <Button className="button-general" text={label} onClick={handleClick} />
         )}
 
-        {badge > 0 && (
-          <div className="sidebar-badge">{badge > 99 ? '99+' : badge}</div>
+        {showDot && (
+          <div className="sidebar-dot" />
         )}
         {onLongPress && (
           <button
@@ -141,6 +141,14 @@ const Sidebar = () => {
     removeCollaborator,
     reset,
   } = useCreateGroupModal(isOpen);
+  
+  const groupChatRoomIds = groups.map(g => String(g.chat_room_id));
+  const homeUnreadTotal = Object.entries(unreadByRoom).reduce((acc, [roomId, count]) => {
+    if (!groupChatRoomIds.includes(String(roomId))) {
+      return acc + count;
+    }
+    return acc;
+  }, 0);
 
   const handleCreateGroup = async (avatarFile) => {
     if (!name.trim()) return alert("Nombre requerido");
@@ -192,7 +200,7 @@ const Sidebar = () => {
             tooltip={tooltip}
             isActive={location.pathname === path}
             onClick={() => navigate(path)}
-            badge={0}
+            showDot={path === "/home" && homeUnreadTotal > 0}
           >
             <Button className="button-general">{icon}</Button>
           </SidebarItem>
@@ -219,7 +227,7 @@ const Sidebar = () => {
               isActive={location.pathname === `/groups/${group.id}`}
               onClick={() => navigate(`/groups/${group.id}`)}
               onLongPress={canEdit ? () => setEditingGroup(group) : null}
-              badge={badgeCount}
+              showDot={badgeCount > 0}
             />
           );
         })}

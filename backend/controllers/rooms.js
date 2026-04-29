@@ -91,7 +91,7 @@ router.get("/rooms", verifyToken, async (req, res) => {
     const enrichedRooms = await Promise.all(rooms.map(async (room) => {
       if (room.participant_count === 2 && room.type === 'chat') {
         const [other] = await db.query(
-          `SELECT u.name, u.profile_pic 
+          `SELECT u.id, u.name, u.profile_pic 
            FROM room_participants rp
            JOIN users u ON u.id = rp.user_id
            WHERE rp.room_id = ? AND rp.user_id != ?`,
@@ -101,7 +101,8 @@ router.get("/rooms", verifyToken, async (req, res) => {
           return {
             ...room,
             display_name: other[0].name,
-            display_avatar: other[0].profile_pic
+            display_avatar: other[0].profile_pic,
+            display_id: other[0].id
           };
         }
       }
@@ -224,6 +225,38 @@ router.post("/messages", verifyToken, async (req, res) => {
   }
 });
 
+// Traer detalles de una sala (nombre, avatar y participantes)
+router.get("/rooms/:roomId/details", verifyToken, async (req, res) => {
+  const { roomId } = req.params;
+  const userId = req.userId;
+ 
+  try {
+    const [rooms] = await db.query(
+      "SELECT id, name, avatar, type, owner_id FROM rooms WHERE id = ?",
+      [roomId]
+    );
+    if (rooms.length === 0) return res.status(404).json({ error: "Sala no encontrada" });
+    const room = rooms[0];
+
+    const [participants] = await db.query(
+      `SELECT u.id, u.name, u.profile_pic
+       FROM room_participants rp
+       JOIN users u ON u.id = rp.user_id
+       WHERE rp.room_id = ?`,
+      [roomId]
+    );
+ 
+    res.json({
+      ...room,
+      members: participants
+    });
+ 
+  } catch (err) {
+    console.error("ERROR GET ROOM DETAILS:", err);
+    res.status(500).json({ message: "Error obteniendo detalles de la sala" });
+  }
+});
+
 // Traer participantes de una sala (excluyendo al usuario que consulta)
 router.get("/rooms/:roomId/participants", verifyToken, async (req, res) => {
   const { roomId } = req.params;
@@ -331,5 +364,98 @@ router.delete("/messages/:messageId", verifyToken, async (req, res) => {
   }
 });
 
-// responder mensaje (reply) ya existe arriba, se eliminó el duplicado
-module.exports = router;
+// Transferir ownership de la sala
+router.patch("/rooms/:roomId/transfer", verifyToken, async (req, res) => {
+  const { roomId } = req.params;
+  const { newOwnerId } = req.body;
+  const userId = req.userId;
+
+  try {
+    const room = await query(
+      "SELECT * FROM rooms WHERE id=? AND owner_id=?",
+      [roomId, userId]
+    );
+    if (room.length === 0)
+      return res.status(403).json({ message: "No eres owner de la sala" });
+
+    // Verificar que el nuevo owner es participante
+    const participant = await query(
+      "SELECT * FROM room_participants WHERE user_id=? AND room_id=?",
+      [newOwnerId, roomId]
+    );
+    if (participant.length === 0)
+      return res.status(400).json({ message: "El usuario no pertenece a la sala" });
+
+    await query(
+      "UPDATE rooms SET owner_id=? WHERE id=?",
+      [newOwnerId, roomId]
+    );
+
+    res.json({ success: true, message: "Ownership transferido" });
+  } catch (err) {
+    console.error("ERROR DB TRANSFER ROOM:", err);
+    res.status(500).json({ message: "Error al transferir ownership" });
+  }
+});
+
+// Salirse de una sala
+router.post("/rooms/:roomId/leave", verifyToken, async (req, res) => {
+  const { roomId } = req.params;
+  const userId = req.userId;
+
+  try {
+    const room = await query("SELECT owner_id FROM rooms WHERE id = ?", [roomId]);
+    if (room.length === 0) return res.status(404).json({ message: "Sala no encontrada" });
+
+    if (room[0].owner_id === userId) {
+      return res.status(400).json({ 
+        message: "No puedes salirte siendo el owner. Transfiere el mando o elimina la sala." 
+      });
+    }
+
+    const result = await query(
+      "DELETE FROM room_participants WHERE room_id = ? AND user_id = ?",
+      [roomId, userId]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "No eres participante de esta sala" });
+    }
+
+    res.json({ success: true, message: "Has salido de la sala" });
+  } catch (err) {
+    console.error("ERROR LEAVE ROOM:", err);
+    res.status(500).json({ message: "Error al salir de la sala" });
+  }
+});
+
+// Eliminar sala (incluyendo chats de 10 personas)
+router.delete("/rooms/:roomId", verifyToken, async (req, res) => {
+  const { roomId } = req.params;
+  const userId = req.userId;
+
+  try {
+    const room = await query("SELECT owner_id FROM rooms WHERE id = ?", [roomId]);
+    if (room.length === 0) return res.status(404).json({ message: "Sala no encontrada" });
+
+    const [user] = await query("SELECT rol FROM users WHERE id=?", [userId]);
+    const isAdmin = user?.rol === 'admin';
+    const isOwner = room[0].owner_id === userId;
+
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({ message: "No tienes permisos para eliminar esta sala" });
+    }
+
+    // Limpiar mensajes y participantes
+    await query("DELETE FROM messages WHERE room_id = ?", [roomId]);
+    await query("DELETE FROM room_participants WHERE room_id = ?", [roomId]);
+    await query("DELETE FROM rooms WHERE id = ?", [roomId]);
+
+    res.json({ success: true, message: "Sala eliminada correctamente" });
+  } catch (err) {
+    console.error("ERROR DELETE ROOM:", err);
+    res.status(500).json({ message: "Error al eliminar la sala" });
+  }
+});
+
+module.exports = router;

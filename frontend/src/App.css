@@ -41,6 +41,7 @@
   --status-cancelled-bg:   #fee2e2;
   --status-cancelled-text: #991b1b;
   --status-cancelled-border: #ef4444;
+  --read-check: #00e5ff;
 }
 
 /* Oscuro */
@@ -77,6 +78,7 @@
   --status-cancelled-bg:   rgba(239, 68, 68, 0.15);
   --status-cancelled-text: #fca5a5;
   --status-cancelled-border: rgba(239, 68, 68, 0.4);
+  --read-check: #00e5ff;
 }
 
 /* ----------------- COLORES DE ACENTO (BOTONES, DETALLES) ----------------- */
@@ -89,6 +91,7 @@
   --secondary-hover: #3B82F6;
   --success: #16A34A;
   --error: #DC2626;
+  --read-check: #00e5ff;
 }
 
 /* Ámbar / Naranja */
@@ -99,6 +102,7 @@
   --secondary-hover: #F59E0B;
   --success: #22C55E;
   --error: #EF4444;
+  --read-check: #00e5ff;
 }
 
 /* Morado */
@@ -109,6 +113,7 @@
   --secondary-hover: #8B5CF6;
   --success: #22C55E;
   --error: #EF4444;
+  --read-check: #00ff88;
 }
 
 /* Rosa */
@@ -119,6 +124,7 @@
   --secondary-hover: #DB2777;
   --success: #22C55E;
   --error: #F43F5E;
+  --read-check: #00ffff;
 }
 
 /* Gris */
@@ -129,6 +135,7 @@
   --secondary-hover: #6B7280;
   --success: #16A34A;
   --error: #DC2626;
+  --read-check: #00d2ff;
 }
 
 /* Rojo */
@@ -139,6 +146,7 @@
   --secondary-hover: #EF4444;
   --success: #22C55E;
   --error: #B91C1C;
+  --read-check: #00ffff;
 }
 
 /* Amarillo */
@@ -159,6 +167,7 @@
   --secondary-hover: #10B981;
   --success: #059669;
   --error: #EF4444;
+  --read-check: #ffeb3b;
 }
 
 /* Cyan / Turquesa */
@@ -169,6 +178,7 @@
   --secondary-hover: #06B6D4;
   --success: #22C55E;
   --error: #EF4444;
+  --read-check: #ffeb3b;
 }
 
 /* Índigo */

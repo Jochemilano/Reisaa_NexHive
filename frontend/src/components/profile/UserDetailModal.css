@@ -1,0 +1,116 @@
+/* Estilo específico para el modal de perfil de usuario */
+.user-profile-modal {
+  width: 320px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: none;
+  background: var(--bg-elevated);
+}
+
+.user-detail-banner {
+  height: 80px;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  width: 100%;
+}
+
+.user-detail-content {
+  padding: 0 20px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: -40px;
+}
+
+.user-detail-pic-section {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.user-detail-pic-wrapper {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 4px solid var(--bg-elevated);
+  background: var(--bg-soft);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px var(--shadow);
+}
+
+.user-detail-pic {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.user-detail-pic-placeholder {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.user-info {
+  text-align: center;
+  width: 100%;
+}
+
+.user-name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 4px;
+}
+
+.user-email {
+  font-size: 0.85rem;
+  color: var(--text-tertiary);
+  margin: 0 0 12px;
+}
+
+.user-badges {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.user-role-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: var(--bg-soft);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.user-detail-divider {
+  width: 100%;
+  height: 1px;
+  background: var(--border);
+  margin: 20px 0;
+}
+
+.user-actions {
+  width: 100%;
+}
+
+.user-close-btn {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-soft);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.user-close-btn:hover {
+  background: var(--bg-active);
+  transform: translateY(-1px);
+}

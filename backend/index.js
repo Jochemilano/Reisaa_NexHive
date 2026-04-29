@@ -86,6 +86,7 @@ app.post("/upload", upload.single("file"), (req, res) => {
 app.get("/", (req, res) => res.send("Servidor corriendo"));
 
 app.use("/api", authController);
+app.use("/api", friendsController);
 app.use("/api", groupsController);
 app.use("/api", projectsController);
 app.use("/api", eventsController);
@@ -94,7 +95,6 @@ app.use("/api", profileController);
 app.use("/api", activitiesController);
 app.use("/api", favoritesController);
 app.use("/api", preferencesController);
-app.use("/api", friendsController);
 
 // ============================================================
 // SERVIDOR HTTP + SOCKET.IO

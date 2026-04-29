@@ -1,0 +1,229 @@
+.group-profile-modal {
+  width: 400px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: none;
+  background: var(--bg-elevated);
+}
+
+.group-detail-banner {
+  height: 120px;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.group-banner-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.group-banner-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  color: rgba(255, 255, 255, 0.6);
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+}
+
+.group-banner-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.4));
+}
+
+.group-detail-content {
+  padding: 20px;
+}
+
+.group-info-section {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.group-name {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 5px;
+}
+
+.group-meta {
+  font-size: 0.9rem;
+  color: var(--text-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.group-detail-divider {
+  width: 100%;
+  height: 1px;
+  background: var(--border);
+  margin: 15px 0;
+}
+
+.section-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+}
+
+.members-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 250px;
+  overflow-y: auto;
+  padding-right: 5px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.members-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.member-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.member-item:hover {
+  background: var(--bg-soft);
+  transform: translateX(4px);
+}
+
+.member-avatar-wrapper {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+}
+
+.member-avatar, .member-avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--bg-active);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.owner-crown {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  background: gold;
+  color: #000;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  border: 1px solid var(--bg-elevated);
+}
+
+.member-name {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.group-actions {
+  margin-top: 20px;
+}
+
+.group-close-btn {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-soft);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.group-close-btn:hover {
+  background: var(--bg-active);
+}
+
+.transfer-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  margin-left: auto;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.transfer-btn:hover {
+  color: gold;
+  background: rgba(255, 215, 0, 0.1);
+}
+
+.action-btn {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  transition: all 0.2s;
+}
+
+.danger-btn {
+  background: rgba(255, 77, 77, 0.1);
+  color: #ff4d4d;
+  border: 1px solid rgba(255, 77, 77, 0.2);
+}
+
+.danger-btn:hover {
+  background: #ff4d4d;
+  color: white;
+}
+
+.leave-btn {
+  background: rgba(255, 152, 0, 0.1);
+  color: #ff9800;
+  border: 1px solid rgba(255, 152, 0, 0.2);
+}
+
+.leave-btn:hover {
+  background: #ff9800;
+  color: white;
+}

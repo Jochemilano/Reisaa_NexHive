@@ -30,6 +30,11 @@ module.exports = (io, connectedUsers) => {
       // enviar info completa
       io.emit("usuarios:lista", [...connectedUsers.values()].map(v => v.userData));
 
+      // Permitir que el cliente pida la lista (ej: al volver a Home)
+      socket.on("get-online-users", () => {
+        socket.emit("usuarios:lista", [...connectedUsers.values()].map(v => v.userData));
+      });
+
     } catch (err) {
       console.log("❌ JWT inválido en socket:", err.message);
       return socket.disconnect();
