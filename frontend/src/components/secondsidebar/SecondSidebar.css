@@ -461,6 +461,44 @@
   font-weight: 500;
 }
 
+.project-item-minimal.visible {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.project-item-minimal.hidden {
+  color: var(--text-tertiary);
+  opacity: 0.55;
+}
+
+.project-item-minimal.hidden:hover {
+  opacity: 0.8;
+}
+
+.project-name-hidden {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+.project-eye-icon {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  font-size: 9px;
+  color: var(--text-tertiary);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.project-item-minimal:hover .project-eye-icon {
+  opacity: 1;
+}
+
+.project-item-minimal.hidden .project-eye-icon {
+  opacity: 1;
+  color: var(--text-tertiary);
+}
+
 .project-dot-small {
   width: 4px; /* Más pequeño */
   height: 4px;

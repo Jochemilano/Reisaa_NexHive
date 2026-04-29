@@ -15,7 +15,7 @@ export const CalendarProvider = ({ children }) => {
   const [filters, setFilters] = useState({
     showPersonal: true,
     showActivities: true,
-    selectedProjects: [], 
+    hiddenProjects: [], // IDs de proyectos cuyas actividades están ocultas
   });
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -50,9 +50,8 @@ export const CalendarProvider = ({ children }) => {
   const filteredEvents = events.filter(event => {
     if (event.isActivity) {
       if (!filters.showActivities) return false;
-      if (filters.selectedProjects.length > 0 && !filters.selectedProjects.includes(event.project_id)) {
-        return false;
-      }
+      // Si el proyecto está en hiddenProjects, ocultar sus actividades
+      if (filters.hiddenProjects.includes(event.project_id)) return false;
       return true;
     } else {
       return filters.showPersonal;

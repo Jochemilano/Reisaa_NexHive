@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { useGroup } from "@/context/GroupContext";
 import { useCalendar } from "@/context/CalendarContext";
 import { getProfile } from "@/utils/profile";
+import { useUnread } from "@/context/UnreadContext";
 
 const GroupSecondSidebar = ({ groupId }) => {
   const [details, setDetails] = useState({ channels: [], members: [] });
@@ -22,6 +23,7 @@ const GroupSecondSidebar = ({ groupId }) => {
   const myId = Number(localStorage.getItem("userId"));
   const filteredAvailableUsers = availableUsers.filter(u => u.id !== myId);
 
+  const { unreadByRoom } = useUnread();
   const [userRole, setUserRole] = useState(null);
 
   const loadDetails = async () => {
@@ -113,6 +115,11 @@ const GroupSecondSidebar = ({ groupId }) => {
             >
               <FaHashtag className="channel-icon" />
               <span>Mensajes</span>
+              {unreadByRoom[c.chat_room_id] > 0 && (
+                <span className="unread-badge-small" style={{ marginLeft: 'auto' }}>
+                  {unreadByRoom[c.chat_room_id]}
+                </span>
+              )}
             </div>
             <div
               className="user-item"

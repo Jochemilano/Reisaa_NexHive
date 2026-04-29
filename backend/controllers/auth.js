@@ -18,8 +18,26 @@ router.post("/register", async (req, res) => {
   }
 
   try {
-    const existing = await query("SELECT id FROM users WHERE email = ?", [email]);
+    const existing = await query("SELECT id, is_verified FROM users WHERE email = ?", [email]);
     if (existing.length) {
+      if (!existing[0].is_verified) {
+        // Re-generate code and update user
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+        const vCode = generateCode();
+
+        await query(
+          "UPDATE users SET name = ?, password = ?, verification_code = ? WHERE email = ?",
+          [name, hashedPassword, vCode, email]
+        );
+        await sendVerificationEmail(email, vCode);
+
+        return res.status(201).json({
+          message: "Registro actualizado. Por favor verifica tu correo.",
+          email: email,
+          needsVerification: true
+        });
+      }
       return res.status(409).json({ message: "El correo ya está registrado" });
     }
 
@@ -97,7 +115,7 @@ router.post("/login", async (req, res) => {
     );
 
     if (results.length === 0) {
-      return res.status(401).json({ message: "Credenciales inválidas" });
+      return res.status(401).json({ message: "El correo no está registrado" });
     }
 
     const user = results[0];
@@ -114,7 +132,7 @@ router.post("/login", async (req, res) => {
     // Comparar contraseña
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).json({ message: "Credenciales inválidas" });
+      return res.status(401).json({ message: "Contraseña incorrecta" });
     }
 
     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "1d" });

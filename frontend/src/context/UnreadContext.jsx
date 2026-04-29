@@ -1,15 +1,39 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { socket } from "@/utils/socket";
 import { apiFetch } from "@/utils/apiClient";
+import { playNotificationSound } from "@/utils/audio";
 
 const UnreadContext = createContext();
 
-export const UnreadProvider = ({ children }) => {
+export function UnreadProvider({ children }) {
   const [unreadTotal, setUnreadTotal] = useState(0);
   const [unreadByRoom, setUnreadByRoom] = useState({}); // { roomId: count }
+  const [mutedRooms, setMutedRooms] = useState(() => {
+    const saved = localStorage.getItem("muted_rooms");
+    return saved ? JSON.parse(saved) : [];
+  });
+  
+  const soundEnabledRef = useRef(true);
+  const setSoundEnabled = useCallback((enabled) => {
+    soundEnabledRef.current = !!enabled;
+  }, []);
+
+  const toggleMuteRoom = useCallback((roomId) => {
+    setMutedRooms(prev => {
+      const isMuted = prev.includes(roomId);
+      const next = isMuted ? prev.filter(id => id !== roomId) : [...prev, roomId];
+      localStorage.setItem("muted_rooms", JSON.stringify(next));
+      return next;
+    });
+  }, []);
 
   const fetchUnreadData = useCallback(async () => {
     try {
+      const prefs = await apiFetch("preferences").catch(() => null);
+      if (prefs && prefs.notifications_enabled !== undefined) {
+        soundEnabledRef.current = !!prefs.notifications_enabled;
+      }
+
       const totalData = await apiFetch("rooms/unread/total");
       setUnreadTotal(totalData.total);
 
@@ -27,8 +51,11 @@ export const UnreadProvider = ({ children }) => {
   useEffect(() => {
     fetchUnreadData();
 
-    // Escuchar notificaciones de nuevos mensajes (evento separado del chat)
     const handleNotification = (data) => {
+      const isRoomMuted = mutedRooms.includes(data.room_id);
+      if (soundEnabledRef.current && !isRoomMuted) {
+        playNotificationSound();
+      }
       setUnreadByRoom(prev => ({
         ...prev,
         [data.room_id]: (prev[data.room_id] || 0) + 1
@@ -36,7 +63,6 @@ export const UnreadProvider = ({ children }) => {
       setUnreadTotal(prev => prev + 1);
     };
 
-    // Escuchar cuando una sala se marca como leída para resetear
     const handleRoomRead = ({ roomId, userId }) => {
       const currentUserId = parseInt(localStorage.getItem("userId"));
       if (parseInt(userId) !== currentUserId) return;
@@ -50,16 +76,13 @@ export const UnreadProvider = ({ children }) => {
 
     socket.on("new-message-notification", handleNotification);
     socket.on("room-read", handleRoomRead);
-    socket.on("connect", fetchUnreadData);
 
     return () => {
       socket.off("new-message-notification", handleNotification);
       socket.off("room-read", handleRoomRead);
-      socket.off("connect", fetchUnreadData);
     };
-  }, [fetchUnreadData]);
+  }, [fetchUnreadData, mutedRooms]);
 
-  // Función para resetear manualmente (útil al entrar a un chat)
   const markAsRead = useCallback((roomId) => {
     setUnreadByRoom(prev => {
       const oldCount = prev[roomId] || 0;
@@ -69,15 +92,16 @@ export const UnreadProvider = ({ children }) => {
     });
   }, []);
 
-  const value = React.useMemo(() => ({
-    unreadTotal, unreadByRoom, fetchUnreadData, markAsRead
-  }), [unreadTotal, unreadByRoom, fetchUnreadData, markAsRead]);
+  const value = useMemo(() => ({
+    unreadTotal, unreadByRoom, fetchUnreadData, markAsRead, setSoundEnabled, mutedRooms, toggleMuteRoom
+  }), [unreadTotal, unreadByRoom, fetchUnreadData, markAsRead, setSoundEnabled, mutedRooms, toggleMuteRoom]);
 
   return (
     <UnreadContext.Provider value={value}>
       {children}
     </UnreadContext.Provider>
   );
-};
+}
 
 export const useUnread = () => useContext(UnreadContext);
+

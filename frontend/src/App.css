@@ -21,6 +21,26 @@
 
   --border: rgba(0, 0, 0, 0.1);
   --shadow: rgba(0, 0, 0, 0.2);
+
+  /* Estado: Pendiente */
+  --status-pending-bg:   #fef3c7;
+  --status-pending-text: #92400e;
+  --status-pending-border: #f59e0b;
+
+  /* Estado: En progreso */
+  --status-progress-bg:   #dbeafe;
+  --status-progress-text: #1e40af;
+  --status-progress-border: #3b82f6;
+
+  /* Estado: Completada */
+  --status-done-bg:   #d1fae5;
+  --status-done-text: #065f46;
+  --status-done-border: #10b981;
+
+  /* Estado: Cancelada */
+  --status-cancelled-bg:   #fee2e2;
+  --status-cancelled-text: #991b1b;
+  --status-cancelled-border: #ef4444;
 }
 
 /* Oscuro */
@@ -37,6 +57,26 @@
 
   --border: rgba(255, 255, 255, 0.07);
   --shadow: rgba(0, 0, 0, 0.7);
+
+  /* Estado: Pendiente */
+  --status-pending-bg:   rgba(245, 158, 11, 0.15);
+  --status-pending-text: #fcd34d;
+  --status-pending-border: rgba(245, 158, 11, 0.4);
+
+  /* Estado: En progreso */
+  --status-progress-bg:   rgba(59, 130, 246, 0.15);
+  --status-progress-text: #93c5fd;
+  --status-progress-border: rgba(59, 130, 246, 0.4);
+
+  /* Estado: Completada */
+  --status-done-bg:   rgba(16, 185, 129, 0.15);
+  --status-done-text: #6ee7b7;
+  --status-done-border: rgba(16, 185, 129, 0.4);
+
+  /* Estado: Cancelada */
+  --status-cancelled-bg:   rgba(239, 68, 68, 0.15);
+  --status-cancelled-text: #fca5a5;
+  --status-cancelled-border: rgba(239, 68, 68, 0.4);
 }
 
 /* ----------------- COLORES DE ACENTO (BOTONES, DETALLES) ----------------- */

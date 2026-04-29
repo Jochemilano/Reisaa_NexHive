@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { FaPlus, FaCog, FaUserAlt, FaComments, FaStar, FaCalendarAlt } from "react-icons/fa";
+import { FaPlus, FaCog, FaUserAlt, FaComments, FaStar, FaCalendarAlt, FaVolumeMute } from "react-icons/fa";
 import Modal from "@/components/modal/Modal";
 import Separator from "@/components/separator/Separator";
 import Button from "@/components/button/Button";
@@ -19,9 +19,9 @@ import { useUnread } from "@/context/UnreadContext";
 import "./Sidebar.css";
 
 const NAV_ITEMS = [
-  { path: "/home",  icon: <FaComments />,       tooltip: "Mensajes" },
-  { path: "/favorites", icon: <FaStar />,       tooltip: "Favoritos" },
-  { path: "/calendar",  icon: <FaCalendarAlt />,tooltip: "Calendario" },
+  { path: "/home", icon: <FaComments />, tooltip: "Mensajes" },
+  { path: "/favorites", icon: <FaStar />, tooltip: "Favoritos" },
+  { path: "/calendar", icon: <FaCalendarAlt />, tooltip: "Calendario" },
 ];
 
 // ─── SidebarItem ──────────────────────────────────────────────────────────────
@@ -30,11 +30,11 @@ const SidebarItem = ({
   onLongPress, badge,
 }) => {
   const [show, setShow] = useState(false);
-  const [y, setY]       = useState(0);
-  const wrapperRef      = useRef(null);
+  const [y, setY] = useState(0);
+  const wrapperRef = useRef(null);
 
   const longPressTriggered = useRef(false);
-  const timerRef           = useRef(null);
+  const timerRef = useRef(null);
 
   const startPress = useCallback((e) => {
     longPressTriggered.current = false;
@@ -90,13 +90,13 @@ const SidebarItem = ({
         ) : (
           <Button className="button-general" text={label} onClick={handleClick} />
         )}
-        
+
         {badge > 0 && (
           <div className="sidebar-badge">{badge > 99 ? '99+' : badge}</div>
         )}
         {onLongPress && (
-          <button 
-            className="sidebar-item-edit" 
+          <button
+            className="sidebar-item-edit"
             onClick={(e) => { e.stopPropagation(); onLongPress(); }}
             title="Editar"
           >
@@ -121,17 +121,16 @@ const SidebarItem = ({
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 const Sidebar = () => {
-  const navigate  = useNavigate();
-  const location  = useLocation();
-  // unreadTotal ya no se usa aquí pero lo dejamos por si acaso o lo quitamos para limpiar
-  // const { unreadTotal } = useUnread(); 
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { unreadTotal, unreadByRoom, setSoundEnabled } = useUnread();
 
-  const [isOpen,            setIsOpen]            = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const [isPreferencesOpen, setIsPreferencesOpen] = useState(false);
-  const [userPreferences,   setUserPreferences]   = useState(null);
-  const [isProfileOpen,     setIsProfileOpen]     = useState(false);
-  const [perfil,            setPerfil]            = useState(null);
-  const [editingGroup,      setEditingGroup]      = useState(null);
+  const [userPreferences, setUserPreferences] = useState(null);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [perfil, setPerfil] = useState(null);
+  const [editingGroup, setEditingGroup] = useState(null);
 
   const { groups, addGroup } = useGroups();
   const {
@@ -170,6 +169,7 @@ const Sidebar = () => {
       setUserPreferences(saved);
       setIsPreferencesOpen(false);
       document.body.className = saved.theme === "light" ? "" : saved.theme;
+      setSoundEnabled(saved.notifications_enabled);
     } catch (err) {
       alert("Error guardando preferencias: " + err.message);
     }
@@ -192,6 +192,7 @@ const Sidebar = () => {
             tooltip={tooltip}
             isActive={location.pathname === path}
             onClick={() => navigate(path)}
+            badge={0}
           >
             <Button className="button-general">{icon}</Button>
           </SidebarItem>
@@ -208,6 +209,7 @@ const Sidebar = () => {
 
         {groups.map(group => {
           const canEdit = perfil?.rol === 'admin' || perfil?.id === group.owner_id;
+          const badgeCount = unreadByRoom[String(group.chat_room_id)] || 0;
           return (
             <SidebarItem
               key={group.id}
@@ -217,6 +219,7 @@ const Sidebar = () => {
               isActive={location.pathname === `/groups/${group.id}`}
               onClick={() => navigate(`/groups/${group.id}`)}
               onLongPress={canEdit ? () => setEditingGroup(group) : null}
+              badge={badgeCount}
             />
           );
         })}

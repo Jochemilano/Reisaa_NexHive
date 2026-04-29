@@ -7,9 +7,10 @@ import MediaModal from "./MediaModal";
 import MediaPanel from "./MediaPanel";
 import ImageEditorModal from "./ImageEditorModal";
 import ChatSearch from "./ChatSearch";
-import { FaPaperclip, FaPaperPlane, FaStar, FaPhone, FaReply, FaEdit, FaTrash, FaTimes, FaImages, FaCopy, FaPlus } from "react-icons/fa";
+import { FaPaperclip, FaPaperPlane, FaStar, FaPhone, FaReply, FaEdit, FaTrash, FaTimes, FaImages, FaCopy, FaPlus, FaVolumeUp, FaVolumeMute } from "react-icons/fa";
 import { MdDoneAll } from "react-icons/md";
 import { FiCheck } from "react-icons/fi";
+import { useUnread } from "@/context/UnreadContext";
 import { getFileUrl, getFileName, toggleFavoriteMessage } from "@/utils/chat";
 import "./chat.css";
 import "./call.css";
@@ -176,6 +177,8 @@ const Chat = ({ roomId, userId, targetUserId, targetUserName, targetUserAvatar, 
 
   const { messages, send, sendFile, deleteMessage, editMessage } = useChat(roomId, userId);
   const { startCall, activeCall, isMinimized } = useCall();
+  const { mutedRooms = [], toggleMuteRoom } = useUnread();
+  const isRoomMuted = mutedRooms?.includes(roomId) || false;
 
   const isInitialLoad = useRef(true);
 
@@ -394,6 +397,13 @@ const Chat = ({ roomId, userId, targetUserId, targetUserName, targetUserAvatar, 
           </div>
           <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
             <ChatSearch showSearch={showSearch} setShowSearch={setSearchSearch} searchTerm={searchTerm} onSearch={handleSearch} results={searchResults} currentIndex={currentMatchIndex} onNavigate={navigateMatch} />
+            <button 
+              onClick={() => toggleMuteRoom(roomId)} 
+              className={`header-icon-btn ${isRoomMuted ? 'audio-off' : 'audio-on'}`}
+              title={isRoomMuted ? "Activar audio" : "Desactivar audio"}
+            >
+              {isRoomMuted ? <FaVolumeMute style={{ color: "#ff4d4d" }} /> : <FaVolumeUp />}
+            </button>
             {targetUserId && !activeCall && <button onClick={() => startCall(targetUserId, targetUserName, roomId)} className="header-icon-btn" title="Llamar"><FaPhone /></button>}
             <button onClick={() => setShowMediaPanel(prev => !prev)} className="header-icon-btn" title="Multimedia"><FaImages /></button>
           </div>

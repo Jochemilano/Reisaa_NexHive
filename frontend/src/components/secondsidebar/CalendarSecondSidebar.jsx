@@ -46,10 +46,11 @@ const CalendarSecondSidebar = () => {
   
   const toggleProject = (projectId) => {
     setFilters(f => {
-      const selected = f.selectedProjects.includes(projectId)
-        ? f.selectedProjects.filter(id => id !== projectId)
-        : [...f.selectedProjects, projectId];
-      return { ...f, selectedProjects: selected };
+      const isHidden = f.hiddenProjects.includes(projectId);
+      const hiddenProjects = isHidden
+        ? f.hiddenProjects.filter(id => id !== projectId) // mostrar
+        : [...f.hiddenProjects, projectId];               // ocultar
+      return { ...f, hiddenProjects };
     });
   };
 
@@ -135,11 +136,24 @@ const CalendarSecondSidebar = () => {
           {filters.showActivities && projects.length > 0 && (
             <div className="project-sublist-minimal">
               {projects.map(p => {
-                const isSelected = filters.selectedProjects.length === 0 || filters.selectedProjects.includes(p.id);
+                const isHidden = filters.hiddenProjects.includes(p.id);
                 return (
-                  <div key={p.id} className={`project-item-minimal ${isSelected ? 'selected' : ''}`} onClick={() => toggleProject(p.id)}>
-                    <span className="project-dot-small" style={{ backgroundColor: getProjectColor(p.id) }}></span>
-                    <span className="project-name-small">{p.name}</span>
+                  <div
+                    key={p.id}
+                    className={`project-item-minimal ${isHidden ? 'hidden' : 'visible'}`}
+                    onClick={() => toggleProject(p.id)}
+                    title={isHidden ? `Mostrar actividades de ${p.name}` : `Ocultar actividades de ${p.name}`}
+                  >
+                    <span
+                      className="project-dot-small"
+                      style={{ backgroundColor: getProjectColor(p.id), opacity: isHidden ? 0.3 : 1 }}
+                    />
+                    <span className={`project-name-small ${isHidden ? 'project-name-hidden' : ''}`}>
+                      {p.name}
+                    </span>
+                    <span className="project-eye-icon">
+                      {isHidden ? <FaEyeSlash className="muted" /> : <FaEye />}
+                    </span>
                   </div>
                 );
               })}

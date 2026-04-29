@@ -7,11 +7,13 @@ import ViewActivityModal from "@/components/groups/ViewActivityModal";
 import Modal from "@/components/modal/Modal";
 import { BsThreeDots } from "react-icons/bs";
 import { useGroup } from "@/context/GroupContext";
-import { FaEye, FaEdit, FaTrash, FaSort, FaSortUp, FaSortDown, FaCalendarAlt, FaCheck, FaClock, FaThumbtack, FaChevronRight } from "react-icons/fa";
+import { FaEye, FaEdit, FaTrash, FaSort, FaSortUp, FaSortDown, FaCalendarAlt, FaCheck, FaClock, FaThumbtack, FaChevronRight, FaTable, FaThLarge } from "react-icons/fa";
 import { apiFetch } from "@/utils/apiClient";
 import { deleteActivity } from "@/utils/activities";
 import { useCalendar } from "@/context/CalendarContext";
+import KanbanBoard from "@/components/kanban/KanbanBoard";
 import "./GroupPage.css";
+import "@/components/kanban/KanbanBoard.css";
 
 const STATUS_LABELS = {
   pending: "Pendiente",
@@ -56,6 +58,7 @@ const GroupPage = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [groupName, setGroupName] = useState("");
   const [sortConfig, setSortConfig] = useState({ key: "id", direction: "desc" });
+  const [viewMode, setViewMode] = useState("table"); // "table" | "kanban"
 
   // Cargar nombre del grupo para breadcrumbs
   useEffect(() => {
@@ -192,145 +195,202 @@ const GroupPage = () => {
             <h1 className="group-page__title">
               {selectedProject?.name ?? "Selecciona un proyecto"}
             </h1>
-            {selectedProject && (
-              <div className="project-stats">
-                <span className="stat-item stat-item--done" title="Completadas">
-                  <FaCheck /> {stats.done}
-                </span>
-                <span className="stat-item stat-item--progress" title="En progreso">
-                  <FaClock /> {stats.inProgress}
-                </span>
-                <span className="stat-item stat-item--pending" title="Pendientes">
-                  <FaThumbtack /> {stats.pending}
-                </span>
-              </div>
-            )}
+            {selectedProject && (() => {
+            const total = activities.length;
+            const pct = total === 0 ? 0 : Math.round((stats.done / total) * 100);
+            const isComplete = pct === 100;
+            return (
+              <>
+                <div className="project-stats">
+                  <span className="stat-item stat-item--done" title="Completadas">
+                    <FaCheck /> {stats.done}
+                  </span>
+                  <span className="stat-item stat-item--progress" title="En progreso">
+                    <FaClock /> {stats.inProgress}
+                  </span>
+                  <span className="stat-item stat-item--pending" title="Pendientes">
+                    <FaThumbtack /> {stats.pending}
+                  </span>
+                </div>
+                {total > 0 && (
+                  <div className="project-progress">
+                    <div className="progress-bar-track">
+                      <div
+                        className={`progress-bar-fill ${isComplete ? "progress-bar-fill--complete" : ""}`}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <span className="progress-label">{pct}%</span>
+                  </div>
+                )}
+              </>
+            );
+          })()}
           </div>
           {selectedProject && (
-            <Modal.Button onClick={() => setCreateModal(true)}>
-              + Nueva actividad
-            </Modal.Button>
+            <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
+              {/* Toggle vista */}
+              <div className="view-toggle">
+                <button
+                  className={`view-toggle__btn ${viewMode === "table" ? "view-toggle__btn--active" : ""}`}
+                  onClick={() => setViewMode("table")}
+                  title="Vista tabla"
+                >
+                  <FaTable /> Tabla
+                </button>
+                <button
+                  className={`view-toggle__btn ${viewMode === "kanban" ? "view-toggle__btn--active" : ""}`}
+                  onClick={() => setViewMode("kanban")}
+                  title="Vista Kanban"
+                >
+                  <FaThLarge /> Kanban
+                </button>
+              </div>
+              <Modal.Button onClick={() => setCreateModal(true)}>
+                + Nueva actividad
+              </Modal.Button>
+            </div>
           )}
         </div>
 
         {selectedProject ? (
           <>
-            <div className="group-page__filters">
-              <input
-                type="text"
-                placeholder="Buscar por nombre o responsable..."
-                className="group-page__search"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              <select
-                className="group-page__filter"
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-              >
-                <option value="all">Todos los estados</option>
-                <option value="pending">Pendiente</option>
-                <option value="in_progress">En progreso</option>
-                <option value="done">Completada</option>
-              </select>
-            </div>
+            {/* Filtros — solo en vista tabla */}
+            {viewMode === "table" && (
+              <div className="group-page__filters">
+                <input
+                  type="text"
+                  placeholder="Buscar por nombre o responsable..."
+                  className="group-page__search"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <select
+                  className="group-page__filter"
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                >
+                  <option value="all">Todos los estados</option>
+                  <option value="pending">Pendiente</option>
+                  <option value="in_progress">En progreso</option>
+                  <option value="done">Completada</option>
+                </select>
+              </div>
+            )}
 
-            <div className="activity-table-wrapper">
-              <table className="activity-table">
-                <thead>
-                  <tr>
-                    <th onClick={() => requestSort("name")} className="sortable-th">
-                      Nombre {getSortIcon("name")}
-                    </th>
-                    <th onClick={() => requestSort("owner_name")} className="sortable-th">
-                      Responsable {getSortIcon("owner_name")}
-                    </th>
-                    <th onClick={() => requestSort("status")} className="sortable-th">
-                      Estado {getSortIcon("status")}
-                    </th>
-                    <th onClick={() => requestSort("start_date")} className="sortable-th">
-                      Inicio {getSortIcon("start_date")}
-                    </th>
-                    <th onClick={() => requestSort("deadline")} className="sortable-th">
-                      Fecha límite {getSortIcon("deadline")}
-                    </th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredActivities.length === 0 ? (
+            {/* ── VISTA TABLA ── */}
+            {viewMode === "table" && (
+              <div className="activity-table-wrapper">
+                <table className="activity-table">
+                  <thead>
                     <tr>
-                      <td colSpan={6} className="activity-table__empty">
-                        {activities.length === 0
-                          ? "Este proyecto no tiene actividades aún."
-                          : "No hay actividades que coincidan con la búsqueda."}
-                      </td>
+                      <th onClick={() => requestSort("name")} className="sortable-th">
+                        Nombre {getSortIcon("name")}
+                      </th>
+                      <th onClick={() => requestSort("owner_name")} className="sortable-th">
+                        Responsable {getSortIcon("owner_name")}
+                      </th>
+                      <th onClick={() => requestSort("status")} className="sortable-th">
+                        Estado {getSortIcon("status")}
+                      </th>
+                      <th onClick={() => requestSort("start_date")} className="sortable-th">
+                        Inicio {getSortIcon("start_date")}
+                      </th>
+                      <th onClick={() => requestSort("deadline")} className="sortable-th">
+                        Fecha límite {getSortIcon("deadline")}
+                      </th>
+                      <th></th>
                     </tr>
-                  ) : (
-                    filteredActivities.map((a) => (
-                      <tr key={`activity-${a.id}`}>
-                        <td>{highlightText(a.name || "Sin nombre", searchTerm)}</td>
-                        <td>{highlightText(a.owner_name || "—", searchTerm)}</td>
-                        <td>
-                          <span className={`activity-status activity-status--${a.status}`}>
-                            {STATUS_LABELS[a.status] ?? "—"}
-                          </span>
-                        </td>
-                        <td>{formatDate(a.start_date)}</td>
-                        <td className={isOverdue(a.deadline, a.status) ? "date-overdue" : ""}>
-                          {isOverdue(a.deadline, a.status) && <FaCalendarAlt style={{ marginRight: "4px", fontSize: "0.8em" }} />}
-                          {formatDate(a.deadline)}
-                        </td>
-                        <td className="activity-table__actions">
-                          <div className="activity-menu">
-                            <button
-                              className="activity-menu__trigger"
-                              onClick={(e) => toggleMenu(e, a.id)}
-                            >
-                              <BsThreeDots />
-                            </button>
-                            {openMenuId === a.id && (
-                              <div
-                                className="activity-menu__dropdown"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <button
-                                  className="activity-menu__item"
-                                  onClick={() => {
-                                    setViewModal({ open: true, activityId: a.id });
-                                    setOpenMenuId(null);
-                                  }}
-                                >
-                                  <FaEye style={{ marginRight: "12px" }} /> Ver detalles
-                                </button>
-                                <button
-                                  className="activity-menu__item"
-                                  onClick={() => {
-                                    setEditModal({ open: true, activityId: a.id });
-                                    setOpenMenuId(null);
-                                  }}
-                                >
-                                  <FaEdit style={{ marginRight: "12px" }} /> Editar
-                                </button>
-                                <button
-                                  className="activity-menu__item activity-menu__item--danger"
-                                  onClick={() => {
-                                    handleDelete(a);
-                                    setOpenMenuId(null);
-                                  }}
-                                >
-                                  <FaTrash style={{ marginRight: "12px" }} /> Eliminar
-                                </button>
-                              </div>
-                            )}
-                          </div>
+                  </thead>
+                  <tbody>
+                    {filteredActivities.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="activity-table__empty">
+                          {activities.length === 0
+                            ? "Este proyecto no tiene actividades aún."
+                            : "No hay actividades que coincidan con la búsqueda."}
                         </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+                    ) : (
+                      filteredActivities.map((a) => (
+                        <tr key={`activity-${a.id}`}>
+                          <td>{highlightText(a.name || "Sin nombre", searchTerm)}</td>
+                          <td>{highlightText(a.owner_name || "—", searchTerm)}</td>
+                          <td>
+                            <span className={`activity-status activity-status--${a.status}`}>
+                              {STATUS_LABELS[a.status] ?? "—"}
+                            </span>
+                          </td>
+                          <td>{formatDate(a.start_date)}</td>
+                          <td className={isOverdue(a.deadline, a.status) ? "date-overdue" : ""}>
+                            {isOverdue(a.deadline, a.status) && <FaCalendarAlt style={{ marginRight: "4px", fontSize: "0.8em" }} />}
+                            {formatDate(a.deadline)}
+                          </td>
+                          <td className="activity-table__actions">
+                            <div className="activity-menu">
+                              <button
+                                className="activity-menu__trigger"
+                                onClick={(e) => toggleMenu(e, a.id)}
+                              >
+                                <BsThreeDots />
+                              </button>
+                              {openMenuId === a.id && (
+                                <div
+                                  className="activity-menu__dropdown"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <button
+                                    className="activity-menu__item"
+                                    onClick={() => {
+                                      setViewModal({ open: true, activityId: a.id });
+                                      setOpenMenuId(null);
+                                    }}
+                                  >
+                                    <FaEye style={{ marginRight: "12px" }} /> Ver detalles
+                                  </button>
+                                  <button
+                                    className="activity-menu__item"
+                                    onClick={() => {
+                                      setEditModal({ open: true, activityId: a.id });
+                                      setOpenMenuId(null);
+                                    }}
+                                  >
+                                    <FaEdit style={{ marginRight: "12px" }} /> Editar
+                                  </button>
+                                  <button
+                                    className="activity-menu__item activity-menu__item--danger"
+                                    onClick={() => {
+                                      handleDelete(a);
+                                      setOpenMenuId(null);
+                                    }}
+                                  >
+                                    <FaTrash style={{ marginRight: "12px" }} /> Eliminar
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* ── VISTA KANBAN ── */}
+            {viewMode === "kanban" && (
+              <KanbanBoard
+                activities={activities}
+                onView={(a) => setViewModal({ open: true, activityId: a.id })}
+                onEdit={(a) => setEditModal({ open: true, activityId: a.id })}
+                onDelete={handleDelete}
+                onStatusChanged={() => {
+                  loadProjectDetails();
+                  refreshEvents();
+                }}
+              />
+            )}
           </>
         ) : (
           projects.length === 0 && (

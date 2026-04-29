@@ -79,9 +79,10 @@ router.get("/groups", verifyToken, async (req, res) => {
 
   try {
     const results = await query(
-      `SELECT g.id, g.name, g.owner_id, g.avatar
+      `SELECT g.id, g.name, g.owner_id, g.avatar, c.chat_room_id
        FROM groups g
        JOIN user_groups ug ON g.id = ug.group_id
+       LEFT JOIN channels c ON c.group_id = g.id
        WHERE ug.user_id = ?`,
       [userId]
     );
@@ -180,7 +181,7 @@ router.patch("/groups/:groupId", verifyToken, async (req, res) => {
     );
     if (groupRows.length === 0)
       return res.status(404).json({ message: "Grupo no encontrado" });
-    
+
     const [user] = await query("SELECT rol FROM users WHERE id=?", [userId]);
     const isAdmin = user?.rol === 'admin';
     const isOwner = groupRows[0].owner_id === userId;
@@ -293,7 +294,7 @@ router.delete("/groups/:groupId", verifyToken, async (req, res) => {
 
     // Traer canales para limpiar rooms y participantes
     const channels = await query("SELECT chat_room_id, voice_room_id FROM channels WHERE group_id=?", [groupId]);
-    
+
     for (const channel of channels) {
       await query("DELETE FROM room_participants WHERE room_id IN (?, ?)", [channel.chat_room_id, channel.voice_room_id]);
       await query("DELETE FROM rooms WHERE id IN (?, ?)", [channel.chat_room_id, channel.voice_room_id]);
@@ -301,7 +302,7 @@ router.delete("/groups/:groupId", verifyToken, async (req, res) => {
 
     await query("DELETE FROM channels WHERE group_id=?", [groupId]);
     await query("DELETE FROM user_groups WHERE group_id=?", [groupId]);
-    
+
     // Eliminar el grupo
     await query("DELETE FROM groups WHERE id=?", [groupId]);
 

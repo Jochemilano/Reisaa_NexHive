@@ -103,4 +103,58 @@ El proyecto sigue una arquitectura de **Cliente-Servidor (MERN Stack simplificad
 ## 🤝 Reglas de Colaboración
 - **Ramas**: Crear ramas descriptivas (ej: `feat/login-system` o `fix/navbar-mobile`).
 - **Commits**: Mensajes claros y en español/inglés consistentes.
-- **Código**: Mantener el código limpio, comentado donde sea necesario y seguir la estructura de carpetas establecida.
+- **Código**: Mantener el código limpio, comentado donde sea necesario y seguir la estructura de carpetas establecida.
+
+---
+
+## 📦 Dependencias adicionales instaladas
+
+### Frontend
+
+| Librería | Versión | Instalado | Propósito |
+|---|---|---|---|
+| **@hello-pangea/dnd** | última estable | 2026-04-29 | Drag & drop para el Kanban Board |
+
+**Comando de instalación:**
+```bash
+# En /frontend
+npm install @hello-pangea/dnd
+```
+
+---
+
+## 🗂️ Kanban Board — Documentación de implementación
+
+### Descripción
+Vista alternativa a la tabla de actividades en la página de proyectos (`GroupPage`). Permite visualizar y gestionar actividades tipo Trello con 3 columnas y drag & drop.
+
+### Archivos creados
+```
+frontend/src/components/kanban/
+├── KanbanBoard.jsx     → Contenedor principal con DragDropContext
+├── KanbanColumn.jsx    → Columna droppable (Pendiente / En progreso / Completada)
+├── KanbanCard.jsx      → Tarjeta draggable con menú de acciones via portal
+└── KanbanBoard.css     → Estilos del tablero, columnas, tarjetas y toggle
+```
+
+### Archivos modificados
+| Archivo | Cambio |
+|---|---|
+| `components/groups/GroupPage.jsx` | Toggle Tabla/Kanban en header + renderizado condicional |
+| `components/groups/GroupPage.css` | Colores vivos en badges de estado de actividades |
+
+### Cómo funciona
+1. Seleccionar un proyecto → aparece toggle **Tabla / Kanban** en el header
+2. En vista Kanban, las actividades se dividen en 3 columnas por `status`
+3. Arrastrar tarjeta a otra columna → llama `PUT /api/activities/:id` con el nuevo status
+4. Actualización **optimista**: UI cambia al instante, revierte si el backend falla
+5. Menú (⋯) en cada tarjeta: Ver detalles, Editar, Eliminar
+6. El menú usa `ReactDOM.createPortal` → nunca es cortado por `overflow` de los padres
+
+### Colores de columnas y estados
+| Estado | Color |
+|---|---|
+| Pendiente 🟡 | `#f59e0b` (amarillo) |
+| En progreso 🔵 | `#3b82f6` (azul) |
+| Completada 🟢 | `#10b981` (verde) |
+| Cancelada 🔴 | `#ef4444` (rojo) |

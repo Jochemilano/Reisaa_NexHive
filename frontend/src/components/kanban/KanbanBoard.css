@@ -1,0 +1,380 @@
+/* ==========================================================================
+   KANBAN WRAPPER (incluye buscador + tablero)
+   ========================================================================== */
+.kanban-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+/* Buscador del Kanban */
+.kanban-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 12px;
+  max-width: 400px;
+  transition: border-color 0.2s;
+}
+
+.kanban-search-bar:focus-within {
+  border-color: var(--primary);
+}
+
+.kanban-search-icon {
+  color: var(--text-tertiary);
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.kanban-search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 0.82rem;
+  color: var(--text-primary);
+}
+
+.kanban-search-input::placeholder {
+  color: var(--text-tertiary);
+}
+
+.kanban-search-clear {
+  background: transparent;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  font-size: 10px;
+  padding: 2px;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  transition: color 0.15s;
+}
+
+.kanban-search-clear:hover {
+  color: var(--error);
+}
+
+.kanban-search-results {
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  border-left: 1px solid var(--border);
+  padding-left: 8px;
+}
+
+/* ==========================================================================
+   KANBAN BOARD — LAYOUT
+   ========================================================================== */
+.kanban-board {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  width: 100%;
+  overflow-x: auto;
+  padding-bottom: 1rem;
+}
+
+.kanban-board::-webkit-scrollbar {
+  height: 6px;
+}
+.kanban-board::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 10px;
+}
+
+/* ==========================================================================
+   COLUMNAS
+   ========================================================================== */
+.kanban-col {
+  flex: 1;
+  min-width: 260px;
+  max-width: 340px;
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  /* SIN overflow:hidden — el dropdown usa portal (position:fixed) */
+}
+
+/* Borde superior de color por columna */
+.kanban-col--pending  { border-top: 3px solid #f59e0b; }
+.kanban-col--progress { border-top: 3px solid #3b82f6; }
+.kanban-col--done     { border-top: 3px solid #10b981; }
+
+.kanban-col__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.kanban-col__title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.kanban-col__title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.kanban-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.kanban-dot--pending  { background-color: #f59e0b; }
+.kanban-dot--progress { background-color: #3b82f6; }
+.kanban-dot--done     { background-color: #10b981; }
+
+.kanban-col__count {
+  background: var(--bg-active);
+  color: var(--text-tertiary);
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.kanban-col__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  min-height: 120px;  /* columna vacía o de 1 card tiene altura visible */
+  flex: 1;
+  transition: background 0.2s;
+}
+
+.kanban-col__body--over {
+  background: var(--bg-hover);
+  border-radius: 0 0 10px 10px;
+}
+
+.kanban-col__empty {
+  text-align: center;
+  color: var(--text-tertiary);
+  font-size: 0.75rem;
+  font-style: italic;
+  padding: 2rem 0;
+  border: 1.5px dashed var(--border);
+  border-radius: 8px;
+}
+
+/* ==========================================================================
+   TARJETAS
+   ========================================================================== */
+.kanban-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.75rem;
+  cursor: grab;
+  transition: box-shadow 0.2s, transform 0.15s;
+  position: relative;
+}
+
+.kanban-card:hover {
+  box-shadow: 0 4px 16px var(--shadow);
+  transform: translateY(-1px);
+}
+
+.kanban-card--dragging {
+  box-shadow: 0 12px 32px rgba(0,0,0,0.25);
+  transform: rotate(1.5deg);
+  cursor: grabbing;
+  z-index: 999;
+}
+
+.kanban-card--overdue {
+  border-left: 3px solid var(--error);
+}
+
+.kanban-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  position: relative;
+}
+
+.kanban-card__title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.3;
+  flex: 1;
+}
+
+.kanban-card__menu-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+
+.kanban-card__menu-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+/* Dropdown — renderizado via portal (position:fixed calculado por JS) */
+.kanban-card__dropdown {
+  z-index: 9999;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  min-width: 160px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  padding: 0.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  animation: kanbanMenuSlide 0.15s ease-out;
+}
+
+@keyframes kanbanMenuSlide {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.kanban-card__dropdown-item {
+  width: 100%;
+  padding: 0.45rem 0.75rem;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  text-align: left;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: background 0.15s;
+}
+
+.kanban-card__dropdown-item:hover {
+  background: var(--bg-hover);
+}
+
+.kanban-card__dropdown-item--danger {
+  color: var(--error);
+}
+
+.kanban-card__dropdown-item--danger:hover {
+  background: var(--error) !important;
+  color: white !important;
+}
+
+/* Descripción */
+.kanban-card__desc {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  margin: 6px 0 0;
+  line-height: 1.4;
+}
+
+/* Footer */
+.kanban-card__footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  gap: 8px;
+}
+
+.kanban-card__owner {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kanban-card__owner svg,
+.kanban-card__date svg {
+  font-size: 0.65rem;
+  flex-shrink: 0;
+}
+
+.kanban-card__date {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.kanban-card__date--overdue {
+  color: var(--error);
+  font-weight: 700;
+}
+
+/* ==========================================================================
+   TOGGLE DE VISTA (Tabla / Kanban) — se usa en GroupPage
+   ========================================================================== */
+.view-toggle {
+  display: flex;
+  gap: 4px;
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 3px;
+}
+
+.view-toggle__btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.view-toggle__btn:hover {
+  color: var(--text-secondary);
+  background: var(--bg-hover);
+}
+
+.view-toggle__btn--active {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  box-shadow: 0 1px 4px var(--shadow);
+}

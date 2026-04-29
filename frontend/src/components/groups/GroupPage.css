@@ -235,30 +235,67 @@
   border: 1px solid transparent;
 }
 
-.activity-status--pending { 
-  background-color: var(--bg-active); 
-  color: var(--text-tertiary);
-  border-color: var(--border);
+.activity-status--pending {
+  background-color: var(--status-pending-bg);
+  color: var(--status-pending-text);
+  border-color: var(--status-pending-border);
 }
 
-.activity-status--in-progress, 
-.activity-status--in_progress { 
-  background-color: var(--bg-hover);
-  color: var(--primary); 
-  border-color: var(--primary);
+.activity-status--in-progress,
+.activity-status--in_progress {
+  background-color: var(--status-progress-bg);
+  color: var(--status-progress-text);
+  border-color: var(--status-progress-border);
 }
 
 .activity-status--completed,
-.activity-status--done { 
-  background-color: var(--bg-hover); 
-  color: var(--success); 
-  border-color: var(--success);
+.activity-status--done {
+  background-color: var(--status-done-bg);
+  color: var(--status-done-text);
+  border-color: var(--status-done-border);
 }
 
-.activity-status--cancelled { 
-  background-color: var(--bg-hover); 
-  color: var(--error); 
-  border-color: var(--error);
+.activity-status--cancelled {
+  background-color: var(--status-cancelled-bg);
+  color: var(--status-cancelled-text);
+  border-color: var(--status-cancelled-border);
+}
+
+/* ==========================================================================
+   BARRA DE PROGRESO DEL PROYECTO
+   ========================================================================== */
+.project-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.progress-bar-track {
+  flex: 1;
+  max-width: 180px;
+  height: 5px;
+  background: var(--bg-active);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 10px;
+  background: linear-gradient(90deg, var(--status-progress-border), var(--status-done-border));
+  transition: width 0.5s ease;
+}
+
+.progress-bar-fill--complete {
+  background: var(--status-done-border);
+}
+
+.progress-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-tertiary);
+  white-space: nowrap;
 }
 
 /* ==========================================================================
