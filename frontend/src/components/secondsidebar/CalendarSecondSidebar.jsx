@@ -3,6 +3,7 @@ import { useCalendar } from '@/context/CalendarContext';
 import { format, isSameDay, isPast } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { FaEye, FaEyeSlash, FaSearch, FaPlus, FaCalendarDay, FaHistory } from 'react-icons/fa';
+import Skeleton from '@/components/loading/Skeleton';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import './SecondSidebar.css';
@@ -17,7 +18,8 @@ const CalendarSecondSidebar = () => {
     setCurrentDate,
     setIsCreateOpen,
     setInitialDate,
-    setHighlightedEventId
+    setHighlightedEventId,
+    loading
   } = useCalendar();
   
   const [searchTerm, setSearchTerm] = useState('');
@@ -183,7 +185,21 @@ const CalendarSecondSidebar = () => {
         </div>
 
         <div className="events-list">
-          {upcomingEvents.length === 0 ? (
+          {loading ? (
+            Array.from({ length: 4 }).map((_, i) => (
+              <div key={`event-skeleton-${i}`} className="event-card-minimal">
+                <div className="card-indicator" style={{ backgroundColor: 'var(--bg-active)' }}></div>
+                <div className="card-content">
+                  <div className="card-top">
+                    <Skeleton width="40px" height="12px" />
+                    <Skeleton width="30px" height="12px" />
+                  </div>
+                  <Skeleton width="100%" height="16px" />
+                  <Skeleton width="60px" height="12px" />
+                </div>
+              </div>
+            ))
+          ) : upcomingEvents.length === 0 ? (
             <div className="empty-state">
               <p>{searchTerm ? 'Sin coincidencias' : 'Nada pendiente'}</p>
             </div>

@@ -10,6 +10,7 @@ import { useGroup } from "@/context/GroupContext";
 import { useCalendar } from "@/context/CalendarContext";
 import { getProfile } from "@/utils/profile";
 import { useUnread } from "@/context/UnreadContext";
+import Skeleton from "@/components/loading/Skeleton";
 
 const GroupSecondSidebar = ({ groupId }) => {
   const [details, setDetails] = useState({ channels: [], members: [] });
@@ -25,15 +26,20 @@ const GroupSecondSidebar = ({ groupId }) => {
 
   const { unreadByRoom } = useUnread();
   const [userRole, setUserRole] = useState(null);
+  const [loadingDetails, setLoadingDetails] = useState(true);
+  const [loadingProjects, setLoadingProjects] = useState(true);
 
   const loadDetails = async () => {
     if (!groupId) return;
+    setLoadingDetails(true);
     try {
       const data = await fetchGroupDetails(groupId);
       setDetails(data);
     } catch (err) {
       console.error("Error cargando detalles del grupo:", err);
       setDetails({ channels: [], members: [] });
+    } finally {
+      setLoadingDetails(false);
     }
   };
 
@@ -45,6 +51,7 @@ const GroupSecondSidebar = ({ groupId }) => {
 
   const loadProjects = async () => {
     if (!groupId) return;
+    setLoadingProjects(true);
     try {
       const data = await fetchGroupProjects(groupId);
       setProjects(data);
@@ -54,6 +61,8 @@ const GroupSecondSidebar = ({ groupId }) => {
     } catch (err) {
       console.error("Error cargando proyectos:", err);
       setProjects([]);
+    } finally {
+      setLoadingProjects(false);
     }
   };
 
@@ -108,30 +117,38 @@ const GroupSecondSidebar = ({ groupId }) => {
   return (
     <>
       <div className="sidebar-content">
-        {details.channels.map((c) => (
-          <div key={c.id} className="channel-group">
+        {loadingDetails ? (
+          <div className="channel-group">
             <h3>Canales</h3>
-            <div
-              className="user-item"
-              onClick={() => navigate(`/groups/${groupId}/chat/${c.chat_room_id}`)}
-            >
-              <FaHashtag className="channel-icon" />
-              <span>Mensajes</span>
-              {unreadByRoom[c.chat_room_id] > 0 && (
-                <span className="unread-badge-small" style={{ marginLeft: 'auto' }}>
-                  {unreadByRoom[c.chat_room_id]}
-                </span>
-              )}
-            </div>
-            <div
-              className="user-item"
-              onClick={() => navigate(`/groups/${groupId}/voice/${c.voice_room_id}`)}
-            >
-              <FaVolumeUp className="channel-icon" />
-              <span>Sala de voz</span>
-            </div>
+            <div className="user-item"><Skeleton width="100%" height="24px" /></div>
+            <div className="user-item"><Skeleton width="100%" height="24px" /></div>
           </div>
-        ))}
+        ) : (
+          details.channels.map((c) => (
+            <div key={c.id} className="channel-group">
+              <h3>Canales</h3>
+              <div
+                className="user-item"
+                onClick={() => navigate(`/groups/${groupId}/chat/${c.chat_room_id}`)}
+              >
+                <FaHashtag className="channel-icon" />
+                <span>Mensajes</span>
+                {unreadByRoom[c.chat_room_id] > 0 && (
+                  <span className="unread-badge-small" style={{ marginLeft: 'auto' }}>
+                    {unreadByRoom[c.chat_room_id]}
+                  </span>
+                )}
+              </div>
+              <div
+                className="user-item"
+                onClick={() => navigate(`/groups/${groupId}/voice/${c.voice_room_id}`)}
+              >
+                <FaVolumeUp className="channel-icon" />
+                <span>Sala de voz</span>
+              </div>
+            </div>
+          ))
+        )}
 
         <div className="cont-sec">
           <h3>Proyectos</h3>
@@ -139,35 +156,42 @@ const GroupSecondSidebar = ({ groupId }) => {
         </div>
 
         <div className="project-list">
-          {projects.length === 0 && (
-            <span className="empty-activities">Sin proyectos</span>
-          )}
-          {projects.map((p) => {
-            const canEdit = userRole === 'admin' || myId === p.owner_id || myId === details.owner_id;
-            return (
-              <div
-                key={`project-${p.id}`}
-                className={`user-item ${selectedProjectId === p.id ? "project-item--active" : ""}`}
-                onMouseDown={() => startPress(p)}
-                onMouseUp={cancelPress}
-                onMouseLeave={cancelPress}
-                onTouchStart={() => startPress(p)}
-                onTouchEnd={cancelPress}
-                onClick={() => handleProjectClick(p)}
-              >
-                <span>{p.name}</span>
-                {canEdit && (
-                  <button 
-                    className="project-edit-btn"
-                    onClick={(e) => { e.stopPropagation(); setEditingProject(p); }}
-                    title="Editar proyecto"
-                  >
-                    <FaEdit />
-                  </button>
-                )}
+          {loadingProjects ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <div key={`project-skeleton-${i}`} className="user-item">
+                <Skeleton width="100%" height="24px" />
               </div>
-            );
-          })}
+            ))
+          ) : projects.length === 0 ? (
+            <span className="empty-activities">Sin proyectos</span>
+          ) : (
+            projects.map((p) => {
+              const canEdit = userRole === 'admin' || myId === p.owner_id || myId === details.owner_id;
+              return (
+                <div
+                  key={`project-${p.id}`}
+                  className={`user-item ${selectedProjectId === p.id ? "project-item--active" : ""}`}
+                  onMouseDown={() => startPress(p)}
+                  onMouseUp={cancelPress}
+                  onMouseLeave={cancelPress}
+                  onTouchStart={() => startPress(p)}
+                  onTouchEnd={cancelPress}
+                  onClick={() => handleProjectClick(p)}
+                >
+                  <span>{p.name}</span>
+                  {canEdit && (
+                    <button 
+                      className="project-edit-btn"
+                      onClick={(e) => { e.stopPropagation(); setEditingProject(p); }}
+                      title="Editar proyecto"
+                    >
+                      <FaEdit />
+                    </button>
+                  )}
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
 

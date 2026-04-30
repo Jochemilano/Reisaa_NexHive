@@ -8,7 +8,8 @@
 /* ----------------- MODO DE APARIENCIA (FONDO Y TEXTO) ----------------- */
 
 /* Claro (Default) */
-:root, :root[data-theme="light"] {
+:root,
+:root[data-theme="light"] {
   --bg-base: #ffffff;
   --bg-soft: #F4F7F9;
   --bg-elevated: #ffffff;
@@ -23,22 +24,22 @@
   --shadow: rgba(0, 0, 0, 0.2);
 
   /* Estado: Pendiente */
-  --status-pending-bg:   #fef3c7;
+  --status-pending-bg: #fef3c7;
   --status-pending-text: #92400e;
   --status-pending-border: #f59e0b;
 
   /* Estado: En progreso */
-  --status-progress-bg:   #dbeafe;
+  --status-progress-bg: #dbeafe;
   --status-progress-text: #1e40af;
   --status-progress-border: #3b82f6;
 
   /* Estado: Completada */
-  --status-done-bg:   #d1fae5;
+  --status-done-bg: #d1fae5;
   --status-done-text: #065f46;
   --status-done-border: #10b981;
 
   /* Estado: Cancelada */
-  --status-cancelled-bg:   #fee2e2;
+  --status-cancelled-bg: #fee2e2;
   --status-cancelled-text: #991b1b;
   --status-cancelled-border: #ef4444;
   --read-check: #00e5ff;
@@ -60,22 +61,22 @@
   --shadow: rgba(0, 0, 0, 0.7);
 
   /* Estado: Pendiente */
-  --status-pending-bg:   rgba(245, 158, 11, 0.15);
+  --status-pending-bg: rgba(245, 158, 11, 0.15);
   --status-pending-text: #fcd34d;
   --status-pending-border: rgba(245, 158, 11, 0.4);
 
   /* Estado: En progreso */
-  --status-progress-bg:   rgba(59, 130, 246, 0.15);
+  --status-progress-bg: rgba(59, 130, 246, 0.15);
   --status-progress-text: #93c5fd;
   --status-progress-border: rgba(59, 130, 246, 0.4);
 
   /* Estado: Completada */
-  --status-done-bg:   rgba(16, 185, 129, 0.15);
+  --status-done-bg: rgba(16, 185, 129, 0.15);
   --status-done-text: #6ee7b7;
   --status-done-border: rgba(16, 185, 129, 0.4);
 
   /* Estado: Cancelada */
-  --status-cancelled-bg:   rgba(239, 68, 68, 0.15);
+  --status-cancelled-bg: rgba(239, 68, 68, 0.15);
   --status-cancelled-text: #fca5a5;
   --status-cancelled-border: rgba(239, 68, 68, 0.4);
   --read-check: #00e5ff;
@@ -84,7 +85,8 @@
 /* ----------------- COLORES DE ACENTO (BOTONES, DETALLES) ----------------- */
 
 /* Azul (Default) */
-:root, :root[data-accent="blue"] {
+:root,
+:root[data-accent="blue"] {
   --primary: #3B82F6;
   --primary-hover: #2563EB;
   --secondary: #60A5FA;

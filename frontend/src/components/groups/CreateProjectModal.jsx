@@ -4,6 +4,7 @@ import { Input, Textarea } from "@/components/input/Input";
 import CollaboratorPicker from "@/components/input/CollaboratorPicker";
 import { createProject } from "@/utils/projects";
 import useCollaborators from "@/hooks/useCollaborators";
+import { toast } from "sonner";
 
 const CreateProjectModal = ({ isOpen, onClose, groupId, availableUsers = [], onCreated }) => {
   const [projectName, setProjectName] = useState("");
@@ -27,6 +28,7 @@ const CreateProjectModal = ({ isOpen, onClose, groupId, availableUsers = [], onC
         startDate || null, deadline || null,
         selectedCollaborators.map(c => c.id)
       );
+      toast.success(`Proyecto "${projectName}" creado con éxito`);
       onCreated(newProject);
       setProjectName("");
       setProjectDescription("");
@@ -36,6 +38,7 @@ const CreateProjectModal = ({ isOpen, onClose, groupId, availableUsers = [], onC
       onClose();
     } catch (err) {
       console.error("Error creando proyecto:", err);
+      toast.error("Error al crear el proyecto");
     }
   };
 

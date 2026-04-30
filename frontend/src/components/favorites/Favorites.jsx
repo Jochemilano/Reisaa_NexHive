@@ -2,8 +2,9 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getUserFavorites, formatDate } from "@/utils/favorites";
 import { getFileUrl, getFileName, toggleFavoriteMessage  } from "@/utils/chat";
-import {FaStar} from "react-icons/fa";
+import {FaStar, FaRegStar} from "react-icons/fa";
 import MediaModal from "@/components/communication/MediaModal";
+import Skeleton from "@/components/loading/Skeleton";
 import "@/styles.css";
 import "./Favorites.css"
 
@@ -52,8 +53,34 @@ const Favorites = () => {
     }
   };
 
-  if (loading) return <p>Cargando favoritos...</p>;
-  if (favorites.length === 0) return <p>No tienes mensajes favoritos.</p>;
+  if (loading) {
+    return (
+      <div className="favorites-page">
+        <h2>Mensajes Favoritos</h2>
+        <div className="favorites-list">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={`fav-skeleton-${i}`} className="favorite-message" style={{ marginBottom: '1rem' }}>
+              <Skeleton width="120px" height="20px" style={{ marginBottom: '8px' }} />
+              <Skeleton width="100%" height="40px" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+  
+  if (favorites.length === 0) {
+    return (
+      <div className="favorites-page">
+        <h2>Mensajes Favoritos</h2>
+        <div className="empty-favorites-state">
+          <div className="empty-icon">⭐</div>
+          <h3>Aún no tienes favoritos</h3>
+          <p>Haz clic en la estrella de cualquier mensaje para guardarlo aquí y encontrarlo rápidamente más tarde.</p>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="favorites-page">

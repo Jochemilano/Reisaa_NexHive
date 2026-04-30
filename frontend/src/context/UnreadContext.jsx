@@ -12,8 +12,16 @@ export function UnreadProvider({ children }) {
     const saved = localStorage.getItem("muted_rooms");
     return saved ? JSON.parse(saved) : [];
   });
+  const [allRooms, setAllRooms] = useState([]); // Nuevo state para guardar la info de los chats
   const [selectedSound, setSelectedSound] = useState(() => {
     return localStorage.getItem("notification_sound") || "crystal";
+  });
+  const [callsEnabled, setCallsEnabledGlobal] = useState(() => {
+    const saved = localStorage.getItem("calls_enabled");
+    return saved !== null ? JSON.parse(saved) : true;
+  });
+  const [callSound, setCallSoundGlobal] = useState(() => {
+    return localStorage.getItem("call_sound_type") || "digital";
   });
   
   const soundEnabledRef = useRef(true);
@@ -24,6 +32,16 @@ export function UnreadProvider({ children }) {
   const changeNotificationSound = useCallback((soundType) => {
     setSelectedSound(soundType);
     localStorage.setItem("notification_sound", soundType);
+  }, []);
+
+  const changeCallEnabled = useCallback((enabled) => {
+    setCallsEnabledGlobal(enabled);
+    localStorage.setItem("calls_enabled", JSON.stringify(enabled));
+  }, []);
+
+  const changeCallSound = useCallback((soundType) => {
+    setCallSoundGlobal(soundType);
+    localStorage.setItem("call_sound_type", soundType);
   }, []);
 
   const toggleMuteRoom = useCallback((roomId) => {
@@ -46,6 +64,7 @@ export function UnreadProvider({ children }) {
       setUnreadTotal(totalData.total);
 
       const rooms = await apiFetch("rooms");
+      setAllRooms(rooms); // Guardamos la info completa
       const counts = {};
       rooms.forEach(r => {
         counts[r.id] = r.unread_count || 0;
@@ -109,8 +128,13 @@ export function UnreadProvider({ children }) {
     mutedRooms, 
     toggleMuteRoom,
     selectedSound,
-    changeNotificationSound
-  }), [unreadTotal, unreadByRoom, fetchUnreadData, markAsRead, setSoundEnabled, mutedRooms, toggleMuteRoom, selectedSound, changeNotificationSound]);
+    changeNotificationSound,
+    callsEnabled,
+    changeCallEnabled,
+    callSound,
+    changeCallSound,
+    allRooms
+  }), [unreadTotal, unreadByRoom, fetchUnreadData, markAsRead, setSoundEnabled, mutedRooms, toggleMuteRoom, selectedSound, changeNotificationSound, callsEnabled, changeCallEnabled, callSound, changeCallSound, allRooms]);
 
   return (
     <UnreadContext.Provider value={value}>

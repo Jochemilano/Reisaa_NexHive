@@ -5,11 +5,13 @@ import { apiFetch } from "@/utils/apiClient";
 import { getAvatarUrl } from "@/utils/media"; 
 import { useGroup } from "@/context/GroupContext";
 import { useUserDetail } from "@/context/UserDetailContext";
+import Skeleton from "@/components/loading/Skeleton";
 import "./Home.css"
 
 export default function Home() {
   const [allOnlineUsers, setAllOnlineUsers] = useState([]);
   const [friends, setFriends] = useState([]);
+  const [loadingFriends, setLoadingFriends] = useState(true);
   const [activities, setActivities] = useState([]);
   const [loadingActivities, setLoadingActivities] = useState(true);
   const navigate = useNavigate();
@@ -25,6 +27,8 @@ export default function Home() {
         setFriends(friendsData);
       } catch (err) {
         console.error("Error cargando amigos:", err);
+      } finally {
+        setLoadingFriends(false);
       }
     };
 
@@ -94,35 +98,54 @@ export default function Home() {
         <div className="online-users">
           <h3>Conectados ({onlineUsers.length})</h3>
           <ul className="online-users-list">
-            {onlineUsers.map((u) => {
-              const avatarUrl = getAvatarUrl(u.profile_pic);
-              return (
-                <li 
-                  key={u.id} 
-                  className="online-user-item" 
-                  onClick={() => handleUserClick(u)}
-                >
-                  <div 
-                    className="avatar-wrapper"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      showUserProfile(u.id);
-                    }}
-                    style={{ cursor: 'pointer' }}
+            {loadingFriends ? (
+              <>
+                <div style={{ display: 'flex', gap: '12px', padding: '10px' }}>
+                  <Skeleton width="40px" height="40px" borderRadius="50%" />
+                  <Skeleton width="120px" height="20px" />
+                </div>
+                <div style={{ display: 'flex', gap: '12px', padding: '10px' }}>
+                  <Skeleton width="40px" height="40px" borderRadius="50%" />
+                  <Skeleton width="120px" height="20px" />
+                </div>
+              </>
+            ) : onlineUsers.length > 0 ? (
+              onlineUsers.map((u) => {
+                const avatarUrl = getAvatarUrl(u.profile_pic);
+                return (
+                  <li 
+                    key={u.id} 
+                    className="online-user-item" 
+                    onClick={() => handleUserClick(u)}
                   >
-                    {avatarUrl ? (
-                      <img src={avatarUrl} alt={u.name} className="avatar" />
-                    ) : (
-                      <div className="avatar avatar--fallback">
-                        {u.name?.charAt(0).toUpperCase()}
-                      </div>
-                    )}
-                    <span className="online-dot" />
-                  </div>
-                  <span className="user-name">{u.name}</span>
-                </li>
-              );
-            })}
+                    <div 
+                      className="avatar-wrapper"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        showUserProfile(u.id);
+                      }}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      {avatarUrl ? (
+                        <img src={avatarUrl} alt={u.name} className="avatar" />
+                      ) : (
+                        <div className="avatar avatar--fallback">
+                          {u.name?.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      <span className="online-dot" />
+                    </div>
+                    <span className="user-name">{u.name}</span>
+                  </li>
+                );
+              })
+            ) : (
+              <div className="empty-online-state">
+                <div className="empty-icon">🔌</div>
+                <p>Nadie conectado en este momento.</p>
+                <span className="empty-hint">Tus amigos aparecerán aquí cuando inicien sesión.</span>
+              </div>
+            )}
           </ul>
         </div>
       </main>
@@ -133,7 +156,11 @@ export default function Home() {
           <h4 className="widget-title">Actividades en curso</h4>
           <div className="activities-list">
             {loadingActivities ? (
-              <div className="widget-status">Cargando...</div>
+              <div className="activities-list">
+                <Skeleton height="80px" />
+                <Skeleton height="80px" />
+                <Skeleton height="80px" />
+              </div>
             ) : activities.length > 0 ? (
               activities.map((act) => (
                 <div 
@@ -153,7 +180,11 @@ export default function Home() {
                 </div>
               ))
             ) : (
-              <div className="widget-status">No hay actividades trabajando.</div>
+              <div className="empty-activities-state">
+                <div className="empty-icon-small">✨</div>
+                <p>¡Día despejado!</p>
+                <span>No tienes actividades en curso actualmente.</span>
+              </div>
             )}
           </div>
         </div>

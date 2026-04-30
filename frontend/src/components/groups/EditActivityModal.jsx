@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import Modal from "@/components/modal/Modal";
+import Skeleton from "@/components/loading/Skeleton";
 import { Input, Textarea, Select } from "@/components/input/Input";
 import CollaboratorPicker from "@/components/input/CollaboratorPicker";
-import { getActivityDetails, updateActivity } from "@/utils/activities";
+import { getActivityDetails, updateActivity, deleteActivity } from "@/utils/activities";
 import { fetchProjectUsers } from "@/utils/projects";
+import { toast } from "sonner";
 
 const EditActivityModal = ({ isOpen, onClose, activityId, onUpdated, onDeleted }) => {
   const [loading, setLoading] = useState(true);
@@ -90,19 +92,27 @@ const EditActivityModal = ({ isOpen, onClose, activityId, onUpdated, onDeleted }
       };
 
       await updateActivity(activityId, payload);
+      toast.warning("Actividad actualizada");
       onUpdated();
       onClose();
     } catch (err) {
-      alert("Error al actualizar actividad");
+      toast.error("Error al actualizar actividad");
       console.error(err);
     }
   };
 
-  const handleDelete = async () => {
-    if (!window.confirm(`¿Eliminar la actividad "${activityData.name}"? Esta acción no se puede deshacer.`)) return;
+  const handleDelete = async (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
+    if (!window.confirm(`¿Eliminar la actividad "${activityData.name}"?`)) return;
     try {
-      const { deleteActivity } = await import("@/utils/activities");
       await deleteActivity(activityId);
+      toast.error("Actividad eliminada", {
+        description: 'La tarea ha sido borrada permanentemente',
+      });
       if (onDeleted) {
         onDeleted(activityId);
       } else {
@@ -110,7 +120,7 @@ const EditActivityModal = ({ isOpen, onClose, activityId, onUpdated, onDeleted }
       }
       onClose();
     } catch (err) {
-      alert("Error al eliminar actividad");
+      toast.error("Error al eliminar actividad");
       console.error(err);
     }
   };
@@ -119,7 +129,13 @@ const EditActivityModal = ({ isOpen, onClose, activityId, onUpdated, onDeleted }
     <Modal isOpen={isOpen} onClose={onClose}>
       <Modal.Header onClose={onClose}>Editar Actividad</Modal.Header>
       <Modal.Body>
-        {loading ? <p>Cargando...</p> : (
+        {loading ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            <Skeleton height="40px" />
+            <Skeleton height="80px" />
+            <Skeleton height="40px" />
+          </div>
+        ) : (
           <>
             <Input
               label="Nombre de la actividad"
@@ -164,8 +180,13 @@ const EditActivityModal = ({ isOpen, onClose, activityId, onUpdated, onDeleted }
         )}
       </Modal.Body>
       <Modal.Footer onClose={onClose}>
-        <button className="calendar-delete-btn" onClick={handleDelete}>
-          Eliminar
+        <button 
+          type="button"
+          className="modal-danger" 
+          onClick={handleDelete}
+          style={{ marginRight: 'auto', background: '#ff4d4d', color: 'white', padding: '8px 16px', borderRadius: '4px', border: 'none', cursor: 'pointer' }}
+        >
+          Eliminar Actividad
         </button>
         <Modal.AcceptButton onClick={handleSave}>
           Guardar cambios

@@ -1,0 +1,30 @@
+.skeleton-loader {
+  background: linear-gradient(
+    90deg,
+    var(--bg-active) 25%,
+    var(--bg-hover) 50%,
+    var(--bg-active) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite linear;
+  position: relative;
+  overflow: hidden;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Variantes opcionales */
+.skeleton-circle {
+  border-radius: 50% !important;
+}
+
+.skeleton-text {
+  margin-bottom: 0.5rem;
+}

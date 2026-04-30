@@ -428,14 +428,20 @@
   border-radius: 50%;
 }
 
-.status-dot.personal { background-color: #3B82F6; }
-.status-dot.activities { background-color: var(--primary); }
+.status-dot.personal {
+  background-color: #3B82F6;
+}
+
+.status-dot.activities {
+  background-color: var(--primary);
+}
 
 /* SUB-LISTA DE PROYECTOS (JERARQUÍA REFINADA) */
 .project-sublist-minimal {
   display: flex;
   flex-direction: column;
-  padding: 2px 0 2px 34px; /* Más indentado */
+  padding: 2px 0 2px 34px;
+  /* Más indentado */
   gap: 1px;
 }
 
@@ -444,8 +450,10 @@
   align-items: center;
   gap: 8px;
   padding: 3px 8px;
-  font-size: 11px; /* Más pequeño */
-  color: var(--text-tertiary); /* Más suave */
+  font-size: 11px;
+  /* Más pequeño */
+  color: var(--text-tertiary);
+  /* Más suave */
   cursor: pointer;
   border-radius: 4px;
   transition: all 0.2s;
@@ -500,7 +508,8 @@
 }
 
 .project-dot-small {
-  width: 4px; /* Más pequeño */
+  width: 4px;
+  /* Más pequeño */
   height: 4px;
   border-radius: 50%;
   opacity: 0.6;
@@ -532,7 +541,8 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 10px; /* Más pequeño */
+  font-size: 10px;
+  /* Más pequeño */
   color: var(--text-tertiary);
   cursor: pointer;
 }
@@ -628,7 +638,8 @@
 
 .project-tag-minimal {
   display: inline-block;
-  font-size: 8.5px; /* Tiny */
+  font-size: 8.5px;
+  /* Tiny */
   color: var(--text-tertiary);
   margin-top: 4px;
   padding: 1px 4px;
@@ -649,9 +660,20 @@
 
 /* ANIMACIÓN DE RESALTE PARA EL CALENDARIO PRINCIPAL */
 @keyframes highlight-pulse {
-  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
-  50% { transform: scale(1.05); box-shadow: 0 0 20px 10px rgba(59, 130, 246, 0); }
-  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+  }
+
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px 10px rgba(59, 130, 246, 0);
+  }
+
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+  }
 }
 
 .highlight-event {

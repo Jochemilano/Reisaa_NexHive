@@ -3,6 +3,7 @@ import Modal from "@/components/modal/Modal";
 import { Input, Textarea, Select } from "@/components/input/Input";
 import CollaboratorPicker from "@/components/input/CollaboratorPicker";
 import { fetchProjectUsers } from "@/utils/projects";
+import { toast } from "sonner";
 
 const CreateActivityModal = ({ isOpen, onClose, currentProjectId, onCreated }) => {
   const [activityName, setActivityName] = useState("");
@@ -51,6 +52,7 @@ const CreateActivityModal = ({ isOpen, onClose, currentProjectId, onCreated }) =
         collaborators: selectedCollaborators.map(c => c.id)
       });
 
+      toast.success(`Actividad "${activityName}" creada`);
       onCreated(newActivity);
       setActivityName("");
       setActivityDescription("");
@@ -62,6 +64,7 @@ const CreateActivityModal = ({ isOpen, onClose, currentProjectId, onCreated }) =
       onClose();
     } catch (err) {
       console.error("Error creando actividad:", err);
+      toast.error("Error al crear la actividad");
     }
   };
 

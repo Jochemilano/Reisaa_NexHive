@@ -434,3 +434,59 @@
   border-radius: 2px;
   padding: 0 2px;
 }
+/* ==========================================================================
+   BIENVENIDA (ESTADO SIN PROYECTO)
+   ========================================================================== */
+.group-page__welcome-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  background-color: var(--bg-soft);
+  border-radius: 20px;
+  border: 2px dashed var(--border);
+  margin-top: 2rem;
+  padding: 2rem;
+  text-align: center;
+}
+
+.welcome-content {
+  max-width: 450px;
+}
+
+.welcome-icon {
+  font-size: 4rem;
+  margin-bottom: 1.5rem;
+  filter: drop-shadow(0 4px 10px var(--shadow));
+  animation: float 3s ease-in-out infinite;
+}
+
+.welcome-content h2 {
+  font-size: 1.8rem;
+  font-weight: 800;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.welcome-content p {
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+
+.group-page__empty {
+  font-style: italic;
+  color: var(--text-tertiary);
+  font-size: 0.9rem;
+  margin-top: 2rem;
+  padding: 1rem;
+  background: var(--bg-active);
+  border-radius: 8px;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}

@@ -4,6 +4,7 @@ import { Input, Textarea } from "@/components/input/Input";
 import CollaboratorPicker from "@/components/input/CollaboratorPicker";
 import { updateProject, fetchProjectUsers, deleteProject } from "@/utils/projects";
 import { fetchGroupUsers } from "@/utils/groups";
+import { toast } from "sonner";
 
 const EditProjectModal = ({ isOpen, onClose, project, groupId, onUpdated }) => {
   const [name, setName]               = useState("");
@@ -57,10 +58,12 @@ const EditProjectModal = ({ isOpen, onClose, project, groupId, onUpdated }) => {
     try {
       const collaboratorIds = selectedCollaborators.map(c => c.id);
       await updateProject(project.id, name, description, startDate, deadline, collaboratorIds);
+      toast.warning("Proyecto actualizado");
       onUpdated(project.id);
       onClose();
     } catch (err) {
       console.error("Error actualizando proyecto:", err);
+      toast.error("Error al actualizar el proyecto");
     }
   };
   
@@ -70,11 +73,12 @@ const EditProjectModal = ({ isOpen, onClose, project, groupId, onUpdated }) => {
     if (window.confirm(`¿Estás seguro de que deseas eliminar el proyecto "${project.name}"? Esta acción no se puede deshacer.`)) {
       try {
         await deleteProject(project.id);
+        toast.error("Proyecto eliminado");
         onUpdated(); // Refresh parent
         onClose();
       } catch (err) {
         console.error("Error eliminando proyecto:", err);
-        alert("No se pudo eliminar el proyecto");
+        toast.error("No se pudo eliminar el proyecto");
       }
     }
   };

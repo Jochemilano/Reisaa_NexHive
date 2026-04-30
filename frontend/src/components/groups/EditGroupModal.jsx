@@ -6,6 +6,7 @@ import CollaboratorPicker from "@/components/input/CollaboratorPicker";
 import { updateGroup, fetchAllUsers, fetchGroupUsers, deleteGroup } from "@/utils/groups";
 import { fetchFriends } from "@/utils/friends";
 import { getAvatarUrl } from "@/utils/media";
+import { toast } from "sonner";
 
 const EditGroupModal = ({
   isOpen,
@@ -66,10 +67,12 @@ const EditGroupModal = ({
     try {
       const collaboratorIds = selectedCollaborators.map(c => c.id);
       await updateGroup(group.id, name, collaboratorIds, avatarFile);
+      toast.warning("Grupo actualizado");
       onUpdate(group.id);
       handleClose();
     } catch (err) {
       console.error("Error actualizando grupo:", err);
+      toast.error("Error al actualizar el grupo");
     }
   };
 
@@ -79,11 +82,12 @@ const EditGroupModal = ({
     if (window.confirm(`¿Estás seguro de que deseas eliminar el grupo "${group.name}"? Esta acción no se puede deshacer.`)) {
       try {
         await deleteGroup(group.id);
+        toast.error("Grupo eliminado");
         handleClose();
         window.location.reload(); 
       } catch (err) {
         console.error("Error eliminando grupo:", err);
-        alert("No se pudo eliminar el grupo");
+        toast.error("No se pudo eliminar el grupo");
       }
     }
   };

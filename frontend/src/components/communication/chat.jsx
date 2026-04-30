@@ -39,7 +39,7 @@ const formatTime = (dateStr) => {
   return d.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" });
 };
 
-const MessageContent = ({ msg, onImageClick, onVideoClick, isMine, onReply, onEdit, onDelete, onReplyToOriginal, searchTerm }) => {
+const MessageContent = React.memo(({ msg, onImageClick, onVideoClick, isMine, onReply, onEdit, onDelete, onReplyToOriginal, searchTerm }) => {
   const [favorite, setFavorite] = useState(msg.favorite === 1);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef();
@@ -145,7 +145,11 @@ const MessageContent = ({ msg, onImageClick, onVideoClick, isMine, onReply, onEd
       <button className="reply-btn" onClick={() => onReply(msg)} type="button"><FaReply /></button>
     </div>
   );
-};
+}, (prevProps, nextProps) => {
+  return prevProps.msg === nextProps.msg && 
+         prevProps.isMine === nextProps.isMine && 
+         prevProps.searchTerm === nextProps.searchTerm;
+});
 
 const Chat = ({ roomId, userId, groupId, targetUserId, targetUserName, targetUserAvatar, initialUnreadCount }) => {
   const location = useLocation();
@@ -175,14 +179,28 @@ const Chat = ({ roomId, userId, groupId, targetUserId, targetUserName, targetUse
   const scrollContainerRef = useRef(null);
   const messagesRef = useRef(null);
   const messageRefs = useRef({});
+  const typingTimeoutRef = useRef(null);
 
-  const { messages, send, sendFile, deleteMessage, editMessage } = useChat(roomId, userId);
+  const { messages, typingUsers, send, sendFile, deleteMessage, editMessage, setTyping } = useChat(roomId, userId);
   const { startCall, activeCall, isMinimized } = useCall();
   const { mutedRooms = [], toggleMuteRoom } = useUnread();
   const { showUserProfile, showGroupProfile, showRoomProfile } = useUserDetail();
   const isRoomMuted = mutedRooms?.includes(roomId) || false;
 
   const isInitialLoad = useRef(true);
+  const myNameRef = useRef("Alguien");
+
+  useEffect(() => {
+    try {
+      const userStr = localStorage.getItem("user");
+      if (userStr) {
+        const userObj = JSON.parse(userStr);
+        myNameRef.current = userObj?.name || "Alguien";
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }, []);
 
   const scrollToBottom = (instant = false) => {
     const container = scrollContainerRef.current;
@@ -326,6 +344,18 @@ const Chat = ({ roomId, userId, groupId, targetUserId, targetUserName, targetUse
     textarea.style.height = "auto";
     textarea.style.height = Math.min(textarea.scrollHeight, 4 * 1.4 * 16) + "px";
     setInput(textarea.value);
+
+    // Typing indicator logic
+    if (!typingTimeoutRef.current) {
+      setTyping(true, myNameRef.current);
+    } else {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    typingTimeoutRef.current = setTimeout(() => {
+      setTyping(false);
+      typingTimeoutRef.current = null;
+    }, 3000);
   };
 
   const handleScrollToOriginal = (msgId) => {
@@ -362,7 +392,7 @@ const Chat = ({ roomId, userId, groupId, targetUserId, targetUserName, targetUse
       if (msg.id === firstUnreadId && showUnreadSep) {
         items.push({ unreadSeparator: true, label: `Mensajes no leídos: ${initialUnreadRef.current}`, key: 'unread-sep' });
       }
-      items.push({ ...msg, separator: false, key: msg.id || `${msg.sender_id}-${msg.created_at}-${Math.random()}` });
+      items.push({ ...msg, originalMsg: msg, separator: false, key: msg.id || `temp-${msg.sender_id}-${msg.created_at}-${msg.content?.substring(0, 20) || Math.random()}` });
     });
     return items;
   };
@@ -436,7 +466,7 @@ const Chat = ({ roomId, userId, groupId, targetUserId, targetUserName, targetUse
                 >
                   {item.sender_name || item.sender_id}
                 </span>
-                <MessageContent msg={item} searchTerm={searchTerm} onImageClick={(src) => setModalMedia({ src, type: 'image' })} onVideoClick={(src) => setModalMedia({ src, type: 'video' })} isMine={Number(item.sender_id) === Number(userId)} onReply={handleReply} onReplyToOriginal={handleScrollToOriginal} onEdit={handleEdit} onDelete={deleteMessage} />
+                <MessageContent msg={item.originalMsg || item} searchTerm={searchTerm} onImageClick={(src) => setModalMedia({ src, type: 'image' })} onVideoClick={(src) => setModalMedia({ src, type: 'video' })} isMine={Number(item.sender_id) === Number(userId)} onReply={handleReply} onReplyToOriginal={handleScrollToOriginal} onEdit={handleEdit} onDelete={deleteMessage} />
               </div>
             )
           ))}
@@ -463,6 +493,21 @@ const Chat = ({ roomId, userId, groupId, targetUserId, targetUserName, targetUse
               <button className="cancel-action" onClick={cancelAction}><FaTimes /></button>
             </div>
           )}
+          
+          {/* Indicador de escritura */}
+          {typingUsers.length > 0 && (
+            <div className="typing-indicator-container">
+              <div className="typing-bubbles">
+                <span></span><span></span><span></span>
+              </div>
+              <span className="typing-text">
+                {typingUsers.length === 1 && <b>{typingUsers[0].name} está escribiendo...</b>}
+                {typingUsers.length === 2 && <b>{typingUsers[0].name} y {typingUsers[1].name} están escribiendo...</b>}
+                {typingUsers.length > 2 && <b>{typingUsers[0].name}, {typingUsers[1].name} y otros están escribiendo...</b>}
+              </span>
+            </div>
+          )}
+
           <div className="chat-input">
             <label htmlFor="file-upload" className="upload-btn"><FaPaperclip /></label>
             <input id="file-upload" type="file" multiple onChange={handleFileChange} style={{ display: "none" }} />

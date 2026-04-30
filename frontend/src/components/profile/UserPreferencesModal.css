@@ -194,15 +194,8 @@
 }
 
 @keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-5px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* Checkbox de Notificaciones */
@@ -224,10 +217,6 @@
   border-color: var(--border);
 }
 
-.preferences-field--checkbox:hover .preferences-icon {
-  transform: scale(1.1);
-}
-
 .preferences-field--checkbox input[type="checkbox"] {
   width: 1.2rem;
   height: 1.2rem;
@@ -235,7 +224,7 @@
   cursor: pointer;
 }
 
-/* Selección de Sonidos en Píldoras */
+/* Selección de Sonidos */
 .sound-pill-list {
   display: flex;
   flex-wrap: wrap;
@@ -280,4 +269,71 @@
 
 .sound-pill.active .sound-pill-icon {
   color: #fff !important;
+}
+
+/* Nuevas Secciones Sólidas */
+.stop-ringtone-btn {
+  width: 100%;
+  margin-top: 0.8rem;
+  padding: 0.7rem;
+  border-radius: var(--radius-search);
+  border: 1px solid var(--border);
+  background-color: var(--bg-soft);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+}
+
+.stop-ringtone-btn:hover {
+  background-color: var(--bg-hover);
+  border-color: var(--primary);
+}
+
+.muted-chats-scroll-list {
+  max-height: 160px;
+  overflow-y: auto;
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+.muted-chats-scroll-list::-webkit-scrollbar { width: 6px; }
+.muted-chats-scroll-list::-webkit-scrollbar-track { background-color: var(--bg-soft); border-radius: 10px; }
+.muted-chats-scroll-list::-webkit-scrollbar-thumb { background-color: var(--border); border-radius: 10px; }
+
+.muted-chat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.8rem 1rem;
+  background-color: var(--bg-soft);
+  border-radius: var(--radius-search);
+  border: 1px solid var(--border);
+}
+
+.no-muted-text {
+  text-align: center;
+  padding: 1.5rem;
+  color: var(--text-tertiary);
+}
+
+.unmute-btn {
+  background-color: var(--bg-base);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  padding: 0.4rem;
+  border-radius: var(--radius-circle);
+  cursor: pointer;
+}
+
+.unmute-btn:hover {
+  background-color: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
 }

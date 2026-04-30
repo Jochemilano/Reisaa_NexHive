@@ -2,6 +2,7 @@ import './App.css';
 import AppRouter from './router/AppRouter';
 import { useState, useEffect } from "react";
 import { preferencesApi } from "@/utils/preferences";
+import { Toaster } from "sonner";
 
 function App() {
   const [userPreferences, setUserPreferences] = useState(null);
@@ -57,9 +58,12 @@ function App() {
   }, []);
 
   return (
-    <div className="App">
-      <AppRouter userPreferences={userPreferences} />
-    </div>
+    <>
+      <Toaster position="bottom-right" richColors closeButton />
+      <div className="App">
+        <AppRouter userPreferences={userPreferences} />
+      </div>
+    </>
   );
 }
 

@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import Modal from "@/components/modal/Modal";
-import { FaPalette, FaBell, FaCheck, FaSun, FaMoon, FaFont, FaChevronDown, FaChevronUp, FaVolumeUp, FaMusic, FaGem, FaCloud, FaBolt, FaWaveSquare, FaTint, FaMicrophoneAlt, FaBroadcastTower, FaFingerprint, FaCircle } from "react-icons/fa";
+import { FaPalette, FaBell, FaCheck, FaSun, FaMoon, FaFont, FaChevronDown, FaChevronUp, FaVolumeUp, FaMusic, FaGem, FaCloud, FaBolt, FaWaveSquare, FaTint, FaMicrophoneAlt, FaBroadcastTower, FaFingerprint, FaCircle, FaPhone, FaVolumeMute, FaPlay, FaStop } from "react-icons/fa";
 import { useUnread } from "@/context/UnreadContext";
-import { playNotificationSound } from "@/utils/audio";
+import { playNotificationSound, playRingtone, playRingtoneOnce, stopRingtone } from "@/utils/audio";
 import "./UserPreferencesModal.css";
 
 const UserPreferencesModal = ({ isOpen, handleClose, initialData, onSave }) => {
@@ -10,15 +10,21 @@ const UserPreferencesModal = ({ isOpen, handleClose, initialData, onSave }) => {
   const [accentColor, setAccentColor] = useState("blue");
   const [fontFamily, setFontFamily] = useState("system");
   const [notifications, setNotifications] = useState(true);
-  const { selectedSound, changeNotificationSound } = useUnread();
+  
+  const { 
+    selectedSound, changeNotificationSound, 
+    mutedRooms, toggleMuteRoom, allRooms,
+    callsEnabled, changeCallEnabled,
+    callSound, changeCallSound
+  } = useUnread();
+
   const [localSound, setLocalSound] = useState(selectedSound);
 
-  const [openSections, setOpenSections] = useState({ appearance: true, colors: false, fonts: false, sounds: false });
+  const [openSections, setOpenSections] = useState({ appearance: true, colors: false, fonts: false, sounds: false, calls: false, muted: false });
   const toggleSection = (section) => {
     setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
   };
 
-  // Los colores de acento disponibles (26 opciones)
   const ACCENT_COLORS = [
     { id: "red", hex: "#EF4444" },
     { id: "rose", hex: "#F43F5E" },
@@ -48,7 +54,6 @@ const UserPreferencesModal = ({ isOpen, handleClose, initialData, onSave }) => {
     { id: "stone", hex: "#57534E" }
   ];
 
-  // Las tipografías disponibles
   const FONT_OPTIONS = [
     { id: "system", label: "Básica", family: "system-ui, sans-serif" },
     { id: "tahoma", label: "Tahoma", family: "Tahoma, sans-serif" },
@@ -67,38 +72,33 @@ const UserPreferencesModal = ({ isOpen, handleClose, initialData, onSave }) => {
     { id: "bloop", label: "Bloop", icon: <FaCircle />, color: "#95a5a6" }
   ];
 
+  const CALL_SOUND_OPTIONS = [
+    { id: "retro", label: "Arcade", color: "#f1c40f" },
+    { id: "zen", label: "Garden", color: "#2ecc71" },
+    { id: "modern", label: "Modern", color: "#3498db" }
+  ];
+
   useEffect(() => {
     if (initialData) {
       setNotifications(initialData.notifications_enabled ?? true);
+      // Fallback a 'retro' si el ID guardado ya no existe
+      const validSounds = ["retro", "zen", "modern"];
+      const savedSound = localStorage.getItem("call_sound_type") || initialData.call_sound_type;
+      if (!validSounds.includes(savedSound)) {
+        changeCallSound("retro");
+      }
 
       let initialThemeMode = "light";
       let initialAccent = "blue";
       let initialFont = "system";
 
-      if (initialData.theme) {
-        if (initialData.theme.includes("-")) {
-          const parts = initialData.theme.split("-");
-          if (parts[0] === "theme") {
-            const accent = parts[1];
-            if (accent === "dark") {
-              initialThemeMode = "dark";
-              initialAccent = "amber";
-            } else {
-              initialAccent = accent;
-              initialThemeMode = (accent === "blue" || accent === "purple") ? "dark" : "light";
-            }
-          } else {
-            initialThemeMode = parts[0];
-            initialAccent = parts[1];
-            if (parts[2]) {
-              initialFont = parts[2];
-            }
-          }
-        } else if (initialData.theme === "light") {
-          initialThemeMode = "light";
-          initialAccent = "blue";
-        }
+      if (initialData.theme && initialData.theme.includes("-")) {
+        const parts = initialData.theme.split("-");
+        initialThemeMode = parts[0];
+        initialAccent = parts[1];
+        if (parts[2]) initialFont = parts[2];
       }
+      
       setThemeMode(initialThemeMode);
       setAccentColor(initialAccent);
       setFontFamily(initialFont);
@@ -106,7 +106,6 @@ const UserPreferencesModal = ({ isOpen, handleClose, initialData, onSave }) => {
     }
   }, [initialData, isOpen, selectedSound]);
 
-  // Aplicar temporalmente los estilos al root para la previsualización
   useEffect(() => {
     if (isOpen) {
       document.documentElement.setAttribute('data-theme', themeMode);
@@ -115,53 +114,28 @@ const UserPreferencesModal = ({ isOpen, handleClose, initialData, onSave }) => {
     }
   }, [themeMode, accentColor, fontFamily, isOpen]);
 
-  // Restaurar original si se cancela o cierra sin guardar
-  useEffect(() => {
-    if (!isOpen && initialData && initialData.theme) {
-      let originalThemeMode = "light";
-      let originalAccent = "blue";
-      let originalFont = "system";
-      if (initialData.theme.includes("-")) {
-        const parts = initialData.theme.split("-");
-        if (parts[0] === "theme") {
-          const accent = parts[1];
-          if (accent === "dark") {
-            originalThemeMode = "dark";
-            originalAccent = "amber";
-          } else {
-            originalAccent = accent;
-            originalThemeMode = (accent === "blue" || accent === "purple") ? "dark" : "light";
-          }
-        } else {
-          originalThemeMode = parts[0];
-          originalAccent = parts[1];
-          if (parts[2]) {
-            originalFont = parts[2];
-          }
-        }
-      } else if (initialData.theme === "light") {
-        originalThemeMode = "light";
-        originalAccent = "blue";
-      }
-      document.documentElement.setAttribute('data-theme', originalThemeMode);
-      document.documentElement.setAttribute('data-accent', originalAccent);
-      document.documentElement.setAttribute('data-font', originalFont);
-    }
-  }, [isOpen, initialData]);
-
   const handleSubmit = () => {
     changeNotificationSound(localSound);
     onSave({
       language: initialData?.language || "es",
       theme: `${themeMode}-${accentColor}-${fontFamily}`,
       notifications_enabled: notifications,
+      calls_enabled: callsEnabled,
+      call_sound_type: callSound
     });
+    stopRingtone();
   };
 
   const handlePreviewSound = (e, soundId) => {
     e.stopPropagation();
     setLocalSound(soundId);
     playNotificationSound(soundId);
+  };
+
+  const handlePreviewRingtone = (e, soundId) => {
+    e.stopPropagation();
+    changeCallSound(soundId); // Se guarda al instante en el contexto
+    playRingtoneOnce(soundId);
   };
 
   return (
@@ -173,7 +147,7 @@ const UserPreferencesModal = ({ isOpen, handleClose, initialData, onSave }) => {
       <Modal.Body>
         <div className="preferences-accordion-wrapper">
 
-          {/* Sección de Tema Claro / Oscuro */}
+          {/* Modo de Apariencia */}
           <div className="preferences-field">
             <div className="preferences-accordion-header" onClick={() => toggleSection('appearance')}>
               <label className="preferences-label">
@@ -185,25 +159,17 @@ const UserPreferencesModal = ({ isOpen, handleClose, initialData, onSave }) => {
 
             {openSections.appearance && (
               <div className="mode-selector-grid">
-                <button
-                  className={`mode-card ${themeMode === 'light' ? 'active' : ''}`}
-                  onClick={() => setThemeMode('light')}
-                >
-                  <FaSun className="mode-card-icon" />
-                  <span>Claro</span>
+                <button className={`mode-card ${themeMode === 'light' ? 'active' : ''}`} onClick={() => setThemeMode('light')}>
+                  <FaSun className="mode-card-icon" /> <span>Claro</span>
                 </button>
-                <button
-                  className={`mode-card ${themeMode === 'dark' ? 'active' : ''}`}
-                  onClick={() => setThemeMode('dark')}
-                >
-                  <FaMoon className="mode-card-icon" />
-                  <span>Oscuro</span>
+                <button className={`mode-card ${themeMode === 'dark' ? 'active' : ''}`} onClick={() => setThemeMode('dark')}>
+                  <FaMoon className="mode-card-icon" /> <span>Oscuro</span>
                 </button>
               </div>
             )}
           </div>
 
-          {/* Sección de Color de Acento */}
+          {/* Color de Acento */}
           <div className="preferences-field">
             <div className="preferences-accordion-header" onClick={() => toggleSection('colors')}>
               <label className="preferences-label">
@@ -221,8 +187,6 @@ const UserPreferencesModal = ({ isOpen, handleClose, initialData, onSave }) => {
                     className={`color-swatch ${accentColor === color.id ? 'active' : ''}`}
                     style={{ backgroundColor: color.hex }}
                     onClick={() => setAccentColor(color.id)}
-                    title={`Seleccionar color ${color.id}`}
-                    aria-label={`Seleccionar color ${color.id}`}
                   >
                     {accentColor === color.id && <FaCheck className="color-swatch-check" />}
                   </button>
@@ -231,7 +195,7 @@ const UserPreferencesModal = ({ isOpen, handleClose, initialData, onSave }) => {
             )}
           </div>
 
-          {/* Sección de Tipografía */}
+          {/* Tipografía */}
           <div className="preferences-field">
             <div className="preferences-accordion-header" onClick={() => toggleSection('fonts')}>
               <label className="preferences-label">
@@ -248,10 +212,7 @@ const UserPreferencesModal = ({ isOpen, handleClose, initialData, onSave }) => {
                     key={font.id}
                     className={`font-pill ${fontFamily === font.id ? 'active' : ''}`}
                     onClick={() => setFontFamily(font.id)}
-                    style={{
-                      fontFamily: font.family,
-                      fontSize: font.id === 'pixel' ? '1.15rem' : '0.95rem'
-                    }}
+                    style={{ fontFamily: font.family }}
                   >
                     {font.label}
                   </button>
@@ -260,12 +221,12 @@ const UserPreferencesModal = ({ isOpen, handleClose, initialData, onSave }) => {
             )}
           </div>
 
-          {/* Sección de Sonidos de Notificación */}
+          {/* Sonido Notificación */}
           <div className="preferences-field">
             <div className="preferences-accordion-header" onClick={() => toggleSection('sounds')}>
               <label className="preferences-label">
                 <FaMusic className="preferences-icon" />
-                Sonido de Notificación
+                Notificaciones
               </label>
               {openSections.sounds ? <FaChevronUp className="accordion-icon" /> : <FaChevronDown className="accordion-icon" />}
             </div>
@@ -276,14 +237,9 @@ const UserPreferencesModal = ({ isOpen, handleClose, initialData, onSave }) => {
                   <button
                     key={sound.id}
                     className={`sound-pill ${localSound === sound.id ? 'active' : ''}`}
-                    onClick={() => {
-                      setLocalSound(sound.id);
-                      playNotificationSound(sound.id);
-                    }}
+                    onClick={(e) => handlePreviewSound(e, sound.id)}
                   >
-                    <span className="sound-pill-icon" style={{ color: sound.color }}>
-                      {sound.icon}
-                    </span>
+                    <span className="sound-pill-icon" style={{ color: sound.color }}>{sound.icon}</span>
                     {sound.label}
                   </button>
                 ))}
@@ -291,27 +247,83 @@ const UserPreferencesModal = ({ isOpen, handleClose, initialData, onSave }) => {
             )}
           </div>
 
+          {/* Tono de Llamada */}
+          <div className="preferences-field">
+            <div className="preferences-accordion-header" onClick={() => toggleSection('calls')}>
+              <label className="preferences-label">
+                <FaPhone className="preferences-icon" />
+                Tono de Llamada
+              </label>
+              {openSections.calls ? <FaChevronUp className="accordion-icon" /> : <FaChevronDown className="accordion-icon" />}
+            </div>
+
+            {openSections.calls && (
+              <div className="sound-pill-list">
+                {CALL_SOUND_OPTIONS.map((sound) => (
+                  <button
+                    key={sound.id}
+                    className={`sound-pill ${callSound === sound.id ? 'active' : ''}`}
+                    onClick={(e) => handlePreviewRingtone(e, sound.id)}
+                  >
+                    <span className="sound-pill-icon" style={{ color: sound.color }}><FaMusic /></span>
+                    {sound.label}
+                    {callSound === sound.id && <FaPlay style={{ fontSize: '0.7rem', marginLeft: 'auto' }} />}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Chats Silenciados */}
+          <div className="preferences-field">
+            <div className="preferences-accordion-header" onClick={() => toggleSection('muted')}>
+              <label className="preferences-label">
+                <FaVolumeMute className="preferences-icon" />
+                Chats Silenciados
+              </label>
+              {openSections.muted ? <FaChevronUp className="accordion-icon" /> : <FaChevronDown className="accordion-icon" />}
+            </div>
+
+            {openSections.muted && (
+              <div className="muted-chats-scroll-list">
+                {mutedRooms.length === 0 ? (
+                  <p className="no-muted-text">No hay chats silenciados.</p>
+                ) : (
+                  mutedRooms.map(roomId => {
+                    const room = allRooms.find(r => String(r.id) === String(roomId));
+                    return (
+                      <div key={roomId} className="muted-chat-item">
+                        <span>{room ? room.name : `Chat #${roomId}`}</span>
+                        <button className="unmute-btn" onClick={() => toggleMuteRoom(roomId)}>
+                          <FaVolumeUp />
+                        </button>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            )}
+          </div>
+
         </div>
 
         <div className="preferences-field preferences-field--checkbox">
-          <input
-            id="notifications"
-            type="checkbox"
-            checked={notifications}
-            onChange={(e) => setNotifications(e.target.checked)}
-          />
-
+          <input id="notifications" type="checkbox" checked={notifications} onChange={(e) => setNotifications(e.target.checked)} />
           <label htmlFor="notifications" className="preferences-label">
-            <FaBell className="preferences-icon" />
-            Notificaciones
+            <FaBell className="preferences-icon" /> Notificaciones
+          </label>
+        </div>
+
+        <div className="preferences-field preferences-field--checkbox">
+          <input id="calls_enabled" type="checkbox" checked={callsEnabled} onChange={(e) => changeCallEnabled(e.target.checked)} />
+          <label htmlFor="calls_enabled" className="preferences-label">
+            <FaPhone className="preferences-icon" /> Sonido de Llamadas
           </label>
         </div>
       </Modal.Body>
 
-      <Modal.Footer onClose={handleClose}>
-        <Modal.AcceptButton onClick={handleSubmit}>
-          Guardar
-        </Modal.AcceptButton>
+      <Modal.Footer onClose={() => { stopRingtone(); handleClose(); }}>
+        <Modal.AcceptButton onClick={handleSubmit}>Guardar</Modal.AcceptButton>
       </Modal.Footer>
     </Modal>
   );

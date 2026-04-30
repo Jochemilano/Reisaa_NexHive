@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { FaPlus, FaCog, FaUserAlt, FaComments, FaStar, FaCalendarAlt, FaVolumeMute } from "react-icons/fa";
+import { FiMessageSquare, FiStar, FiCalendar, FiPlus, FiSettings, FiUser } from "react-icons/fi";
 import Modal from "@/components/modal/Modal";
 import Separator from "@/components/separator/Separator";
 import Button from "@/components/button/Button";
@@ -16,12 +16,13 @@ import { createGroup, fetchGroups } from "@/utils/groups";
 import { getAvatarUrl } from "@/utils/media";
 import { addLongPress } from "@/utils/longPress";
 import { useUnread } from "@/context/UnreadContext";
+import { toast } from "sonner";
 import "./Sidebar.css";
 
 const NAV_ITEMS = [
-  { path: "/home", icon: <FaComments />, tooltip: "Mensajes" },
-  { path: "/favorites", icon: <FaStar />, tooltip: "Favoritos" },
-  { path: "/calendar", icon: <FaCalendarAlt />, tooltip: "Calendario" },
+  { path: "/home", icon: <FiMessageSquare />, tooltip: "Mensajes" },
+  { path: "/favorites", icon: <FiStar />, tooltip: "Favoritos" },
+  { path: "/calendar", icon: <FiCalendar />, tooltip: "Calendario" },
 ];
 
 // ─── SidebarItem ──────────────────────────────────────────────────────────────
@@ -100,7 +101,7 @@ const SidebarItem = ({
             onClick={(e) => { e.stopPropagation(); onLongPress(); }}
             title="Editar"
           >
-            <FaCog />
+            <FiSettings />
           </button>
         )}
       </div>
@@ -151,14 +152,15 @@ const Sidebar = () => {
   }, 0);
 
   const handleCreateGroup = async (avatarFile) => {
-    if (!name.trim()) return alert("Nombre requerido");
+    if (!name.trim()) return toast.error("El nombre del grupo es requerido");
     try {
       const newGroup = await createGroup(name, selectedCollaborators.map(c => c.id), avatarFile);
       addGroup(newGroup);
+      toast.success(`Grupo "${name}" creado con éxito`);
       handleClose();
     } catch (err) {
       console.error(err);
-      alert("Error al crear grupo");
+      toast.error("Error al crear el grupo");
     }
   };
 
@@ -178,8 +180,9 @@ const Sidebar = () => {
       setIsPreferencesOpen(false);
       document.body.className = saved.theme === "light" ? "" : saved.theme;
       setSoundEnabled(saved.notifications_enabled);
+      toast.warning("Preferencias guardadas");
     } catch (err) {
-      alert("Error guardando preferencias: " + err.message);
+      toast.error("Error guardando preferencias: " + err.message);
     }
   };
 
@@ -211,7 +214,7 @@ const Sidebar = () => {
       <div className="sidebar-groups">
         <SidebarItem tooltip="Nuevo grupo">
           <Modal.Button className="modal-button" onClick={() => setIsOpen(true)}>
-            <FaPlus />
+            <FiPlus />
           </Modal.Button>
         </SidebarItem>
 
@@ -236,10 +239,10 @@ const Sidebar = () => {
       <div className="sidebar-footer">
         <Separator />
         <SidebarItem tooltip="Preferencias">
-          <Button onClick={() => setIsPreferencesOpen(true)}><FaCog /></Button>
+          <Button onClick={() => setIsPreferencesOpen(true)}><FiSettings /></Button>
         </SidebarItem>
         <SidebarItem tooltip="Perfil">
-          <Button onClick={() => setIsProfileOpen(true)}><FaUserAlt /></Button>
+          <Button onClick={() => setIsProfileOpen(true)}><FiUser /></Button>
         </SidebarItem>
       </div>
 

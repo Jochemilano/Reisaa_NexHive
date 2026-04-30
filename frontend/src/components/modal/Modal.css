@@ -35,7 +35,8 @@
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 /* Contenido flotante del modal */
@@ -45,7 +46,7 @@
   border-radius: 12px;
   width: 550px;
   max-width: 95%;
-  box-shadow: 0 10px 40px var(--shadow);;
+  box-shadow: 0 10px 40px var(--shadow);
   overflow: hidden;
   animation: modal-fade 0.25s ease;
   border: 1px solid var(--border);
@@ -65,8 +66,8 @@
   justify-content: space-between;
   align-items: center;
   padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid var(--bg-soft);
-  background: var(--bg-base);
+  border-bottom: 1px solid var(--glass-border);
+  background: transparent;
 }
 
 .modal-header h2 {
@@ -163,8 +164,8 @@
   justify-content: flex-end;
   gap: 0.75rem;
   padding: 1.25rem 1.5rem;
-  border-top: 1px solid var(--border);
-  background: var(--bg-soft);
+  border-top: 1px solid var(--glass-border);
+  background: rgba(0, 0, 0, 0.03);
 }
 
 .modal-cancel {

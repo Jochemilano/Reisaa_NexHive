@@ -14,6 +14,8 @@ import { useCalendar } from "@/context/CalendarContext";
 import KanbanBoard from "@/components/kanban/KanbanBoard";
 import { useUserDetail } from "@/context/UserDetailContext";
 import { getAvatarUrl } from "@/utils/media";
+import Skeleton from "@/components/loading/Skeleton";
+import { toast } from "sonner";
 import "./GroupPage.css";
 import "@/components/kanban/KanbanBoard.css";
 
@@ -60,15 +62,19 @@ const GroupPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [groupName, setGroupName] = useState("");
+  const [loadingGroup, setLoadingGroup] = useState(true);
+  const [loadingProject, setLoadingProject] = useState(false);
   const [sortConfig, setSortConfig] = useState({ key: "id", direction: "desc" });
   const [viewMode, setViewMode] = useState("table"); // "table" | "kanban"
 
   // Cargar nombre del grupo para breadcrumbs
   useEffect(() => {
     if (!groupId) return;
+    setLoadingGroup(true);
     apiFetch(`groups/${groupId}/details`)
       .then(g => setGroupName(g.name))
-      .catch(err => console.error("Error cargando nombre del grupo:", err));
+      .catch(err => console.error("Error cargando nombre del grupo:", err))
+      .finally(() => setLoadingGroup(false));
   }, [groupId]);
 
   // Cargar lista de proyectos del grupo
@@ -82,9 +88,11 @@ const GroupPage = () => {
   // Cargar detalle del proyecto seleccionado (con actividades)
   useEffect(() => {
     if (!selectedProjectId) return;
+    setLoadingProject(true);
     fetchProjectDetails(selectedProjectId)
       .then(setSelectedProject)
-      .catch(err => console.error("Error cargando proyecto:", err));
+      .catch(err => console.error("Error cargando proyecto:", err))
+      .finally(() => setLoadingProject(false));
   }, [selectedProjectId]);
 
   const loadProjectDetails = () => {
@@ -167,12 +175,13 @@ const GroupPage = () => {
     if (confirmed) {
       try {
         await deleteActivity(activity.id);
+        toast.error("Actividad eliminada");
         loadProjectDetails();
         refreshEvents();
         setOpenMenuId(null);
       } catch (err) {
         console.error("Error al eliminar actividad:", err);
-        alert("No se pudo eliminar la actividad");
+        toast.error("No se pudo eliminar la actividad");
       }
     }
   };
@@ -186,19 +195,31 @@ const GroupPage = () => {
     <div className="group-page">
       <div className="main-content">
         <div className="group-page__breadcrumbs">
-          <span className="breadcrumb-item">{groupName || "Cargando..."}</span>
+          <span className="breadcrumb-item">
+            {loadingGroup ? <Skeleton width="80px" height="14px" /> : (groupName || "Grupo")}
+          </span>
           <FaChevronRight className="breadcrumb-separator" />
           <span className="breadcrumb-item breadcrumb-item--active">
-            {selectedProject?.name || "Proyecto"}
+            {loadingProject ? <Skeleton width="120px" height="14px" /> : (selectedProject?.name || "Proyecto")}
           </span>
         </div>
 
         <div className="group-page__header">
           <div className="header-main-info">
             <h1 className="group-page__title">
-              {selectedProject?.name ?? "Selecciona un proyecto"}
+              {loadingProject ? (
+                <Skeleton width="300px" height="36px" />
+              ) : (
+                selectedProject?.name ?? `Bienvenido a ${groupName || "el grupo"}`
+              )}
             </h1>
-            {selectedProject && (() => {
+            {loadingProject ? (
+              <div className="project-stats">
+                <Skeleton width="60px" height="24px" />
+                <Skeleton width="60px" height="24px" />
+                <Skeleton width="60px" height="24px" />
+              </div>
+            ) : selectedProject && (() => {
             const total = activities.length;
             const pct = total === 0 ? 0 : Math.round((stats.done / total) * 100);
             const isComplete = pct === 100;
@@ -306,7 +327,18 @@ const GroupPage = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredActivities.length === 0 ? (
+                    {loadingProject ? (
+                      Array.from({ length: 5 }).map((_, i) => (
+                        <tr key={`skeleton-row-${i}`}>
+                          <td><Skeleton width="80%" height="20px" /></td>
+                          <td><Skeleton width="120px" height="20px" circle /></td>
+                          <td><Skeleton width="60px" height="24px" /></td>
+                          <td><Skeleton width="80px" height="20px" /></td>
+                          <td><Skeleton width="80px" height="20px" /></td>
+                          <td><Skeleton width="30px" height="30px" circle /></td>
+                        </tr>
+                      ))
+                    ) : filteredActivities.length === 0 ? (
                       <tr>
                         <td colSpan={6} className="activity-table__empty">
                           {activities.length === 0
@@ -414,9 +446,16 @@ const GroupPage = () => {
             )}
           </>
         ) : (
-          projects.length === 0 && (
-            <p className="group-page__empty">No hay proyectos en este grupo todavía.</p>
-          )
+          <div className="group-page__welcome-container">
+            <div className="welcome-content">
+              <div className="welcome-icon">🚀</div>
+              <h2>¡Hola! Comienza seleccionando un proyecto</h2>
+              <p>Elige un proyecto de la barra lateral para ver sus actividades, progreso y tablero Kanban.</p>
+              {projects.length === 0 && (
+                <p className="group-page__empty">Este grupo aún no tiene proyectos creados.</p>
+              )}
+            </div>
+          </div>
         )}
       </div>
 

@@ -52,6 +52,20 @@ module.exports = (io, connectedUsers) => {
       console.log("Usuario", socket.userId, "salió de sala", roomId);
     });
 
+    // Indicador de escritura (Modificado para ser 100% fiable con el nombre)
+    socket.on("typing", ({ roomId }) => {
+      const userName = socket.userInfo?.name || "Usuario";
+      socket.to(roomId.toString()).emit("user-typing", { 
+        roomId, 
+        userId: socket.userId, 
+        userName: userName 
+      });
+    });
+
+    socket.on("stop-typing", ({ roomId }) => {
+      socket.to(roomId.toString()).emit("user-stop-typing", { roomId, userId: socket.userId });
+    });
+
     // Marcar sala como leída vía socket
     socket.on("mark-room-read", async ({ roomId }) => {
       try {

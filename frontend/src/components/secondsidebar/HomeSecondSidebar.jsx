@@ -7,6 +7,8 @@ import { FiPlus, FiSearch, FiUserPlus } from "react-icons/fi";
 import { CONFIG } from "@/utils/config";
 import { getAvatarUrl } from "@/utils/media";
 import { useUserDetail } from "@/context/UserDetailContext";
+import { toast } from "sonner";
+import Skeleton from "@/components/loading/Skeleton";
 
 const HomeSecondSidebar = () => {
   const [rooms, setRooms] = useState([]);
@@ -15,6 +17,7 @@ const HomeSecondSidebar = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [loading, setLoading] = useState(true);
   
   // Estados para creación de grupo
   const [selectedFriends, setSelectedFriends] = useState([]);
@@ -26,7 +29,8 @@ const HomeSecondSidebar = () => {
   const currentUserId = parseInt(localStorage.getItem("userId"));
 
   useEffect(() => {
-    const loadData = async () => {
+    const loadData = async (showLoading = true) => {
+      if (showLoading) setLoading(true);
       try {
         const roomsData = await apiFetch("rooms");
         setRooms(roomsData);
@@ -35,11 +39,13 @@ const HomeSecondSidebar = () => {
         setFriends(friendsData);
       } catch (err) {
         console.error("Error cargando datos:", err);
+      } finally {
+        if (showLoading) setLoading(false);
       }
     };
     loadData();
-    // Refrescar cada 10 segundos para no leídos
-    const interval = setInterval(loadData, 10000);
+    // Refrescar cada 10 segundos para no leídos (sin mostrar skeleton)
+    const interval = setInterval(() => loadData(false), 10000);
     return () => clearInterval(interval);
   }, [currentUserId]);
 
@@ -75,8 +81,10 @@ const HomeSecondSidebar = () => {
       setSearchQuery("");
       setSearchResults([]);
       setIsSearchModalOpen(false);
+      toast.success("¡Solicitud enviada con éxito!");
     } catch (err) {
       console.error("Error agregando amigo:", err);
+      toast.error("Error al agregar amigo");
     }
   };
 
@@ -107,9 +115,11 @@ const HomeSecondSidebar = () => {
       setIsSearchModalOpen(false);
       setSelectedFriends([]);
       setGroupName("");
+      toast.success(`Grupo "${groupName}" creado`);
       navigate(`/chat/${res.roomId}`);
     } catch (err) {
       console.error("Error creando grupo:", err);
+      toast.error("Error al crear el grupo");
     }
   };
 
@@ -131,7 +141,16 @@ const HomeSecondSidebar = () => {
       </div>
 
       <div className="user-list">
-        {rooms.length > 0 ? (
+        {loading ? (
+          Array.from({ length: 6 }).map((_, i) => (
+            <div key={`chat-skeleton-${i}`} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 12px' }}>
+              <Skeleton width="32px" height="32px" circle />
+              <div style={{ flex: 1 }}>
+                <Skeleton width="70%" height="14px" />
+              </div>
+            </div>
+          ))
+        ) : rooms.length > 0 ? (
           rooms.map(r => {
             const unread = unreadByRoom[r.id] || r.unread_count || 0;
             const avatarUrl = getAvatarUrl(r.display_avatar);
