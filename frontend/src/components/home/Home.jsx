@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { socket } from "@/utils/socket";
 import { apiFetch } from "@/utils/apiClient";
-import { getAvatarUrl } from "@/utils/media"; 
+import { getAvatarUrl } from "@/utils/media";
 import { useGroup } from "@/context/GroupContext";
 import { useUserDetail } from "@/context/UserDetailContext";
+import { FaPlug, FaMagic } from "react-icons/fa";
 import Skeleton from "@/components/loading/Skeleton";
 import "./Home.css"
 
@@ -58,9 +59,12 @@ export default function Home() {
     return () => socket.off("usuarios:lista", handleUserList);
   }, [currentUserId]);
 
-  const onlineUsers = allOnlineUsers.filter(u => 
-    u.id !== currentUserId && friends.some(f => f.id === u.id)
-  );
+  const onlineUsers = allOnlineUsers
+    .filter(u => u.id !== currentUserId && friends.some(f => f.id === u.id))
+    .map(u => {
+      const friendData = friends.find(f => f.id === u.id);
+      return { ...u, ...friendData };
+    });
 
   const handleUserClick = async (user) => {
     try {
@@ -113,12 +117,12 @@ export default function Home() {
               onlineUsers.map((u) => {
                 const avatarUrl = getAvatarUrl(u.profile_pic);
                 return (
-                  <li 
-                    key={u.id} 
-                    className="online-user-item" 
+                  <li
+                    key={u.id}
+                    className="online-user-item"
                     onClick={() => handleUserClick(u)}
                   >
-                    <div 
+                    <div
                       className="avatar-wrapper"
                       onClick={(e) => {
                         e.stopPropagation();
@@ -127,12 +131,20 @@ export default function Home() {
                       style={{ cursor: 'pointer' }}
                     >
                       {avatarUrl ? (
-                        <img src={avatarUrl} alt={u.name} className="avatar" />
-                      ) : (
-                        <div className="avatar avatar--fallback">
-                          {u.name?.charAt(0).toUpperCase()}
-                        </div>
-                      )}
+                        <img 
+                          src={avatarUrl} 
+                          alt={u.name} 
+                          className="avatar" 
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            const fallback = e.target.parentElement.querySelector('.avatar--fallback');
+                            if (fallback) fallback.style.display = 'flex';
+                          }}
+                        />
+                      ) : null}
+                      <div className={`avatar avatar--fallback ${avatarUrl ? 'hidden' : ''}`} style={{ display: avatarUrl ? 'none' : 'flex' }}>
+                        {u.name?.charAt(0).toUpperCase()}
+                      </div>
                       <span className="online-dot" />
                     </div>
                     <span className="user-name">{u.name}</span>
@@ -141,8 +153,8 @@ export default function Home() {
               })
             ) : (
               <div className="empty-online-state">
-                <div className="empty-icon">🔌</div>
-                <p>Nadie conectado en este momento.</p>
+                <div className="empty-icon bounce-animation"><FaPlug style={{ color: 'var(--primary)' }} /></div>
+                <p style={{ color: 'var(--primary)' }}>Nadie conectado en este momento.</p>
                 <span className="empty-hint">Tus amigos aparecerán aquí cuando inicien sesión.</span>
               </div>
             )}
@@ -163,8 +175,8 @@ export default function Home() {
               </div>
             ) : activities.length > 0 ? (
               activities.map((act) => (
-                <div 
-                  key={act.id} 
+                <div
+                  key={act.id}
                   className="mini-activity-card"
                   onClick={() => {
                     setSelectedProjectId(act.project_id);
@@ -181,7 +193,7 @@ export default function Home() {
               ))
             ) : (
               <div className="empty-activities-state">
-                <div className="empty-icon-small">✨</div>
+                <div className="empty-icon-small pulse-animation"><FaMagic style={{ color: 'var(--primary)' }} /></div>
                 <p>¡Día despejado!</p>
                 <span>No tienes actividades en curso actualmente.</span>
               </div>
@@ -191,4 +203,4 @@ export default function Home() {
       </aside>
     </div>
   );
-}
+}

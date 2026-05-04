@@ -180,14 +180,15 @@ const EditActivityModal = ({ isOpen, onClose, activityId, onUpdated, onDeleted }
         )}
       </Modal.Body>
       <Modal.Footer onClose={onClose}>
-        <button 
-          type="button"
-          className="modal-danger" 
-          onClick={handleDelete}
-          style={{ marginRight: 'auto', background: '#ff4d4d', color: 'white', padding: '8px 16px', borderRadius: '4px', border: 'none', cursor: 'pointer' }}
-        >
-          Eliminar Actividad
-        </button>
+        {isOwner && (
+          <button 
+            type="button"
+            className="modal-danger" 
+            onClick={handleDelete}
+          >
+            Eliminar Actividad
+          </button>
+        )}
         <Modal.AcceptButton onClick={handleSave}>
           Guardar cambios
         </Modal.AcceptButton>

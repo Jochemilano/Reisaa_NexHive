@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getUserFavorites, formatDate } from "@/utils/favorites";
-import { getFileUrl, getFileName, toggleFavoriteMessage  } from "@/utils/chat";
-import {FaStar, FaRegStar} from "react-icons/fa";
+import { getFileUrl, getFileName, toggleFavoriteMessage } from "@/utils/chat";
+import { FaStar, FaRegStar } from "react-icons/fa";
 import MediaModal from "@/components/communication/MediaModal";
 import Skeleton from "@/components/loading/Skeleton";
 import "@/styles.css";
@@ -68,20 +68,20 @@ const Favorites = () => {
       </div>
     );
   }
-  
+
   if (favorites.length === 0) {
     return (
       <div className="favorites-page">
         <h2>Mensajes Favoritos</h2>
         <div className="empty-favorites-state">
-          <div className="empty-icon">⭐</div>
-          <h3>Aún no tienes favoritos</h3>
+          <div className="empty-icon pulse-animation"><FaStar style={{ color: 'gold' }} /></div>
+          <h3 style={{ color: 'var(--primary)' }}>Aún no tienes favoritos</h3>
           <p>Haz clic en la estrella de cualquier mensaje para guardarlo aquí y encontrarlo rápidamente más tarde.</p>
         </div>
       </div>
     );
   }
-  
+
   return (
     <div className="favorites-page">
       <h2>Mensajes Favoritos</h2>
@@ -89,19 +89,19 @@ const Favorites = () => {
       <div className="favorites-list">
         {favorites.map((msg) => (
           <div key={msg.id} className="favorite-message"
-          onClick={() => handleGoToChat(msg)}
+            onClick={() => handleGoToChat(msg)}
             style={{ cursor: "pointer" }}
           >
 
-          {/* Header */}
+            {/* Header */}
             <div className="message-header">
-            <strong className="sender">{msg.sender_name}</strong>
+              <strong className="sender">{msg.sender_name}</strong>
               <small className="date">
                 {formatDate(msg.created_at)}
               </small>
             </div>
-            
-           {/* Contenido */}
+
+            {/* Contenido */}
             <div className="message-content">
               {msg.type === "image" ? (
                 <img
@@ -115,7 +115,7 @@ const Favorites = () => {
                   onError={(e) => { e.target.style.display = "none"; }}
                 />
               ) : msg.type === "video" ? (
-                <div 
+                <div
                   className="favorite-video-preview"
                   onClick={(e) => {
                     e.stopPropagation();
@@ -125,7 +125,7 @@ const Favorites = () => {
                 >
                   <video src={getFileUrl(msg.content)} style={{ width: "100%", borderRadius: "8px" }} />
                   <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.2)" }}>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z" /></svg>
                   </div>
                 </div>
               ) : msg.type === "file" ? (

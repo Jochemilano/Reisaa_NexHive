@@ -68,6 +68,8 @@ module.exports = (io, connectedUsers) => {
 
     // Marcar sala como leída vía socket
     socket.on("mark-room-read", async ({ roomId }) => {
+      if (!roomId) return;
+      console.log(`Marking room ${roomId} as read for user ${socket.userId}`);
       try {
         await db.query(
           "UPDATE room_participants SET last_read_at = NOW() WHERE room_id = ? AND user_id = ?",
@@ -124,7 +126,7 @@ module.exports = (io, connectedUsers) => {
           room_id: roomId,
           sender_id: socket.userId,
           sender_name: user?.[0]?.name || "Usuario",
-          sender_avatar: user?.[0]?.avatar || null,
+          sender_avatar: user?.[0]?.profile_pic || null,
           type,
           content,
           reply_to_id: replyToId || null,
@@ -146,8 +148,13 @@ module.exports = (io, connectedUsers) => {
         );
 
         participants.forEach(p => {
-          // No notificar al remitente
-          if (p.user_id === socket.userId) return;
+          // No notificar al remitente (usar String para evitar problemas de tipos)
+          if (String(p.user_id) === String(socket.userId)) {
+            console.log("Skipping notification for sender:", socket.userId);
+            return;
+          }
+          
+          console.log(`Sending notification to ${p.user_id} for message from ${socket.userId}`);
           io.to(p.user_id.toString()).emit("new-message-notification", {
             room_id: roomId,
             sender_id: socket.userId,

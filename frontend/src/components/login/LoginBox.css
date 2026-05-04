@@ -63,8 +63,8 @@
   box-shadow: 0 0 0 0.01px var(--primary);
 }
 
-/* BOTÓN */
-.center-box button {
+/* BOTÓN PRINCIPAL */
+.center-box .submit-button {
   width: 100%;
   padding: 12px;
   margin-top: 10px;

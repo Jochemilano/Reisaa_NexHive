@@ -7,12 +7,14 @@ import { useUnread } from "@/context/UnreadContext";
 
 export const useChat = (roomId, userId) => {
   const [messages, setMessages] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [typingUsers, setTypingUsers] = useState([]); // Array de { id, name }
   const { markAsRead } = useUnread();
 
   useEffect(() => {
     // Limpiar mensajes y estados del chat anterior
     setMessages([]);
+    setLoading(true);
     setTypingUsers([]);
 
     apiFetch(`rooms/${roomId}/messages`)
@@ -21,7 +23,8 @@ export const useChat = (roomId, userId) => {
         markRoomRead(roomId);
         markAsRead(roomId);
       })
-      .catch(err => console.error("Error cargando mensajes:", err));
+      .catch(err => console.error("Error cargando mensajes:", err))
+      .finally(() => setLoading(false));
 
     joinRoom(roomId);
     markRoomRead(roomId);

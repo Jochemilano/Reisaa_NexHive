@@ -17,20 +17,42 @@ import "./chat.css";
 import "./call.css";
 import { smoothScroll } from "@/utils/smoothScroll";
 import { getAvatarUrl } from "@/utils/media";
+import Skeleton from "@/components/loading/Skeleton";
 
 const normalizeText = (str) =>
   str?.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() || "";
 
-const highlightText = (text, search) => {
-  if (!search.trim()) return text;
-  const escapedSearch = search.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
-  const regex = new RegExp(`(${escapedSearch})`, "gi");
-  const parts = text.split(regex);
-  return parts.map((part, i) =>
-    normalizeText(part) === normalizeText(search) ? (
-      <span key={i} className="search-result-highlight">{part}</span>
-    ) : (part)
-  );
+const renderMessageContent = (text, search) => {
+  if (!text) return "";
+
+  // 1. Detectar links
+  const urlRegex = /(https?:\/\/[^\s]+)/gi;
+  
+  // Dividimos el texto primero por links
+  const parts = text.split(urlRegex);
+
+  return parts.map((part, i) => {
+    if (part.match(urlRegex)) {
+      return (
+        <a key={`link-${i}`} href={part} target="_blank" rel="noopener noreferrer" className="message-link">
+          {part}
+        </a>
+      );
+    }
+
+    // 2. Si no es link, aplicar highlight de búsqueda
+    if (!search.trim()) return part;
+
+    const escapedSearch = search.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
+    const searchRegex = new RegExp(`(${escapedSearch})`, "gi");
+    const subParts = part.split(searchRegex);
+
+    return subParts.map((sub, j) => 
+      normalizeText(sub) === normalizeText(search) ? (
+        <span key={`high-${i}-${j}`} className="search-result-highlight">{sub}</span>
+      ) : sub
+    );
+  });
 };
 
 const formatTime = (dateStr) => {
@@ -98,7 +120,7 @@ const MessageContent = React.memo(({ msg, onImageClick, onVideoClick, isMine, on
           ),
           audio: <audio className="content-audio" src={src} controls />,
           file: <a className="content-file" href={src} target="_blank" rel="noreferrer">{getFileName(msg.content)}</a>,
-          text: <p className="content">{highlightText(msg.content, searchTerm)}</p>,
+          text: <p className="content">{renderMessageContent(msg.content, searchTerm)}</p>,
         }[msg.type]}
 
         <div className="message-meta">
@@ -146,12 +168,12 @@ const MessageContent = React.memo(({ msg, onImageClick, onVideoClick, isMine, on
     </div>
   );
 }, (prevProps, nextProps) => {
-  return prevProps.msg === nextProps.msg && 
-         prevProps.isMine === nextProps.isMine && 
-         prevProps.searchTerm === nextProps.searchTerm;
+  return prevProps.msg === nextProps.msg &&
+    prevProps.isMine === nextProps.isMine &&
+    prevProps.searchTerm === nextProps.searchTerm;
 });
 
-const Chat = ({ roomId, userId, groupId, targetUserId, targetUserName, targetUserAvatar, initialUnreadCount }) => {
+const Chat = ({ roomId, userId, groupId, targetUserId, targetUserName, targetUserAvatar, initialUnreadCount, loadingHeader }) => {
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -181,7 +203,7 @@ const Chat = ({ roomId, userId, groupId, targetUserId, targetUserName, targetUse
   const messageRefs = useRef({});
   const typingTimeoutRef = useRef(null);
 
-  const { messages, typingUsers, send, sendFile, deleteMessage, editMessage, setTyping } = useChat(roomId, userId);
+  const { messages, loading: loadingMessages, typingUsers, send, sendFile, deleteMessage, editMessage, setTyping } = useChat(roomId, userId);
   const { startCall, activeCall, isMinimized } = useCall();
   const { mutedRooms = [], toggleMuteRoom } = useUnread();
   const { showUserProfile, showGroupProfile, showRoomProfile } = useUserDetail();
@@ -423,8 +445,8 @@ const Chat = ({ roomId, userId, groupId, targetUserId, targetUserName, targetUse
       <div className="chat-section" onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop} style={{ position: 'relative' }}>
         {isDragging && <div className="drag-drop-overlay"><div className="drag-drop-content"><FaImages size={50} color="#00a884" /><p>Suelta las imágenes aquí</p></div></div>}
         <div className="chat-header">
-          <div 
-            className="chat-header-info" 
+          <div
+            className="chat-header-info"
             style={{ cursor: (targetUserId || groupId || roomId) ? "pointer" : "default" }}
             onClick={() => {
               if (groupId) showGroupProfile(groupId);
@@ -432,13 +454,23 @@ const Chat = ({ roomId, userId, groupId, targetUserId, targetUserName, targetUse
               else showRoomProfile(roomId);
             }}
           >
-            <div className="chat-avatar">{targetUserAvatar ? <img src={getAvatarUrl(targetUserAvatar)} alt={targetUserName} className="avatar-img" /> : targetUserName?.[0] || "C"}</div>
-            <span className="chat-username">{targetUserName || "Chat"}</span>
+            <div className="chat-avatar">
+              {loadingHeader ? (
+                <Skeleton width="100%" height="100%" borderRadius="50%" />
+              ) : targetUserAvatar ? (
+                <img src={getAvatarUrl(targetUserAvatar)} alt={targetUserName} className="avatar-img" />
+              ) : (
+                targetUserName?.[0] || "C"
+              )}
+            </div>
+            <span className="chat-username">
+              {loadingHeader ? <Skeleton width="100px" height="20px" /> : (targetUserName || "Chat")}
+            </span>
           </div>
           <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
             <ChatSearch showSearch={showSearch} setShowSearch={setSearchSearch} searchTerm={searchTerm} onSearch={handleSearch} results={searchResults} currentIndex={currentMatchIndex} onNavigate={navigateMatch} />
-            <button 
-              onClick={() => toggleMuteRoom(roomId)} 
+            <button
+              onClick={() => toggleMuteRoom(roomId)}
               className={`header-icon-btn ${isRoomMuted ? 'audio-off' : 'audio-on'}`}
               title={isRoomMuted ? "Activar audio" : "Desactivar audio"}
             >
@@ -449,7 +481,15 @@ const Chat = ({ roomId, userId, groupId, targetUserId, targetUserName, targetUse
           </div>
         </div>
         <div className="chat-messages" ref={messagesRef}>
-          {getMessagesWithSeparators().map((item) => (
+          {loadingMessages ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '20px' }}>
+              <div style={{ alignSelf: 'flex-start', width: '60%' }}><Skeleton height="40px" borderRadius="12px" /></div>
+              <div style={{ alignSelf: 'flex-end', width: '50%' }}><Skeleton height="60px" borderRadius="12px" /></div>
+              <div style={{ alignSelf: 'flex-start', width: '40%' }}><Skeleton height="30px" borderRadius="12px" /></div>
+              <div style={{ alignSelf: 'flex-end', width: '70%' }}><Skeleton height="50px" borderRadius="12px" /></div>
+              <div style={{ alignSelf: 'flex-start', width: '55%' }}><Skeleton height="45px" borderRadius="12px" /></div>
+            </div>
+          ) : getMessagesWithSeparators().map((item) => (
             item.separator ? (
               <div key={item.key} className="date-separator"><span>{item.label}</span></div>
             ) : item.unreadSeparator ? (
@@ -459,8 +499,8 @@ const Chat = ({ roomId, userId, groupId, targetUserId, targetUserName, targetUse
               </div>
             ) : (
               <div key={item.key} ref={(el) => (messageRefs.current[item.id] = el)} className={`chat-message ${Number(item.sender_id) === Number(userId) ? "mine" : "other"}`}>
-                <span 
-                  className="sender" 
+                <span
+                  className="sender"
                   style={{ cursor: "pointer" }}
                   onClick={() => showUserProfile(item.sender_id)}
                 >
@@ -493,7 +533,7 @@ const Chat = ({ roomId, userId, groupId, targetUserId, targetUserName, targetUse
               <button className="cancel-action" onClick={cancelAction}><FaTimes /></button>
             </div>
           )}
-          
+
           {/* Indicador de escritura */}
           {typingUsers.length > 0 && (
             <div className="typing-indicator-container">

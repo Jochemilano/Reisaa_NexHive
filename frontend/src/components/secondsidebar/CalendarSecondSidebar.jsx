@@ -3,6 +3,7 @@ import { useCalendar } from '@/context/CalendarContext';
 import { format, isSameDay, isPast } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { FaEye, FaEyeSlash, FaSearch, FaPlus, FaCalendarDay, FaHistory } from 'react-icons/fa';
+import { FiEye, FiEyeOff } from 'react-icons/fi';
 import Skeleton from '@/components/loading/Skeleton';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
@@ -126,13 +127,13 @@ const CalendarSecondSidebar = () => {
           <div className={`filter-item-minimal ${filters.showPersonal ? 'active' : ''}`} onClick={togglePersonal}>
             <div className="status-dot personal"></div>
             <span>Mis Eventos</span>
-            {filters.showPersonal ? <FaEye /> : <FaEyeSlash className="muted" />}
+            {filters.showPersonal ? <FiEye /> : <FiEyeOff className="muted" />}
           </div>
           
           <div className={`filter-item-minimal ${filters.showActivities ? 'active' : ''}`} onClick={toggleActivities}>
             <div className="status-dot activities"></div>
             <span>Actividades</span>
-            {filters.showActivities ? <FaEye /> : <FaEyeSlash className="muted" />}
+            {filters.showActivities ? <FiEye /> : <FiEyeOff className="muted" />}
           </div>
 
           {filters.showActivities && projects.length > 0 && (
@@ -154,7 +155,7 @@ const CalendarSecondSidebar = () => {
                       {p.name}
                     </span>
                     <span className="project-eye-icon">
-                      {isHidden ? <FaEyeSlash className="muted" /> : <FaEye />}
+                      {isHidden ? <FiEyeOff className="muted" /> : <FiEye />}
                     </span>
                   </div>
                 );

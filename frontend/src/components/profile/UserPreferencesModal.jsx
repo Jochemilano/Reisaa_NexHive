@@ -289,17 +289,20 @@ const UserPreferencesModal = ({ isOpen, handleClose, initialData, onSave }) => {
                 {mutedRooms.length === 0 ? (
                   <p className="no-muted-text">No hay chats silenciados.</p>
                 ) : (
-                  mutedRooms.map(roomId => {
-                    const room = allRooms.find(r => String(r.id) === String(roomId));
-                    return (
-                      <div key={roomId} className="muted-chat-item">
-                        <span>{room ? room.name : `Chat #${roomId}`}</span>
-                        <button className="unmute-btn" onClick={() => toggleMuteRoom(roomId)}>
-                          <FaVolumeUp />
-                        </button>
-                      </div>
-                    );
-                  })
+                    mutedRooms.map(roomId => {
+                      const room = allRooms.find(r => String(r.id) === String(roomId));
+                      // Si no encontramos el room en la lista cargada, mostramos el ID
+                      const roomName = room ? (room.name || `Chat #${roomId}`) : `Chat #${roomId}`;
+                      
+                      return (
+                        <div key={roomId} className="muted-chat-item">
+                          <span title={roomName}>{roomName}</span>
+                          <button className="unmute-btn" onClick={() => toggleMuteRoom(roomId)} title="Activar sonido">
+                            <FaVolumeUp />
+                          </button>
+                        </div>
+                      );
+                    })
                 )}
               </div>
             )}

@@ -1,5 +1,6 @@
 import React from "react";
 import Modal from "@/components/modal/Modal";
+import Skeleton from "@/components/loading/Skeleton";
 import { getAvatarUrl } from "@/utils/media";
 import "./UserDetailModal.css";
 
@@ -8,9 +9,7 @@ const ROL_LABEL = {
   user: "Usuario",
 };
 
-const UserDetailModal = ({ isOpen, onClose, user }) => {
-  if (!user) return null;
-
+const UserDetailModal = ({ isOpen, onClose, user, loading }) => {
   return (
     <Modal isOpen={isOpen} onClose={onClose} className="user-profile-modal">
       <div className="user-detail-banner" />
@@ -18,27 +17,42 @@ const UserDetailModal = ({ isOpen, onClose, user }) => {
       <div className="user-detail-content">
         <div className="user-detail-pic-section">
           <div className="user-detail-pic-wrapper">
-            {user.profile_pic ? (
+            {loading ? (
+              <Skeleton width="100%" height="100%" borderRadius="50%" />
+            ) : user?.profile_pic ? (
               <img
                 src={getAvatarUrl(user.profile_pic)}
-                alt={user.name}
+                alt={user?.name}
                 className="user-detail-pic"
               />
             ) : (
               <div className="user-detail-pic-placeholder">
-                {user.name?.[0]?.toUpperCase()}
+                {user?.name?.[0]?.toUpperCase()}
               </div>
             )}
           </div>
         </div>
 
         <div className="user-info">
-          <h2 className="user-name">{user.name}</h2>
-          <p className="user-email">{user.email}</p>
+          {loading ? (
+            <>
+              <Skeleton width="150px" height="24px" className="mb-2" />
+              <Skeleton width="180px" height="14px" />
+            </>
+          ) : (
+            <>
+              <h2 className="user-name">{user?.name}</h2>
+              <p className="user-email">{user?.email}</p>
+            </>
+          )}
           <div className="user-badges">
-            <span className="user-role-badge">
-              {ROL_LABEL[user.rol?.toLowerCase()] || user.rol || "Usuario"}
-            </span>
+            {loading ? (
+              <Skeleton width="80px" height="20px" borderRadius="10px" />
+            ) : (
+              <span className="user-role-badge">
+                {ROL_LABEL[user?.rol?.toLowerCase()] || user?.rol || "Usuario"}
+              </span>
+            )}
           </div>
         </div>
 

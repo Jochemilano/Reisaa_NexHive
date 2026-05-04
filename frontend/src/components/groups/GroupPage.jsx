@@ -7,7 +7,7 @@ import ViewActivityModal from "@/components/groups/ViewActivityModal";
 import Modal from "@/components/modal/Modal";
 import { BsThreeDots } from "react-icons/bs";
 import { useGroup } from "@/context/GroupContext";
-import { FaEye, FaEdit, FaTrash, FaSort, FaSortUp, FaSortDown, FaCalendarAlt, FaCheck, FaClock, FaThumbtack, FaChevronRight, FaTable, FaThLarge } from "react-icons/fa";
+import { FaEye, FaEdit, FaTrash, FaSort, FaSortUp, FaSortDown, FaCalendarAlt, FaCheck, FaClock, FaThumbtack, FaChevronRight, FaTable, FaThLarge, FaRocket } from "react-icons/fa";
 import { apiFetch } from "@/utils/apiClient";
 import { deleteActivity } from "@/utils/activities";
 import { useCalendar } from "@/context/CalendarContext";
@@ -63,6 +63,7 @@ const GroupPage = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [groupName, setGroupName] = useState("");
   const [loadingGroup, setLoadingGroup] = useState(true);
+  const [loadingProjects, setLoadingProjects] = useState(true);
   const [loadingProject, setLoadingProject] = useState(false);
   const [sortConfig, setSortConfig] = useState({ key: "id", direction: "desc" });
   const [viewMode, setViewMode] = useState("table"); // "table" | "kanban"
@@ -80,9 +81,11 @@ const GroupPage = () => {
   // Cargar lista de proyectos del grupo
   useEffect(() => {
     if (!groupId) return;
+    setLoadingProjects(true);
     fetchGroupProjects(groupId)
       .then(setProjects)
-      .catch(err => console.error("Error cargando proyectos:", err));
+      .catch(err => console.error("Error cargando proyectos:", err))
+      .finally(() => setLoadingProjects(false));
   }, [groupId]);
 
   // Cargar detalle del proyecto seleccionado (con actividades)
@@ -277,7 +280,50 @@ const GroupPage = () => {
           )}
         </div>
 
-        {selectedProject ? (
+        {loadingProjects || (selectedProjectId && loadingProject) ? (
+          /* ── MOSTRAR ESQUELETOS MIENTRAS CARGA ── */
+          viewMode === "table" ? (
+            <div className="activity-table-wrapper">
+              <table className="activity-table">
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Responsable</th>
+                    <th>Estado</th>
+                    <th>Inicio</th>
+                    <th>Fecha límite</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <tr key={`skeleton-row-${i}`}>
+                      <td><Skeleton width="80%" height="20px" /></td>
+                      <td><Skeleton width="120px" height="20px" circle /></td>
+                      <td><Skeleton width="60px" height="24px" /></td>
+                      <td><Skeleton width="80px" height="20px" /></td>
+                      <td><Skeleton width="80px" height="20px" /></td>
+                      <td><Skeleton width="30px" height="30px" circle /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="kanban-board-skeleton" style={{ display: 'flex', gap: '20px', padding: '20px', overflowX: 'auto' }}>
+              {[1, 2, 3].map(i => (
+                <div key={i} style={{ minWidth: '300px', flex: 1, background: 'var(--bg-secondary)', borderRadius: '12px', padding: '16px' }}>
+                  <Skeleton width="120px" height="24px" className="mb-4" />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '20px' }}>
+                    <Skeleton height="100px" borderRadius="12px" />
+                    <Skeleton height="100px" borderRadius="12px" />
+                    <Skeleton height="100px" borderRadius="12px" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
+        ) : selectedProject ? (
           <>
             {/* Filtros — solo en vista tabla */}
             {viewMode === "table" && (
@@ -327,18 +373,7 @@ const GroupPage = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {loadingProject ? (
-                      Array.from({ length: 5 }).map((_, i) => (
-                        <tr key={`skeleton-row-${i}`}>
-                          <td><Skeleton width="80%" height="20px" /></td>
-                          <td><Skeleton width="120px" height="20px" circle /></td>
-                          <td><Skeleton width="60px" height="24px" /></td>
-                          <td><Skeleton width="80px" height="20px" /></td>
-                          <td><Skeleton width="80px" height="20px" /></td>
-                          <td><Skeleton width="30px" height="30px" circle /></td>
-                        </tr>
-                      ))
-                    ) : filteredActivities.length === 0 ? (
+                    {filteredActivities.length === 0 ? (
                       <tr>
                         <td colSpan={6} className="activity-table__empty">
                           {activities.length === 0
@@ -448,7 +483,7 @@ const GroupPage = () => {
         ) : (
           <div className="group-page__welcome-container">
             <div className="welcome-content">
-              <div className="welcome-icon">🚀</div>
+              <div className="welcome-icon floating-animation"><FaRocket style={{ color: 'var(--primary)' }} /></div>
               <h2>¡Hola! Comienza seleccionando un proyecto</h2>
               <p>Elige un proyecto de la barra lateral para ver sus actividades, progreso y tablero Kanban.</p>
               {projects.length === 0 && (

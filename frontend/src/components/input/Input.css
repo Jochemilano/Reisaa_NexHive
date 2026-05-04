@@ -14,15 +14,47 @@
   font-weight: 700;
 }
 
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
 .input-field {
   border: 1.5px solid color-mix(in srgb, var(--text-secondary), transparent 50%);
-  color:var(--text-primary);
+  color: var(--text-primary);
   border-radius: 6px;
   font-size: 14px;
   padding: 10px;
   background-color: var(--bg-base);
-  min-width: 100%;
+  width: 100%;
   box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 10px;
+  background: transparent !important;
+  border: none !important;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 !important;
+  margin: 0 !important;
+  width: auto !important;
+  height: auto !important;
+  font-size: 18px;
+  transition: color 0.2s, transform 0.2s;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.password-toggle:hover {
+  color: var(--primary);
 }
 
 .input-field::placeholder{
@@ -32,6 +64,48 @@
 .input-field:focus {
   outline: none;
   border-color: var(--primary);
+}
+
+/* Estilos para inputs de fecha */
+.input-field[type="date"],
+.input-field[type="datetime-local"] {
+  color-scheme: light dark;
+  position: relative;
+  font-weight: 600; /* Hace que el texto resalte más */
+}
+
+/* Forzar el color del esquema basado en el data-theme de root */
+:root[data-theme="dark"] .input-field[type="date"],
+:root[data-theme="dark"] .input-field[type="datetime-local"] {
+  color-scheme: dark;
+  color: #ffffff;
+}
+
+:root[data-theme="light"] .input-field[type="date"],
+:root[data-theme="light"] .input-field[type="datetime-local"] {
+  color-scheme: light;
+  color: #000000;
+}
+
+.input-field::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  filter: var(--calendar-icon-filter, none);
+  opacity: 1;
+  transition: transform 0.2s ease;
+}
+
+.input-field::-webkit-calendar-picker-indicator:hover {
+  transform: scale(1.1);
+}
+
+:root[data-theme="dark"] {
+  /* Forzamos a que sea blanco: primero a negro con brightness(0) y luego invertimos */
+  --calendar-icon-filter: brightness(0) invert(1);
+}
+
+:root[data-theme="light"] {
+  /* Forzamos a que sea negro: simplemente brightness(0) */
+  --calendar-icon-filter: brightness(0);
 }
 
 .input-field select,

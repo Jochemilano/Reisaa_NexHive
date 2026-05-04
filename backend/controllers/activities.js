@@ -129,7 +129,7 @@ router.get("/activities/:id", verifyToken, async (req, res) => {
   try {
     const [rows] = await db.query(
       `SELECT a.id, a.name, a.description, a.status, a.start_date, a.deadline,
-              a.project_id, a.owner_id, u.name AS owner_name, p.group_id
+              a.project_id, a.owner_id, u.name AS owner_name, u.profile_pic AS owner_avatar, p.group_id
        FROM activities a
        JOIN projects p ON a.project_id = p.id
        LEFT JOIN users u ON u.id = a.owner_id
@@ -158,6 +158,7 @@ router.get("/activities/:id", verifyToken, async (req, res) => {
       project_id: activity.project_id,
       owner_id: activity.owner_id,
       owner_name: activity.owner_name,
+      owner_avatar: activity.owner_avatar,
     });
   } catch (err) {
     console.error("ERROR DB GET ACTIVITY:", err);
@@ -179,7 +180,7 @@ router.get("/activities/:id/users", verifyToken, async (req, res) => {
       return res.status(403).json({ message: "No pertenece a esta actividad" });
 
     const [users] = await db.query(
-      `SELECT u.id, u.name FROM users u
+      `SELECT u.id, u.name, u.profile_pic AS avatar FROM users u
        JOIN user_activities ua ON u.id = ua.user_id
        WHERE ua.activity_id = ?`,
       [activityId]

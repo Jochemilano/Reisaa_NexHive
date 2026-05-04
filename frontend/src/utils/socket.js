@@ -60,7 +60,11 @@ const sendMessage = (message) => {
 };
 
 const markRoomRead = (roomId) => {
-  socket.emit("mark-room-read", { roomId });
+  if (socket.connected) {
+    socket.emit("mark-room-read", { roomId });
+  } else {
+    socket.once("connect", () => socket.emit("mark-room-read", { roomId }));
+  }
 };
 
-export { socket, joinRoom, sendMessage, markRoomRead, connectWithToken };
+export { socket, joinRoom, sendMessage, markRoomRead, connectWithToken };

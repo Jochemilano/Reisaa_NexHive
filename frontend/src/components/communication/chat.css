@@ -81,7 +81,7 @@
   color: var(--primary);
 }
 
-.chat-header button, 
+.chat-header button,
 .chat-header .header-icon-btn,
 .chat-header [class*="search"] button {
   all: unset;
@@ -97,7 +97,7 @@
   background: transparent;
 }
 
-.chat-header button:hover, 
+.chat-header button:hover,
 .chat-header .header-icon-btn:hover,
 .chat-header [class*="search"] button:hover {
   background: var(--bg-base);
@@ -146,8 +146,15 @@
   position: relative;
 }
 
-.chat-message.mine { align-self: flex-end; align-items: flex-end; }
-.chat-message.other { align-self: flex-start; align-items: flex-start; }
+.chat-message.mine {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+.chat-message.other {
+  align-self: flex-start;
+  align-items: flex-start;
+}
 
 .chat-message .sender {
   display: block;
@@ -170,7 +177,9 @@
   width: 100%;
 }
 
-.chat-message.mine .message-wrapper { flex-direction: row-reverse; }
+.chat-message.mine .message-wrapper {
+  flex-direction: row-reverse;
+}
 
 .message-content {
   position: relative;
@@ -187,6 +196,21 @@
   background: var(--primary);
   color: #fff;
   border-bottom-right-radius: 2px;
+}
+
+.message-link {
+  color: #fff;
+  text-decoration: underline;
+  word-break: break-all;
+  font-weight: 500;
+}
+
+.chat-message.other .message-link {
+  color: var(--primary);
+}
+
+.message-link:hover {
+  opacity: 0.8;
 }
 
 .chat-message.mine .message-content a {
@@ -253,6 +277,7 @@
 .check-mark.second {
   margin-left: 0;
 }
+
 .chat-message .content {
   margin: 0;
   white-space: pre-wrap;
@@ -293,6 +318,7 @@
   text-overflow: ellipsis;
   white-space: normal;
 }
+
 .highlighted .message-content {
   scale: 1.01;
   box-shadow: 0 0 20px 3px var(--secondary-hover);
@@ -327,7 +353,9 @@
   transition: all 0.2s ease;
 }
 
-.chat-message:hover .reply-btn { opacity: 1; }
+.chat-message:hover .reply-btn {
+  opacity: 1;
+}
 
 .context-menu {
   position: absolute;
@@ -342,7 +370,12 @@
   overflow: hidden;
 }
 
-.context-menu ul { list-style: none; margin: 0; padding: 4px 0; }
+.context-menu ul {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+}
+
 .context-menu li {
   padding: 10px 14px;
   font-size: 13px;
@@ -388,7 +421,11 @@
   font-size: 12px;
 }
 
-.reply-label { font-weight: bold; color: var(--primary); }
+.reply-label {
+  font-weight: bold;
+  color: var(--primary);
+}
+
 .reply-text-truncate {
   opacity: 0.7;
   white-space: nowrap;
@@ -414,7 +451,7 @@
 }
 
 /* Efecto unión con el banner */
-.action-banner + .chat-input {
+.action-banner+.chat-input {
   border-top-left-radius: 0;
   border-top-right-radius: 0;
 }
@@ -423,7 +460,7 @@
   flex: 1;
   scrollbar-width: none;
   border: none;
-  outline: none ;
+  outline: none;
   background: transparent;
   font-size: 14px;
   resize: none;
@@ -447,7 +484,8 @@
   border-radius: var(--radius-circle);
   transition: 0.3s ease;
 }
-.upload-btn:hover{
+
+.upload-btn:hover {
   background-color: var(--bg-base);
 }
 
@@ -507,7 +545,7 @@
 .video-play-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(0,0,0,0.2);
+  background: rgba(0, 0, 0, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -515,11 +553,11 @@
 }
 
 .video-preview-wrapper:hover .video-play-overlay {
-  background: rgba(0,0,0,0.4);
+  background: rgba(0, 0, 0, 0.4);
 }
 
 .video-play-overlay svg {
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
   transform: scale(1.5);
 }
 
@@ -531,7 +569,8 @@
 }
 
 .chat-message.mine .content-audio {
-  filter: invert(1) hue-rotate(180deg); /* Opcional: ajustar color de controles en burbuja oscura */
+  filter: invert(1) hue-rotate(180deg);
+  /* Opcional: ajustar color de controles en burbuja oscura */
 }
 
 /* ── BOTÓN IR AL FONDO ─────────────────────────────────── */
@@ -650,22 +689,29 @@
 
 /* ── REGLAS DE UNIÓN Y CONEXIÓN ── */
 
-.preview-upload-box + .chat-input,
-.action-banner + .chat-input,
-.preview-upload-box + .action-banner + .chat-input {
+.preview-upload-box+.chat-input,
+.action-banner+.chat-input,
+.preview-upload-box+.action-banner+.chat-input {
   border-top-left-radius: 0 !important;
   border-top-right-radius: 0 !important;
 }
 
-.preview-upload-box + .action-banner {
+.preview-upload-box+.action-banner {
   border-radius: 0 !important;
   box-shadow: none;
   border-top: 1px solid var(--border);
 }
 
 @keyframes slideUpChat {
-  from { opacity: 0; transform: translateY(5px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 
@@ -761,21 +807,22 @@
 
 /* ── REGLAS DE CONEXIÓN ── */
 
-.preview-multi-container + .chat-input {
+.preview-multi-container+.chat-input {
   border-top-left-radius: 0 !important;
   border-top-right-radius: 0 !important;
 }
 
-.preview-multi-container + .action-banner {
+.preview-multi-container+.action-banner {
   border-radius: 0 !important;
   box-shadow: none;
   border-top: 1px solid var(--border);
 }
 
-.preview-multi-container + .action-banner + .chat-input {
+.preview-multi-container+.action-banner+.chat-input {
   border-top-left-radius: 0 !important;
   border-top-right-radius: 0 !important;
 }
+
 /* ==========================================================================
    INDICADOR DE ESCRITURA
    ========================================================================== */
@@ -809,15 +856,37 @@
   animation: typing-bounce 1.4s infinite ease-in-out both;
 }
 
-.typing-bubbles span:nth-child(1) { animation-delay: -0.32s; }
-.typing-bubbles span:nth-child(2) { animation-delay: -0.16s; }
+.typing-bubbles span:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.typing-bubbles span:nth-child(2) {
+  animation-delay: -0.16s;
+}
 
 @keyframes typing-bounce {
-  0%, 80%, 100% { transform: scale(0); opacity: 0.3; }
-  40% { transform: scale(1); opacity: 1; }
+
+  0%,
+  80%,
+  100% {
+    transform: scale(0);
+    opacity: 0.3;
+  }
+
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(5px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

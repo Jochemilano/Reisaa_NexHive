@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { FiMessageSquare, FiStar, FiCalendar, FiPlus, FiSettings, FiUser } from "react-icons/fi";
 import Modal from "@/components/modal/Modal";
@@ -16,6 +16,7 @@ import { createGroup, fetchGroups } from "@/utils/groups";
 import { getAvatarUrl } from "@/utils/media";
 import { addLongPress } from "@/utils/longPress";
 import { useUnread } from "@/context/UnreadContext";
+import Skeleton from "@/components/loading/Skeleton";
 import { toast } from "sonner";
 import "./Sidebar.css";
 
@@ -133,7 +134,7 @@ const Sidebar = () => {
   const [perfil, setPerfil] = useState(null);
   const [editingGroup, setEditingGroup] = useState(null);
 
-  const { groups, addGroup } = useGroups();
+  const { groups, loading: loadingGroups, addGroup } = useGroups();
   const {
     name, setName,
     availableUsers,
@@ -143,13 +144,20 @@ const Sidebar = () => {
     reset,
   } = useCreateGroupModal(isOpen);
   
-  const groupChatRoomIds = groups.map(g => String(g.chat_room_id));
-  const homeUnreadTotal = Object.entries(unreadByRoom).reduce((acc, [roomId, count]) => {
-    if (!groupChatRoomIds.includes(String(roomId))) {
-      return acc + count;
-    }
-    return acc;
-  }, 0);
+  const groupChatRoomIds = React.useMemo(() => groups.map(g => String(g.chat_room_id)), [groups]);
+  
+  const homeUnreadTotal = React.useMemo(() => {
+    const total = Object.entries(unreadByRoom).reduce((acc, [roomId, count]) => {
+      // Si la sala NO es de un grupo, entonces es del Home (DM)
+      if (!groupChatRoomIds.includes(String(roomId))) {
+        return acc + count;
+      }
+      return acc;
+    }, 0);
+    // Log para depuración (opcional)
+    console.log("Sidebar homeUnreadTotal:", total, "unreadByRoom:", unreadByRoom);
+    return total;
+  }, [unreadByRoom, groupChatRoomIds, unreadTotal]); // unreadTotal como dependencia extra
 
   const handleCreateGroup = async (avatarFile) => {
     if (!name.trim()) return toast.error("El nombre del grupo es requerido");
@@ -218,22 +226,30 @@ const Sidebar = () => {
           </Modal.Button>
         </SidebarItem>
 
-        {groups.map(group => {
-          const canEdit = perfil?.rol === 'admin' || perfil?.id === group.owner_id;
-          const badgeCount = unreadByRoom[String(group.chat_room_id)] || 0;
-          return (
-            <SidebarItem
-              key={group.id}
-              label={group.name[0].toUpperCase()}
-              avatar={getAvatarUrl(group.avatar)}
-              tooltip={group.name}
-              isActive={location.pathname === `/groups/${group.id}`}
-              onClick={() => navigate(`/groups/${group.id}`)}
-              onLongPress={canEdit ? () => setEditingGroup(group) : null}
-              showDot={badgeCount > 0}
-            />
-          );
-        })}
+        {loadingGroups ? (
+          <>
+            <div style={{ padding: '8px 12px' }}><Skeleton width="48px" height="48px" borderRadius="12px" /></div>
+            <div style={{ padding: '8px 12px' }}><Skeleton width="48px" height="48px" borderRadius="12px" /></div>
+            <div style={{ padding: '8px 12px' }}><Skeleton width="48px" height="48px" borderRadius="12px" /></div>
+          </>
+        ) : (
+          groups.map(group => {
+            const canEdit = perfil?.rol === 'admin' || perfil?.id === group.owner_id;
+            const badgeCount = unreadByRoom[String(group.chat_room_id)] || 0;
+            return (
+              <SidebarItem
+                key={group.id}
+                label={group.name[0].toUpperCase()}
+                avatar={getAvatarUrl(group.avatar)}
+                tooltip={group.name}
+                isActive={location.pathname === `/groups/${group.id}`}
+                onClick={() => navigate(`/groups/${group.id}`)}
+                onLongPress={canEdit ? () => setEditingGroup(group) : null}
+                showDot={badgeCount > 0}
+              />
+            );
+          })
+        )}
       </div>
 
       <div className="sidebar-footer">

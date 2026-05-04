@@ -184,6 +184,14 @@
   padding: 4px 10px;
 }
 
+.empty-projects-minimal-v2 {
+  padding: 8px 14px;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  opacity: 0.6;
+  font-style: italic;
+}
+
 /* --------------------- ADD BUTTON (junto al h3) --------------------- */
 .add-activity-btn,
 .cont-sec .modal-button {

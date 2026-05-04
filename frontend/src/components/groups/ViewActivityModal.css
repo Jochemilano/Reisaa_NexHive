@@ -1,90 +1,186 @@
-.activity-detail__label {
-  font-family: 'Inter', sans-serif;
-  font-weight: 700;
-  font-size: 1.1rem;
-  color: var(--text-primary);
-  min-width: 140px;
-  display: flex;
-  align-items: center;
+.view-activity-modal .modal-content {
+  width: 600px;
 }
 
-.activity-detail__value {
-  font-size: 1rem;
-  font-weight: 500;
-  color: var(--text-secondary);
-  margin-left: 0.5rem;
+.activity-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.activity-detail__section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 .activity-detail__field {
   display: flex;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-
-.activity-detail__row {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 1rem;
-  flex-wrap: wrap;
-}
-
-.activity-detail__row .activity-detail__field {
-  flex: 1 1 45%;
-  min-width: 120px;
-}
-
-.activity-detail__row .activity-detail__label {
-  min-width: auto;
-  font-size: 0.95rem;
-}
-
-.activity-detail__row .activity-detail__value {
-  margin-left: 0.25rem;
-}
-
-/* History Styles */
-.activity-detail__history {
-  margin-top: 2rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border);
-}
-
-.history-title {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--text-secondary);
-  margin-bottom: 1rem;
-  display: flex;
-  align-items: center;
-}
-
-.history-list {
-  display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 0.4rem;
 }
 
-.history-item {
+.main-title .activity-detail__value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--primary);
+  line-height: 1.2;
+}
+
+.activity-detail__label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.activity-detail__label svg {
+  font-size: 0.9rem;
+  color: var(--primary);
+}
+
+.activity-detail__value {
+  font-size: 1rem;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.activity-detail__description {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  background: var(--bg-soft);
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  margin: 0;
+}
+
+.activity-detail__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  padding: 1.25rem;
+  background: var(--bg-soft);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+}
+
+.user-info-chip {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 0.8rem;
+  background: var(--bg-base);
+  padding: 4px 12px 4px 4px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  width: fit-content;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.history-dot {
-  width: 6px;
-  height: 6px;
-  background-color: var(--primary);
+.user-info-chip:hover {
+  background: var(--bg-hover);
+  border-color: var(--primary);
+  transform: translateY(-1px);
+}
+
+.avatar-letter-fallback {
+  width: 40px;
+  height: 40px;
+  background: var(--primary);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 50%;
-  flex-shrink: 0;
+  font-weight: 700;
+  font-size: 1.2rem;
+  cursor: pointer;
+  user-select: none;
 }
 
-.history-text {
-  flex: 1;
-  color: var(--text-primary);
+.avatar-letter-fallback.mini {
+  width: 28px;
+  height: 28px;
+  font-size: 0.85rem;
 }
 
-.history-date {
-  color: var(--text-tertiary);
+.collaborator-item .avatar-letter-fallback.mini {
+  width: 24px;
+  height: 24px;
   font-size: 0.75rem;
 }
+
+.chip-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.overdue {
+  color: var(--error);
+  font-weight: 700;
+}
+
+.activity-detail__collaborators {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.collaborators-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.collaborator-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-soft);
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.collaborator-item:hover {
+  border-color: var(--primary);
+  transform: translateY(-2px);
+  background: var(--bg-hover);
+}
+
+.collaborator-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.collaborator-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+/* Status Badges - already defined in GroupPage.css but ensuring they work here too */
+.activity-status {
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  width: fit-content;
+}
+
+.activity-status--pending { background: var(--status-pending-bg); color: var(--status-pending-text); border: 1px solid var(--status-pending-border); }
+.activity-status--in-progress, .activity-status--in_progress { background: var(--status-progress-bg); color: var(--status-progress-text); border: 1px solid var(--status-progress-border); }
+.activity-status--completed, .activity-status--done { background: var(--status-done-bg); color: var(--status-done-text); border: 1px solid var(--status-done-border); }
+.activity-status--cancelled { background: var(--status-cancelled-bg); color: var(--status-cancelled-text); border: 1px solid var(--status-cancelled-border); }

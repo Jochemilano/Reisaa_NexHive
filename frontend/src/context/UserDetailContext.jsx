@@ -11,41 +11,55 @@ export const UserDetailProvider = ({ children }) => {
   // Perfil de usuario
   const [isUserOpen, setIsUserOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const [loadingUser, setLoadingUser] = useState(false);
 
   // Perfil de grupo/sala
   const [isGroupOpen, setIsGroupOpen] = useState(false);
   const [groupData, setGroupData] = useState(null);
+  const [loadingGroup, setLoadingGroup] = useState(false);
 
   const showUserProfile = async (userId) => {
     if (!userId) return;
+    setUser(null);
+    setLoadingUser(true);
+    setIsUserOpen(true);
     try {
       const data = await apiFetch(`users/${userId}`);
       setUser(data);
-      setIsUserOpen(true);
     } catch (err) {
       console.error("Error al cargar perfil de usuario:", err);
+    } finally {
+      setLoadingUser(false);
     }
   };
 
   const showGroupProfile = async (groupId) => {
     if (!groupId) return;
+    setGroupData(null);
+    setLoadingGroup(true);
+    setIsGroupOpen(true);
     try {
       const data = await apiFetch(`groups/${groupId}/details`);
       setGroupData({ ...data, type: 'group' });
-      setIsGroupOpen(true);
     } catch (err) {
       console.error("Error al cargar perfil de grupo:", err);
+    } finally {
+      setLoadingGroup(false);
     }
   };
 
   const showRoomProfile = async (roomId) => {
     if (!roomId) return;
+    setGroupData(null);
+    setLoadingGroup(true);
+    setIsGroupOpen(true);
     try {
       const data = await apiFetch(`rooms/${roomId}/details`);
       setGroupData({ ...data, type: 'room' });
-      setIsGroupOpen(true);
     } catch (err) {
       console.error("Error al cargar perfil de sala:", err);
+    } finally {
+      setLoadingGroup(false);
     }
   };
 
@@ -62,24 +76,21 @@ export const UserDetailProvider = ({ children }) => {
     }}>
       {children}
       
-      <UserDetailModal
-        isOpen={isUserOpen}
-        onClose={closeUserProfile}
-        user={user}
-      />
-
       <GroupDetailModal
         isOpen={isGroupOpen}
         onClose={closeGroupProfile}
         group={groupData}
+        loading={loadingGroup}
         onMemberClick={(id) => {
-          // No cerramos el grupo para que se pueda volver? 
-          // El usuario pidió: "y de ahi que abajo salgan los integrantes y le puedas dar click a cada uno"
-          // Si abro el perfil del usuario, el del grupo debería cerrarse o quedar debajo.
-          // Por simplicidad en NexHive, cerraremos el de grupo.
-          closeGroupProfile();
           showUserProfile(id);
         }}
+      />
+
+      <UserDetailModal
+        isOpen={isUserOpen}
+        onClose={closeUserProfile}
+        user={user}
+        loading={loadingUser}
       />
     </UserDetailContext.Provider>
   );

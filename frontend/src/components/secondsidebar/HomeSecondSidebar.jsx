@@ -13,6 +13,7 @@ import Skeleton from "@/components/loading/Skeleton";
 const HomeSecondSidebar = () => {
   const [rooms, setRooms] = useState([]);
   const [friends, setFriends] = useState([]);
+  const [pendingRequests, setPendingRequests] = useState([]);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
@@ -37,6 +38,9 @@ const HomeSecondSidebar = () => {
 
         const friendsData = await apiFetch("friends");
         setFriends(friendsData);
+
+        const pendingData = await apiFetch("friends/requests");
+        setPendingRequests(pendingData);
       } catch (err) {
         console.error("Error cargando datos:", err);
       } finally {
@@ -44,7 +48,7 @@ const HomeSecondSidebar = () => {
       }
     };
     loadData();
-    // Refrescar cada 10 segundos para no leídos (sin mostrar skeleton)
+    // Refrescar cada 10 segundos para no leídos y solicitudes
     const interval = setInterval(() => loadData(false), 10000);
     return () => clearInterval(interval);
   }, [currentUserId]);
@@ -127,6 +131,36 @@ const HomeSecondSidebar = () => {
     navigate(`/chat/${roomId}`);
   };
 
+  const handleAcceptRequest = async (requestId) => {
+    try {
+      await apiFetch("friends/accept", {
+        method: "POST",
+        body: JSON.stringify({ requestId })
+      });
+      toast.success("Solicitud aceptada");
+      // Recargar datos
+      const friendsData = await apiFetch("friends");
+      setFriends(friendsData);
+      const pendingData = await apiFetch("friends/requests");
+      setPendingRequests(pendingData);
+    } catch (err) {
+      toast.error("Error al aceptar solicitud");
+    }
+  };
+
+  const handleRejectRequest = async (requestId) => {
+    try {
+      await apiFetch(`friends/reject/${requestId}`, {
+        method: "DELETE"
+      });
+      toast.success("Solicitud rechazada");
+      const pendingData = await apiFetch("friends/requests");
+      setPendingRequests(pendingData);
+    } catch (err) {
+      toast.error("Error al rechazar solicitud");
+    }
+  };
+
   return (
     <div className="sidebar-inner">
       <div className="cont-sec">
@@ -139,6 +173,37 @@ const HomeSecondSidebar = () => {
           <FiPlus />
         </button>
       </div>
+
+      {pendingRequests.length > 0 && (
+        <div className="pending-requests" style={{ padding: '0 12px', marginBottom: '15px' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--primary)', marginBottom: '8px', textTransform: 'uppercase' }}>
+            Solicitudes pendientes ({pendingRequests.length})
+          </div>
+          {pendingRequests.map(req => (
+            <div key={req.request_id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 0', borderBottom: '1px solid var(--border-soft)' }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: '0.85rem', fontWeight: '500', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {req.name}
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '4px' }}>
+                <button 
+                  onClick={() => handleAcceptRequest(req.request_id)}
+                  style={{ background: 'var(--success)', color: 'white', border: 'none', padding: '2px 8px', borderRadius: '3px', fontSize: '0.7rem', cursor: 'pointer' }}
+                >
+                  Aceptar
+                </button>
+                <button 
+                  onClick={() => handleRejectRequest(req.request_id)}
+                  style={{ background: 'var(--bg-active)', color: 'var(--text-secondary)', border: 'none', padding: '2px 8px', borderRadius: '3px', fontSize: '0.7rem', cursor: 'pointer' }}
+                >
+                  No
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="user-list">
         {loading ? (

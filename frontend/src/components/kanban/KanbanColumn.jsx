@@ -1,6 +1,7 @@
 import React from "react";
 import { Droppable } from "@hello-pangea/dnd";
 import KanbanCard from "./KanbanCard";
+import { FaClipboardList } from "react-icons/fa";
 import "./KanbanBoard.css";
 
 const COLUMN_CONFIG = {
@@ -64,7 +65,10 @@ const KanbanColumn = ({ columnId, activities, totalInCol, onView, onEdit, onDele
             {provided.placeholder}
 
             {activities.length === 0 && !snapshot.isDraggingOver && (
-              <div className="kanban-col__empty">Sin actividades</div>
+              <div className="kanban-col__empty">
+                <FaClipboardList className="floating-animation" style={{ color: 'var(--primary)' }} />
+                <span style={{ color: 'var(--primary)', fontWeight: 'bold' }}>No hay tareas</span>
+              </div>
             )}
           </div>
         )}

@@ -4,7 +4,7 @@ import { fetchGroupProjects } from "@/utils/projects";
 import Modal from "@/components/modal/Modal";
 import CreateProjectModal from "@/components/groups/CreateProjectModal";
 import EditProjectModal from "@/components/groups/EditProjectModal";
-import { FaHashtag, FaVolumeUp, FaEdit } from "react-icons/fa";
+import { FaHashtag, FaVolumeUp, FaEdit, FaFolderOpen } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useGroup } from "@/context/GroupContext";
 import { useCalendar } from "@/context/CalendarContext";
@@ -163,7 +163,9 @@ const GroupSecondSidebar = ({ groupId }) => {
               </div>
             ))
           ) : projects.length === 0 ? (
-            <span className="empty-activities">Sin proyectos</span>
+            <div className="empty-projects-minimal-v2">
+              <span>Sin proyectos</span>
+            </div>
           ) : (
             projects.map((p) => {
               const canEdit = userRole === 'admin' || myId === p.owner_id || myId === details.owner_id;
@@ -180,7 +182,7 @@ const GroupSecondSidebar = ({ groupId }) => {
                 >
                   <span>{p.name}</span>
                   {canEdit && (
-                    <button 
+                    <button
                       className="project-edit-btn"
                       onClick={(e) => { e.stopPropagation(); setEditingProject(p); }}
                       title="Editar proyecto"

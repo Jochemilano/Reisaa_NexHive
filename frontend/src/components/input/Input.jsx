@@ -1,20 +1,40 @@
+import React, { useState } from "react";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 import "./Input.css";
 
 export const Input = ({ label, type = "text", placeholder, value, onChange, ...props }) => {
+  const [showPassword, setShowPassword] = useState(false);
+  
+  const isPassword = type === "password";
+  const inputType = isPassword ? (showPassword ? "text" : "password") : type;
+
   return (
     <div className="input-container">
-      <label className="input-label">{label}</label>
-      <input
-        className="input-field"
-        type={type}
-        placeholder={placeholder}
-        value={value}
-        onChange={onChange}
-        {...props}
-      />
+      {label && <label className="input-label">{label}</label>}
+      <div className="input-wrapper">
+        <input
+          className="input-field"
+          type={inputType}
+          placeholder={placeholder}
+          value={value}
+          onChange={onChange}
+          {...props}
+        />
+        {isPassword && (
+          <button
+            type="button"
+            className="password-toggle"
+            onClick={() => setShowPassword(!showPassword)}
+            tabIndex="-1"
+          >
+            {showPassword ? <FiEyeOff /> : <FiEye />}
+          </button>
+        )}
+      </div>
     </div>
   );
 };
+
 
 export const Textarea = ({ label, placeholder, value, onChange, ...props }) => {
   return (

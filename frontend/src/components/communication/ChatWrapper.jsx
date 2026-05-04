@@ -64,8 +64,7 @@ export default function ChatWrapper() {
   }, [activeCall, setIsMinimized]);
 
   if (!chatRoomId)  return <p>Chat no encontrado</p>;
-  if (loading)      return <p>Cargando...</p>;
-  if (!authorized)  return <p>No tienes acceso a este chat</p>;
+  if (!loading && !authorized)  return <p>No tienes acceso a este chat</p>;
 
   return (
     <Chat
@@ -75,6 +74,7 @@ export default function ChatWrapper() {
       targetUserId={targetUser.id}
       targetUserName={targetUser.name}
       targetUserAvatar={targetUser.avatar}
+      loadingHeader={loading}
     />
   );
 }

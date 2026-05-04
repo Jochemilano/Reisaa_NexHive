@@ -4,12 +4,15 @@ import Modal from "@/components/modal/Modal";
 import { apiFetch } from "@/utils/apiClient";
 import "./ViewActivityModal.css";
 import { FaIdBadge, FaAlignLeft, FaUserTie, FaCalendarAlt, FaFlagCheckered, FaClock } from "react-icons/fa";
+import { getAvatarUrl } from "@/utils/media";
+import { useUserDetail } from "@/context/UserDetailContext";
 
 const STATUS_LABELS = {
   pending: "Pendiente",
   "in-progress": "En progreso",
   in_progress: "En progreso",
   completed: "Completada",
+  done: "Completada",
   cancelled: "Cancelada",
 };
 
@@ -31,79 +34,144 @@ const formatDate = (d, numeric = false) => {
 
 const ViewActivityModal = ({ isOpen, onClose, activityId }) => {
   const [activity, setActivity] = useState(null);
+  const [collaborators, setCollaborators] = useState([]);
   const [loading, setLoading] = useState(false);
+  const { showUserProfile } = useUserDetail();
 
   useEffect(() => {
     if (!isOpen || !activityId) return;
     setLoading(true);
-    apiFetch(`activities/${activityId}`)
-      .then(setActivity)
+    
+    Promise.all([
+      apiFetch(`activities/${activityId}`),
+      apiFetch(`activities/${activityId}/users`).catch(() => [])
+    ])
+      .then(([activityData, collaboratorsData]) => {
+        setActivity(activityData);
+        setCollaborators(collaboratorsData);
+      })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [isOpen, activityId]);
 
+  const renderAvatarFallback = (user) => {
+    const firstLetter = user.name ? user.name[0].toUpperCase() : "?";
+    return (
+      <div 
+        className="avatar-letter-fallback"
+        onClick={(e) => {
+          e.stopPropagation();
+          showUserProfile(user.id || user.owner_id);
+        }}
+      >
+        {firstLetter}
+      </div>
+    );
+  };
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
+    <Modal isOpen={isOpen} onClose={onClose} className="view-activity-modal">
       <Modal.Header onClose={onClose}>Detalle de actividad</Modal.Header>
       <Modal.Body>
         {loading && <p className="modal-loading">Cargando...</p>}
         {!loading && activity && (
           <div className="activity-detail">
-            <div className="activity-detail__field">
-              <span className="activity-detail__label">
-                <FaIdBadge style={{ marginRight: "6px" }} />
-                Nombre:
-              </span>
-              <span className="activity-detail__value">{activity.name}</span>
-            </div>
+            <div className="activity-detail__section">
+              <div className="activity-detail__field main-title">
+                <span className="activity-detail__value name-highlight">{activity.name}</span>
+              </div>
 
-            <div className="activity-detail__field">
-              <span className="activity-detail__label">
-                <FaAlignLeft style={{ marginRight: "6px" }} />
-                Descripción:
-              </span>
-              <span className="activity-detail__value">
-                {activity.description || "Sin descripción"}
-              </span>
-            </div>
-
-            <div className="activity-detail__field">
-              <span className="activity-detail__label">
-                <FaUserTie style={{ marginRight: "6px" }} />
-                Responsable:
-              </span>
-              <span className="activity-detail__value">
-                {activity.owner_name || "—"}
-              </span>
-            </div>
-
-            <div className="activity-detail__row">
               <div className="activity-detail__field">
                 <span className="activity-detail__label">
-                  <FaCalendarAlt style={{ marginRight: "6px" }} />
-                  Fecha inicio:
+                  <FaAlignLeft />
+                  Descripción
+                </span>
+                <p className="activity-detail__description">
+                  {activity.description || "Sin descripción"}
+                </p>
+              </div>
+            </div>
+
+            <div className="activity-detail__grid">
+              <div className="activity-detail__field">
+                <span className="activity-detail__label">
+                  <FaUserTie />
+                  Responsable
+                </span>
+                <div className="user-info-chip" onClick={() => showUserProfile(activity.owner_id)}>
+                  {activity.owner_avatar ? (
+                    <img 
+                      src={getAvatarUrl(activity.owner_avatar)} 
+                      alt={activity.owner_name} 
+                      className="chip-avatar"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'flex';
+                      }}
+                    />
+                  ) : null}
+                  <div className="avatar-letter-fallback mini" style={{ display: activity.owner_avatar ? 'none' : 'flex' }}>
+                    {activity.owner_name ? activity.owner_name[0].toUpperCase() : "?"}
+                  </div>
+                  <span className="activity-detail__value">{activity.owner_name || "—"}</span>
+                </div>
+              </div>
+
+              <div className="activity-detail__field">
+                <span className="activity-detail__label">
+                  <FaClock />
+                  Estado
+                </span>
+                <span className={`activity-status activity-status--${activity.status}`}>
+                  {STATUS_LABELS[activity.status] ?? activity.status}
+                </span>
+              </div>
+
+              <div className="activity-detail__field">
+                <span className="activity-detail__label">
+                  <FaCalendarAlt />
+                  Inicio
                 </span>
                 <span className="activity-detail__value">{formatDate(activity.start_date, true)}</span>
               </div>
+
               <div className="activity-detail__field">
                 <span className="activity-detail__label">
-                  <FaFlagCheckered style={{ marginRight: "6px" }} />
-                  Fecha límite:
+                  <FaFlagCheckered />
+                  Límite
                 </span>
-                <span className="activity-detail__value">{formatDate(activity.deadline, true)}</span>
+                <span className={`activity-detail__value ${new Date(activity.deadline) < new Date() && activity.status !== 'completed' ? 'overdue' : ''}`}>
+                  {formatDate(activity.deadline, true)}
+                </span>
               </div>
             </div>
 
-            <div className="activity-detail__field">
-              <span className="activity-detail__label">
-                <FaClock style={{ marginRight: "6px" }} />
-                Estado:
-              </span>
-              <span className={`activity-status activity-status--${activity.status}`}>
-                {STATUS_LABELS[activity.status] ?? activity.status}
-              </span>
-            </div>
-
+            {collaborators.length > 0 && (
+              <div className="activity-detail__collaborators">
+                <span className="activity-detail__label">Colaboradores</span>
+                <div className="collaborators-list">
+                  {collaborators.map(user => (
+                    <div key={user.id} className="collaborator-item" title={user.name} onClick={() => showUserProfile(user.id)}>
+                      {user.avatar ? (
+                        <img 
+                          src={getAvatarUrl(user.avatar)} 
+                          alt={user.name} 
+                          className="collaborator-avatar"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            e.target.nextSibling.style.display = 'flex';
+                          }}
+                        />
+                      ) : null}
+                      <div className="avatar-letter-fallback mini" style={{ display: user.avatar ? 'none' : 'flex' }}>
+                        {user.name ? user.name[0].toUpperCase() : "?"}
+                      </div>
+                      <span className="collaborator-name">{user.name}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </Modal.Body>

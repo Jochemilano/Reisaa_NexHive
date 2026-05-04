@@ -50,6 +50,8 @@ const LoginBox = ({
               <Input
                 label="Correo"
                 type="email"
+                name="email"
+                autoComplete="username email"
                 placeholder="correo@ejemplo.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -72,6 +74,8 @@ const LoginBox = ({
               <Input
                 label="Nueva contraseña"
                 type="password"
+                name="password"
+                autoComplete="new-password"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -94,6 +98,8 @@ const LoginBox = ({
               <Input
                 label="Correo"
                 type="email"
+                name="email"
+                autoComplete="username email"
                 placeholder="correo@ejemplo.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -102,6 +108,8 @@ const LoginBox = ({
               <Input
                 label="Contraseña"
                 type="password"
+                name="password"
+                autoComplete={activeTab === "login" ? "current-password" : "new-password"}
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -111,6 +119,8 @@ const LoginBox = ({
                 <Input
                   label="Confirmar contraseña"
                   type="password"
+                  name="confirmPassword"
+                  autoComplete="new-password"
                   placeholder="••••••••"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}

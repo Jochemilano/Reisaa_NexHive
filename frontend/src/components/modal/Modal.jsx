@@ -16,6 +16,17 @@ export const ModalButton = ({ children, text, onClick, type = "button" }) => {
 };
 
 export const Modal = ({ isOpen, onClose, children, className = "" }) => {
+  React.useEffect(() => {
+    if (!isOpen) return;
+    
+    const handleEsc = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   return createPortal(
