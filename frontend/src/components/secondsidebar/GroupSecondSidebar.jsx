@@ -28,6 +28,31 @@ const GroupSecondSidebar = ({ groupId }) => {
   const [userRole, setUserRole] = useState(null);
   const [loadingDetails, setLoadingDetails] = useState(true);
   const [loadingProjects, setLoadingProjects] = useState(true);
+  const [dragHoverId, setDragHoverId] = useState(null);
+
+  const dragTimerRef = useRef(null);
+  const currentHoverRef = useRef(null);
+
+  const handleDragOverItem = (e, id, callback) => {
+    e.preventDefault();
+    if (currentHoverRef.current !== id) {
+      currentHoverRef.current = id;
+      setDragHoverId(id);
+      if (dragTimerRef.current) clearTimeout(dragTimerRef.current);
+      dragTimerRef.current = setTimeout(() => {
+        callback();
+        setDragHoverId(null);
+        currentHoverRef.current = null;
+      }, 800);
+    }
+  };
+
+  const handleDragLeaveList = () => {
+    if (dragTimerRef.current) clearTimeout(dragTimerRef.current);
+    dragTimerRef.current = null;
+    currentHoverRef.current = null;
+    setDragHoverId(null);
+  };
 
   const loadDetails = async () => {
     if (!groupId) return;
@@ -116,7 +141,7 @@ const GroupSecondSidebar = ({ groupId }) => {
 
   return (
     <>
-      <div className="sidebar-content">
+      <div className="sidebar-content" onDragLeave={handleDragLeaveList} onDrop={handleDragLeaveList}>
         {loadingDetails ? (
           <div className="channel-group">
             <h3>Canales</h3>
@@ -130,6 +155,8 @@ const GroupSecondSidebar = ({ groupId }) => {
               <div
                 className="user-item"
                 onClick={() => navigate(`/groups/${groupId}/chat/${c.chat_room_id}`)}
+                onDragOver={(e) => handleDragOverItem(e, c.chat_room_id, () => navigate(`/groups/${groupId}/chat/${c.chat_room_id}`))}
+                style={{ background: dragHoverId === c.chat_room_id ? 'var(--bg-hover)' : undefined }}
               >
                 <FaHashtag className="channel-icon" />
                 <span>Mensajes</span>

@@ -1,116 +1,90 @@
-/* Estilo específico para el modal de perfil de usuario */
-.user-profile-modal {
-  width: 320px;
-  border-radius: 16px;
-  overflow: hidden;
-  border: none;
-  background: var(--bg-elevated);
-}
+/* UserDetailModal v3 - Basado en simple-profile-v3 */
 
-.user-detail-banner {
-  height: 80px;
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
+.v3-friend-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   width: 100%;
 }
 
-.user-detail-content {
-  padding: 0 20px 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-top: -40px;
-}
-
-.user-detail-pic-section {
-  position: relative;
-  margin-bottom: 16px;
-}
-
-.user-detail-pic-wrapper {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  border: 4px solid var(--bg-elevated);
-  background: var(--bg-soft);
-  overflow: hidden;
+.v3-friend-actions .v3-btn-primary {
+  width: 100%;
+  padding: 12px;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 10px var(--shadow);
+  gap: 10px;
+  transition: transform 0.2s;
 }
 
-.user-detail-pic {
+.v3-btn-outline {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.user-detail-pic-placeholder {
-  font-size: 2rem;
-  font-weight: 700;
-  color: var(--text-secondary);
-}
-
-.user-info {
-  text-align: center;
-  width: 100%;
-}
-
-.user-name {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin: 0 0 4px;
-}
-
-.user-email {
-  font-size: 0.85rem;
-  color: var(--text-tertiary);
-  margin: 0 0 12px;
-}
-
-.user-badges {
+  padding: 10px;
+  background: transparent;
+  border: 1px solid var(--primary);
+  color: var(--primary);
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
   display: flex;
+  align-items: center;
   justify-content: center;
   gap: 8px;
 }
 
-.user-role-badge {
-  font-size: 0.7rem;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 20px;
+.v3-btn-disabled {
+  width: 100%;
+  padding: 12px;
   background: var(--bg-soft);
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.user-detail-divider {
-  width: 100%;
-  height: 1px;
-  background: var(--border);
-  margin: 20px 0;
-}
-
-.user-actions {
-  width: 100%;
-}
-
-.user-close-btn {
-  width: 100%;
-  padding: 10px;
-  border-radius: 8px;
+  color: var(--text-tertiary);
   border: 1px solid var(--border);
-  background: var(--bg-soft);
-  color: var(--text-primary);
-  font-size: 0.9rem;
+  border-radius: 10px;
   font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
+  cursor: not-allowed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
-.user-close-btn:hover {
-  background: var(--bg-active);
-  transform: translateY(-1px);
+.v3-btn-primary:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
 }
+
+.v3-btn-outline:hover {
+  background: var(--primary);
+  color: #fff;
+}
+
+/* Clases de utilidad para el layout v3 compartido */
+.v3-header { padding: 30px 24px 20px; display: flex; align-items: center; gap: 20px; background: var(--bg-soft); border-bottom: 1px solid var(--border); }
+.v3-avatar-wrapper { width: 80px; height: 80px; border-radius: 50%; overflow: hidden; background: var(--bg-base); border: 3px solid var(--bg-elevated); position: relative; }
+.v3-img { width: 100%; height: 100%; object-fit: cover; }
+.v3-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 700; color: var(--primary); }
+.v3-status-dot { position: absolute; bottom: 4px; right: 4px; width: 14px; height: 14px; background: var(--success); border: 2px solid var(--bg-soft); border-radius: 50%; }
+.v3-status-dot.admin { background: var(--primary); }
+.v3-name { font-size: 1.25rem; font-weight: 700; color: var(--text-primary); margin: 0; }
+.v3-nickname { font-size: 0.9rem; font-weight: 600; color: var(--primary); }
+.v3-role { font-size: 0.75rem; color: var(--text-tertiary); font-weight: 600; margin-left: 6px; }
+.v3-email { font-size: 0.85rem; color: var(--text-secondary); margin: 4px 0 0; }
+.v3-member-since { display: flex; align-items: center; gap: 6px; font-size: 0.7rem; color: var(--text-tertiary); margin-top: 8px; font-weight: 500; }
+.v3-body { padding: 24px; }
+.v3-section-label { font-size: 0.7rem; font-weight: 700; color: var(--text-tertiary); margin-bottom: 8px; letter-spacing: 0.5px; }
+.v3-bio-text { font-size: 0.9rem; color: var(--text-primary); line-height: 1.5; margin: 0; }
+.v3-details-list { display: flex; flex-direction: column; gap: 12px; }
+.v3-detail-item { display: flex; align-items: center; gap: 12px; color: var(--text-secondary); }
+.v3-detail-item svg { color: var(--primary); font-size: 0.9rem; opacity: 0.7; }
+.v3-detail-content { display: flex; flex-direction: column; }
+.v3-detail-content label { font-size: 0.65rem; font-weight: 600; color: var(--text-tertiary); }
+.v3-detail-content span { font-size: 0.9rem; font-weight: 500; color: var(--text-primary); }
+.v3-footer { margin-top: 10px; display: flex; flex-direction: column; gap: 12px; }
+.v3-footer-secondary { display: flex; justify-content: flex-end; }
+.v3-btn-close { background: none; border: none; color: var(--text-tertiary); font-size: 0.8rem; font-weight: 600; cursor: pointer; }
+.v3-btn-close:hover { color: var(--text-primary); }

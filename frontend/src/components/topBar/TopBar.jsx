@@ -39,6 +39,7 @@ const TopBar = () => {
         perfil={perfil}
         onPicUpdated={handlePicUpdated}
         onLogout={logout}
+        onProfileUpdated={(newData) => setPerfil(prev => ({ ...prev, ...newData }))}
       />
 
       <Modal isOpen={isNotifOpen} onClose={() => setIsNotifOpen(false)}>

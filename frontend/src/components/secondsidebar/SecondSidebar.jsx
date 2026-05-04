@@ -1,5 +1,5 @@
 import { useLocation, useParams } from "react-router-dom";
-import { useState } from "react";
+import { useSidebar } from "@/context/SidebarContext";
 import "./SecondSidebar.css";
 import GroupSecondSidebar from "./GroupSecondSidebar";
 import HomeSecondSidebar from "./HomeSecondSidebar";
@@ -8,7 +8,7 @@ import CalendarSecondSidebar from "./CalendarSecondSidebar";
 const SecondSidebar = () => {
   const location = useLocation();
   const { groupId } = useParams();
-  const [minimized, setMinimized] = useState(false);
+  const { isMinimized } = useSidebar();
 
   const renderContent = () => {
     if (location.pathname.startsWith("/groups")) return <GroupSecondSidebar groupId={groupId} />;
@@ -22,15 +22,7 @@ const SecondSidebar = () => {
   if (!content) return null;
 
   return (
-    <aside className={`second-sidebar ${minimized ? "minimized" : ""}`}>
-      <div className="retract-button">
-        <button
-          onClick={() => setMinimized(!minimized)}
-          aria-label={minimized ? "Expand sidebar" : "Minimize sidebar"}
-        >
-          ❮
-        </button>
-      </div>
+    <aside className={`second-sidebar ${isMinimized ? "minimized" : ""}`}>
       <div className="sidebar-content">
         {content}
       </div>

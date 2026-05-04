@@ -1,5 +1,5 @@
 import "./LoginBox.css";
-import Input from "@/components/input/Input";
+import { Input, Textarea } from "@/components/input/Input";
 
 const LoginBox = ({
   title,
@@ -8,11 +8,21 @@ const LoginBox = ({
   mode,
   setMode,
   name,
+  first_name,
+  last_name,
+  phone,
+  bio,
+  birthday,
   email,
   password,
   confirmPassword,
   code,
   setName,
+  setFirstName,
+  setLastName,
+  setPhone,
+  setBio,
+  setBirthday,
   setEmail,
   setPassword,
   setConfirmPassword,
@@ -23,7 +33,7 @@ const LoginBox = ({
 }) => {
   return (
     <div className="login-container">
-      <div className="center-box">
+      <div className={`center-box ${activeTab === "register" ? "register-mode" : ""}`}>
         <h2>{title}</h2>
 
         <form onSubmit={onSubmit}>
@@ -86,13 +96,52 @@ const LoginBox = ({
           {mode === "default" && (
             <>
               {activeTab === "register" && (
-                <Input
-                  label="Nombre"
-                  type="text"
-                  placeholder="Tu nombre"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                />
+                <>
+                  <div className="input-group-row">
+                    <Input
+                      label="Nombres"
+                      type="text"
+                      placeholder="Tus nombres"
+                      value={first_name}
+                      onChange={(e) => setFirstName(e.target.value)}
+                    />
+                    <Input
+                      label="Apellidos"
+                      type="text"
+                      placeholder="Tus apellidos"
+                      value={last_name}
+                      onChange={(e) => setLastName(e.target.value)}
+                    />
+                  </div>
+                  <div className="input-group-row">
+                    <Input
+                      label="Apodo"
+                      type="text"
+                      placeholder="Cómo te dicen"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                    />
+                    <Input
+                      label="Celular"
+                      type="tel"
+                      placeholder="Tu número"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                    />
+                  </div>
+                  <Input
+                    label="Cumpleaños"
+                    type="date"
+                    value={birthday}
+                    onChange={(e) => setBirthday(e.target.value)}
+                  />
+                  <Textarea
+                    label="Biografía / Acerca de mí"
+                    placeholder="Cuéntanos un poco sobre ti..."
+                    value={bio}
+                    onChange={(e) => setBio(e.target.value)}
+                  />
+                </>
               )}
 
               <Input

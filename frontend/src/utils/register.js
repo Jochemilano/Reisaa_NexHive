@@ -1,10 +1,10 @@
 import { apiFetch } from "@/utils/apiClient";
 
-export async function register(name, email, password) {
+export async function register(name, email, password, first_name, last_name, phone, bio, birthday) {
   try {
     const data = await apiFetch("register", {
       method: "POST",
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify({ name, email, password, first_name, last_name, phone, bio, birthday }),
     });
 
     return data;

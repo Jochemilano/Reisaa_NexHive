@@ -16,6 +16,7 @@ import { createGroup, fetchGroups } from "@/utils/groups";
 import { getAvatarUrl } from "@/utils/media";
 import { addLongPress } from "@/utils/longPress";
 import { useUnread } from "@/context/UnreadContext";
+import { useSidebar } from "@/context/SidebarContext";
 import Skeleton from "@/components/loading/Skeleton";
 import { toast } from "sonner";
 import "./Sidebar.css";
@@ -126,6 +127,7 @@ const Sidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { unreadTotal, unreadByRoom, setSoundEnabled } = useUnread();
+  const { toggleSidebar, setSidebarMinimized } = useSidebar();
 
   const [isOpen, setIsOpen] = useState(false);
   const [isPreferencesOpen, setIsPreferencesOpen] = useState(false);
@@ -181,6 +183,15 @@ const Sidebar = () => {
 
   const handlePicUpdated = (nuevaRuta) => setPerfil((prev) => ({ ...prev, profile_pic: nuevaRuta }));
 
+  const handleSidebarItemClick = (path) => {
+    if (location.pathname === path) {
+      toggleSidebar();
+    } else {
+      navigate(path);
+      setSidebarMinimized(false);
+    }
+  };
+
   const handleSavePreferences = async (data) => {
     try {
       const saved = await preferencesApi.savePreferences(data);
@@ -210,7 +221,7 @@ const Sidebar = () => {
             key={path}
             tooltip={tooltip}
             isActive={location.pathname === path}
-            onClick={() => navigate(path)}
+            onClick={() => handleSidebarItemClick(path)}
             showDot={path === "/home" && homeUnreadTotal > 0}
           >
             <Button className="button-general">{icon}</Button>
@@ -243,7 +254,7 @@ const Sidebar = () => {
                 avatar={getAvatarUrl(group.avatar)}
                 tooltip={group.name}
                 isActive={location.pathname === `/groups/${group.id}`}
-                onClick={() => navigate(`/groups/${group.id}`)}
+                onClick={() => handleSidebarItemClick(`/groups/${group.id}`)}
                 onLongPress={canEdit ? () => setEditingGroup(group) : null}
                 showDot={badgeCount > 0}
               />
@@ -293,6 +304,7 @@ const Sidebar = () => {
         perfil={perfil}
         onPicUpdated={handlePicUpdated}
         onLogout={logout}
+        onProfileUpdated={(newData) => setPerfil(prev => ({ ...prev, ...newData }))}
       />
     </aside>
   );

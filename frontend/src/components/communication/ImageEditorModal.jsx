@@ -25,6 +25,8 @@ const ImageEditorModal = ({ files, onSave, onClose, onAddMore }) => {
   const blobUrlsRef = useRef(new Set());
   const isCanvasDirty = useRef(false);
 
+  const handlersRef = useRef({});
+
   // --- INITIALIZATION ---
   useEffect(() => {
     // Only initialize if activeFiles is empty to prevent wiping out state when files change
@@ -440,6 +442,40 @@ const ImageEditorModal = ({ files, onSave, onClose, onAddMore }) => {
       });
     });
   };
+
+  // Sync latest handlers to ref
+  useEffect(() => {
+    handlersRef.current = { handleBack, handleFinish, isCropping, canvas: fabricCanvas.current };
+  });
+
+  // Global keydown for Esc and Enter
+  useEffect(() => {
+    const onGlobalKeyDown = (e) => {
+      const { handleBack, handleFinish, isCropping, canvas } = handlersRef.current;
+      
+      // Do not trigger if typing in a standard input/textarea (just in case)
+      if (e.target.tagName.toLowerCase() === 'input' || e.target.tagName.toLowerCase() === 'textarea') return;
+      
+      // Do not trigger if typing in a canvas text object
+      if (canvas) {
+        const activeObj = canvas.getActiveObject();
+        if (activeObj && activeObj.isEditing) return;
+      }
+
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        if (handleBack) handleBack();
+      } else if (e.key === 'Enter') {
+        if (!isCropping && handleFinish) {
+          e.preventDefault();
+          handleFinish();
+        }
+      }
+    };
+    
+    window.addEventListener('keydown', onGlobalKeyDown);
+    return () => window.removeEventListener('keydown', onGlobalKeyDown);
+  }, []);
 
   return (
     <div className={`image-editor-modal ${isCropping ? 'mode-crop' : ''}`}>

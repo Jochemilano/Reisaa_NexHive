@@ -156,6 +156,10 @@
   align-items: flex-start;
 }
 
+.chat-message.consecutive {
+  margin-top: -8px;
+}
+
 .chat-message .sender {
   display: block;
   font-size: 13px;

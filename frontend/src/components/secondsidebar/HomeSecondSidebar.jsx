@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { apiFetch } from "@/utils/apiClient";
 import { useNavigate } from "react-router-dom";
 import { useUnread } from "@/context/UnreadContext";
@@ -19,6 +19,7 @@ const HomeSecondSidebar = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [dragHoverId, setDragHoverId] = useState(null);
   
   // Estados para creación de grupo
   const [selectedFriends, setSelectedFriends] = useState([]);
@@ -28,6 +29,30 @@ const HomeSecondSidebar = () => {
   const { showUserProfile, showRoomProfile } = useUserDetail();
   const navigate = useNavigate();
   const currentUserId = parseInt(localStorage.getItem("userId"));
+
+  const dragTimerRef = useRef(null);
+  const currentHoverRef = useRef(null);
+
+  const handleDragOverItem = (e, id, callback) => {
+    e.preventDefault();
+    if (currentHoverRef.current !== id) {
+      currentHoverRef.current = id;
+      setDragHoverId(id);
+      if (dragTimerRef.current) clearTimeout(dragTimerRef.current);
+      dragTimerRef.current = setTimeout(() => {
+        callback();
+        setDragHoverId(null);
+        currentHoverRef.current = null;
+      }, 800);
+    }
+  };
+
+  const handleDragLeaveList = () => {
+    if (dragTimerRef.current) clearTimeout(dragTimerRef.current);
+    dragTimerRef.current = null;
+    currentHoverRef.current = null;
+    setDragHoverId(null);
+  };
 
   useEffect(() => {
     const loadData = async (showLoading = true) => {
@@ -205,7 +230,7 @@ const HomeSecondSidebar = () => {
         </div>
       )}
 
-      <div className="user-list">
+      <div className="user-list" onDragLeave={handleDragLeaveList} onDrop={handleDragLeaveList}>
         {loading ? (
           Array.from({ length: 6 }).map((_, i) => (
             <div key={`chat-skeleton-${i}`} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 12px' }}>
@@ -225,6 +250,7 @@ const HomeSecondSidebar = () => {
                 key={r.id}
                 className="user-item"
                 onClick={() => handleRoomClick(r.id)}
+                onDragOver={(e) => handleDragOverItem(e, r.id, () => handleRoomClick(r.id))}
                 style={{ 
                   display: 'flex', 
                   alignItems: 'center', 
@@ -233,10 +259,10 @@ const HomeSecondSidebar = () => {
                   borderRadius: '4px',
                   cursor: 'pointer',
                   transition: 'background 0.2s',
-                  background: 'transparent'
+                  background: dragHoverId === r.id ? 'var(--bg-hover)' : 'transparent'
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-hover)'}
-                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                onMouseEnter={(e) => { if (dragHoverId !== r.id) e.currentTarget.style.background = 'var(--bg-hover)'; }}
+                onMouseLeave={(e) => { if (dragHoverId !== r.id) e.currentTarget.style.background = 'transparent'; }}
               >
                 <div 
                   className="avatar-wrapper" 

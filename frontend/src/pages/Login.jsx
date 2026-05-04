@@ -6,7 +6,12 @@ import { register, verifyCode } from "@/utils/register";
 const Login = () => {
   const [activeTab, setActiveTab] = useState("login");
   const [mode, setMode] = useState("default"); // default, verify, forgot, reset
-  const [name, setName] = useState("");
+  const [name, setName] = useState(""); // Nickname
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [bio, setBio] = useState("");
+  const [birthday, setBirthday] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -49,12 +54,23 @@ const Login = () => {
       }
 
       if (activeTab === "register") {
-        if (!name.trim()) throw new Error("Ingresa tu nombre.");
-        if (!email.trim()) throw new Error("Ingresa un correo válido.");
-        if (password.length < 6) throw new Error("La contraseña debe tener al menos 6 caracteres.");
-        if (password !== confirmPassword) throw new Error("Las contraseñas no coinciden.");
+        if (!firstName.trim()) throw new Error("Enter your first name.");
+        if (!lastName.trim()) throw new Error("Enter your last name.");
+        if (!name.trim()) throw new Error("Enter your nickname.");
+        if (!email.trim()) throw new Error("Enter a valid email.");
+        if (password.length < 6) throw new Error("Password must be at least 6 characters.");
+        if (password !== confirmPassword) throw new Error("Passwords do not match.");
 
-        const data = await register(name.trim(), email.trim(), password);
+        const data = await register(
+          name.trim(), 
+          email.trim(), 
+          password, 
+          firstName.trim(), 
+          lastName.trim(), 
+          phone.trim(), 
+          bio.trim(), 
+          birthday
+        );
         if (data.needsVerification) {
           setMode("verify");
           setSuccess(true);
@@ -99,10 +115,20 @@ const Login = () => {
       code={code}
       setCode={setCode}
       name={name}
+      first_name={firstName}
+      last_name={lastName}
+      phone={phone}
+      bio={bio}
+      birthday={birthday}
       email={email}
       password={password}
       confirmPassword={confirmPassword}
       setName={setName}
+      setFirstName={setFirstName}
+      setLastName={setLastName}
+      setPhone={setPhone}
+      setBio={setBio}
+      setBirthday={setBirthday}
       setEmail={setEmail}
       setPassword={setPassword}
       setConfirmPassword={setConfirmPassword}

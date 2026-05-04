@@ -61,6 +61,35 @@ const formatTime = (dateStr) => {
   return d.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" });
 };
 
+const renderReplyContent = (content) => {
+  if (!content) return null;
+  // Ensure it's a path or url to avoid false positives on normal text that happens to end in .jpg
+  const isPath = content.startsWith('/uploads/') || content.startsWith('http') || content.startsWith('blob:');
+  const isImage = isPath && (content.match(/\.(jpeg|jpg|gif|png|webp)(\?.*)?$/i) || content.startsWith('blob:'));
+  const isVideo = isPath && content.match(/\.(mp4|webm|ogg)(\?.*)?$/i);
+
+  if (isImage) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+        <img src={getFileUrl(content)} alt="reply" style={{ height: '30px', width: '30px', objectFit: 'cover', borderRadius: '4px' }} />
+        <span style={{ fontSize: '12px', fontStyle: 'italic', opacity: 0.8 }}>Foto</span>
+      </div>
+    );
+  }
+  if (isVideo) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+        <video src={getFileUrl(content)} style={{ height: '30px', width: '30px', objectFit: 'cover', borderRadius: '4px' }} />
+        <span style={{ fontSize: '12px', fontStyle: 'italic', opacity: 0.8 }}>Video</span>
+      </div>
+    );
+  }
+  if (content.startsWith('/uploads/')) {
+    return <span style={{ fontSize: '12px', fontStyle: 'italic', opacity: 0.8, display: 'block', marginTop: '4px' }}>Archivo adjunto</span>;
+  }
+  return <div className="reply-text">{content}</div>;
+};
+
 const MessageContent = React.memo(({ msg, onImageClick, onVideoClick, isMine, onReply, onEdit, onDelete, onReplyToOriginal, searchTerm }) => {
   const [favorite, setFavorite] = useState(msg.favorite === 1);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -102,7 +131,7 @@ const MessageContent = React.memo(({ msg, onImageClick, onVideoClick, isMine, on
             style={{ cursor: "pointer" }}
           >
             <div className="reply-author">{msg.reply_sender_name}</div>
-            <div className="reply-text">{msg.reply_content}</div>
+            {renderReplyContent(msg.reply_content)}
           </div>
         )}
 
@@ -346,7 +375,7 @@ const Chat = ({ roomId, userId, groupId, targetUserId, targetUserName, targetUse
     if (e.currentTarget.contains(e.relatedTarget)) return;
     setIsDragging(false);
   };
-  const handleDrop = (e) => {
+  const handleDrop = async (e) => {
     e.preventDefault(); e.stopPropagation(); setIsDragging(false);
     const files = Array.from(e.dataTransfer.files);
     if (files.length > 0) {
@@ -354,6 +383,32 @@ const Chat = ({ roomId, userId, groupId, targetUserId, targetUserName, targetUse
       const others = files.filter(f => !f.type.startsWith("image/"));
       if (images.length > 0) { setEditorFiles(images); setIsEditorOpen(true); }
       if (others.length > 0) { setPreviewFiles(prev => [...prev, ...others]); }
+    } else {
+      const html = e.dataTransfer.getData("text/html");
+      const url = e.dataTransfer.getData("text/uri-list") || e.dataTransfer.getData("text/plain");
+      
+      let imageUrl = null;
+      if (html) {
+        const match = html.match(/src="([^"]+)"/);
+        if (match && match[1]) {
+          imageUrl = match[1];
+        }
+      }
+      if (!imageUrl && url && url.match(/\.(jpeg|jpg|gif|png|webp)/i)) {
+        imageUrl = url;
+      }
+      
+      if (imageUrl) {
+        try {
+          const res = await fetch(imageUrl);
+          const blob = await res.blob();
+          const file = new File([blob], "image.jpg", { type: blob.type || "image/jpeg" });
+          setEditorFiles([file]);
+          setIsEditorOpen(true);
+        } catch (err) {
+          console.error("Error fetching dropped image", err);
+        }
+      }
     }
   };
 
@@ -404,17 +459,33 @@ const Chat = ({ roomId, userId, groupId, targetUserId, targetUserName, targetUse
   const getMessagesWithSeparators = () => {
     const items = [];
     let lastDateKey = null;
+    let lastSenderId = null;
+    
     messages.forEach((msg) => {
       const msgDate = new Date(msg.created_at);
       const dateKey = msgDate.toDateString();
+      let separatorAdded = false;
+
       if (dateKey !== lastDateKey) {
         items.push({ separator: true, label: formatDateSeparator(msg.created_at), key: `sep-${dateKey}` });
         lastDateKey = dateKey;
+        separatorAdded = true;
       }
       if (msg.id === firstUnreadId && showUnreadSep) {
         items.push({ unreadSeparator: true, label: `Mensajes no leídos: ${initialUnreadRef.current}`, key: 'unread-sep' });
+        separatorAdded = true;
       }
-      items.push({ ...msg, originalMsg: msg, separator: false, key: msg.id || `temp-${msg.sender_id}-${msg.created_at}-${msg.content?.substring(0, 20) || Math.random()}` });
+
+      const isConsecutive = !separatorAdded && lastSenderId === msg.sender_id;
+      lastSenderId = msg.sender_id;
+
+      items.push({ 
+        ...msg, 
+        originalMsg: msg, 
+        separator: false, 
+        isConsecutive,
+        key: msg.id || `temp-${msg.sender_id}-${msg.created_at}-${msg.content?.substring(0, 20) || Math.random()}` 
+      });
     });
     return items;
   };
@@ -498,14 +569,16 @@ const Chat = ({ roomId, userId, groupId, targetUserId, targetUserName, targetUse
                 <button className="clear-unread-btn" onClick={clearUnread}><FaTimes /></button>
               </div>
             ) : (
-              <div key={item.key} ref={(el) => (messageRefs.current[item.id] = el)} className={`chat-message ${Number(item.sender_id) === Number(userId) ? "mine" : "other"}`}>
-                <span
-                  className="sender"
-                  style={{ cursor: "pointer" }}
-                  onClick={() => showUserProfile(item.sender_id)}
-                >
-                  {item.sender_name || item.sender_id}
-                </span>
+              <div key={item.key} ref={(el) => (messageRefs.current[item.id] = el)} className={`chat-message ${Number(item.sender_id) === Number(userId) ? "mine" : "other"} ${item.isConsecutive ? "consecutive" : ""}`}>
+                {!item.isConsecutive && (
+                  <span
+                    className="sender"
+                    style={{ cursor: "pointer" }}
+                    onClick={() => showUserProfile(item.sender_id)}
+                  >
+                    {item.sender_name || item.sender_id}
+                  </span>
+                )}
                 <MessageContent msg={item.originalMsg || item} searchTerm={searchTerm} onImageClick={(src) => setModalMedia({ src, type: 'image' })} onVideoClick={(src) => setModalMedia({ src, type: 'video' })} isMine={Number(item.sender_id) === Number(userId)} onReply={handleReply} onReplyToOriginal={handleScrollToOriginal} onEdit={handleEdit} onDelete={deleteMessage} />
               </div>
             )
@@ -527,7 +600,7 @@ const Chat = ({ roomId, userId, groupId, targetUserId, targetUserName, targetUse
           {(replyTo || editingMsg) && (
             <div className="action-banner">
               <div className="action-content">
-                {replyTo && <><FaReply className="action-icon" /><div className="action-info"><span className="reply-label">Respondiendo a <b>{replyTo.sender_name}</b></span><span className="reply-text-truncate">{replyTo.content}</span></div></>}
+                {replyTo && <><FaReply className="action-icon" /><div className="action-info"><span className="reply-label">Respondiendo a <b>{replyTo.sender_name}</b></span><div className="reply-text-truncate">{renderReplyContent(replyTo.content)}</div></div></>}
                 {editingMsg && <><FaEdit className="action-icon" /><span>Editando mensaje...</span></>}
               </div>
               <button className="cancel-action" onClick={cancelAction}><FaTimes /></button>

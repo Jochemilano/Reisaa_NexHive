@@ -7,3 +7,9 @@ export const updateProfilePic = (profile_pic) =>
     method: "PUT",
     body: JSON.stringify({ profile_pic }),
   });
+
+export const updateProfile = (data) =>
+  apiFetch("profile", {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });

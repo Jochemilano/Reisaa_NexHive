@@ -11,10 +11,10 @@ const generateCode = () => Math.floor(100000 + Math.random() * 900000).toString(
 
 // REGISTER
 router.post("/register", async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password, first_name, last_name, phone, bio, birthday } = req.body;
 
-  if (!name || !email || !password) {
-    return res.status(400).json({ message: "Nombre, correo y contraseña son requeridos" });
+  if (!name || !email || !password || !first_name || !last_name) {
+    return res.status(400).json({ message: "Nickname, email, password, first name and last name are required" });
   }
 
   try {
@@ -27,8 +27,8 @@ router.post("/register", async (req, res) => {
         const vCode = generateCode();
 
         await query(
-          "UPDATE users SET name = ?, password = ?, verification_code = ? WHERE email = ?",
-          [name, hashedPassword, vCode, email]
+          "UPDATE users SET name = ?, password = ?, verification_code = ?, first_name = ?, last_name = ?, phone = ?, bio = ?, birthday = ? WHERE email = ?",
+          [name, hashedPassword, vCode, first_name, last_name, phone || null, bio || null, birthday || null, email]
         );
         await sendVerificationEmail(email, vCode);
 
@@ -49,8 +49,8 @@ router.post("/register", async (req, res) => {
     const vCode = generateCode();
 
     const result = await query(
-      "INSERT INTO users (name, email, password, rol, is_verified, verification_code) VALUES (?, ?, ?, 'user', 0, ?)",
-      [name, email, hashedPassword, vCode]
+      "INSERT INTO users (name, email, password, rol, is_verified, verification_code, first_name, last_name, phone, bio, birthday) VALUES (?, ?, ?, 'user', 0, ?, ?, ?, ?, ?, ?)",
+      [name, email, hashedPassword, vCode, first_name, last_name, phone || null, bio || null, birthday || null]
     );
 
     // Enviar correo (no bloqueamos el registro si falla el correo, pero el usuario no estará verificado)
@@ -110,7 +110,7 @@ router.post("/login", async (req, res) => {
 
   try {
     const results = await query(
-      "SELECT id, name, email, password, rol, is_verified FROM users WHERE email=?",
+      "SELECT id, name, email, password, rol, is_verified, first_name, last_name, phone, bio, birthday, profile_pic FROM users WHERE email=?",
       [email]
     );
 
@@ -141,9 +141,15 @@ router.post("/login", async (req, res) => {
       token,
       user: {
         id: user.id,
-        nombre: user.name,
+        nombre: user.name, // Nickname
+        first_name: user.first_name,
+        last_name: user.last_name,
         email: user.email,
-        rol: user.rol
+        rol: user.rol,
+        profile_pic: user.profile_pic,
+        phone: user.phone,
+        bio: user.bio,
+        birthday: user.birthday
       }
     });
 
