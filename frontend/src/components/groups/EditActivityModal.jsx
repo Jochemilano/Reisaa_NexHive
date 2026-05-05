@@ -137,38 +137,51 @@ const EditActivityModal = ({ isOpen, onClose, activityId, onUpdated, onDeleted }
           </div>
         ) : (
           <>
-            <Input
-              label="Nombre de la actividad"
-              value={activityData.name}
-              onChange={e => handleChange("name", e.target.value)}
-            />
+            <div style={{ display: 'flex', gap: '15px', alignItems: 'flex-start' }}>
+              <div style={{ flex: 2 }}>
+                <Input
+                  label="Nombre de la actividad"
+                  value={activityData.name}
+                  onChange={e => handleChange("name", e.target.value)}
+                />
+              </div>
+              <div style={{ flex: 1 }}>
+                <Select
+                  label="Estado"
+                  value={activityData.status}
+                  onChange={e => handleChange("status", e.target.value)}
+                  options={[
+                    { value: "pending", label: "Pendiente" },
+                    { value: "in_progress", label: "En progreso" },
+                    { value: "done", label: "Completada" },
+                  ]}
+                />
+              </div>
+            </div>
             <Textarea
               label="Descripción"
               value={activityData.description}
               onChange={e => handleChange("description", e.target.value)}
+              rows={2}
             />
-            <Select
-              label="Estado"
-              value={activityData.status}
-              onChange={e => handleChange("status", e.target.value)}
-              options={[
-                { value: "pending", label: "Pending" },
-                { value: "in_progress", label: "In Progress" },
-                { value: "done", label: "Done" },
-              ]}
-            />
-            <Input
-              label="Fecha de inicio"
-              type="datetime-local"
-              value={activityData.start_date}
-              onChange={e => handleChange("start_date", e.target.value)}
-            />
-            <Input
-              label="Fecha de entrega"
-              type="datetime-local"
-              value={activityData.deadline}
-              onChange={e => handleChange("deadline", e.target.value)}
-            />
+            <div style={{ display: 'flex', gap: '15px' }}>
+              <div style={{ flex: 1 }}>
+                <Input
+                  label="Fecha de inicio"
+                  type="datetime-local"
+                  value={activityData.start_date}
+                  onChange={e => handleChange("start_date", e.target.value)}
+                />
+              </div>
+              <div style={{ flex: 1 }}>
+                <Input
+                  label="Fecha de entrega"
+                  type="datetime-local"
+                  value={activityData.deadline}
+                  onChange={e => handleChange("deadline", e.target.value)}
+                />
+              </div>
+            </div>
             <CollaboratorPicker
               availableUsers={availableUsers}
               selectedCollaborators={selectedCollaborators}

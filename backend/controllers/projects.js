@@ -306,7 +306,7 @@ router.delete("/projects/:projectId", verifyToken, async (req, res) => {
       return res.status(403).json({ message: "No tienes permisos (No eres owner del proyecto, admin ni owner del grupo)" });
 
     await query("DELETE FROM users_projects WHERE project_id=?", [projectId]);
-    
+
     // Eliminar el proyecto
     await query("DELETE FROM projects WHERE id=?", [projectId]);
 

@@ -142,40 +142,41 @@ const GroupSecondSidebar = ({ groupId }) => {
   return (
     <>
       <div className="sidebar-content" onDragLeave={handleDragLeaveList} onDrop={handleDragLeaveList}>
-        {loadingDetails ? (
-          <div className="channel-group">
-            <h3>Canales</h3>
-            <div className="user-item"><Skeleton width="100%" height="24px" /></div>
-            <div className="user-item"><Skeleton width="100%" height="24px" /></div>
-          </div>
-        ) : (
-          details.channels.map((c) => (
-            <div key={c.id} className="channel-group">
-              <h3>Canales</h3>
-              <div
-                className="user-item"
-                onClick={() => navigate(`/groups/${groupId}/chat/${c.chat_room_id}`)}
-                onDragOver={(e) => handleDragOverItem(e, c.chat_room_id, () => navigate(`/groups/${groupId}/chat/${c.chat_room_id}`))}
-                style={{ background: dragHoverId === c.chat_room_id ? 'var(--bg-hover)' : undefined }}
-              >
-                <FaHashtag className="channel-icon" />
-                <span>Mensajes</span>
-                {unreadByRoom[c.chat_room_id] > 0 && (
-                  <span className="unread-badge-small" style={{ marginLeft: 'auto' }}>
-                    {unreadByRoom[c.chat_room_id]}
-                  </span>
-                )}
-              </div>
-              <div
-                className="user-item"
-                onClick={() => navigate(`/groups/${groupId}/voice/${c.voice_room_id}`)}
-              >
-                <FaVolumeUp className="channel-icon" />
-                <span>Sala de voz</span>
-              </div>
-            </div>
-          ))
-        )}
+        <div className="channel-group">
+          <h3>Canales</h3>
+          {loadingDetails ? (
+            <>
+              <div className="user-item"><Skeleton width="100%" height="24px" /></div>
+              <div className="user-item"><Skeleton width="100%" height="24px" /></div>
+            </>
+          ) : (
+            details.channels.map((c) => (
+              <React.Fragment key={c.id}>
+                <div
+                  className="user-item"
+                  onClick={() => navigate(`/groups/${groupId}/chat/${c.chat_room_id}`)}
+                  onDragOver={(e) => handleDragOverItem(e, c.chat_room_id, () => navigate(`/groups/${groupId}/chat/${c.chat_room_id}`))}
+                  style={{ background: dragHoverId === c.chat_room_id ? 'var(--bg-hover)' : undefined }}
+                >
+                  <FaHashtag className="channel-icon" />
+                  <span>Mensajes</span>
+                  {unreadByRoom[c.chat_room_id] > 0 && (
+                    <span className="unread-badge-small" style={{ marginLeft: 'auto' }}>
+                      {unreadByRoom[c.chat_room_id]}
+                    </span>
+                  )}
+                </div>
+                <div
+                  className="user-item"
+                  onClick={() => navigate(`/groups/${groupId}/voice/${c.voice_room_id}`)}
+                >
+                  <FaVolumeUp className="channel-icon" />
+                  <span>Sala de voz</span>
+                </div>
+              </React.Fragment>
+            ))
+          )}
+        </div>
 
         <div className="cont-sec">
           <h3>Proyectos</h3>
@@ -252,4 +253,4 @@ const GroupSecondSidebar = ({ groupId }) => {
   );
 };
 
-export default GroupSecondSidebar;
+export default GroupSecondSidebar;

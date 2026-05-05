@@ -1,216 +1,221 @@
-.sidebar {
+.sidebar.creative-sidebar {
   background-color: var(--bg-soft);
   height: 100vh;
-  position: relative;
-  width: 4.5rem;
+  width: 200px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  box-sizing: border-box;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
-  z-index: 20;
 }
 
-/* ── Header fijo ── */
-.sidebar-header {
+/* ── Secciones (Bloques) ── */
+.sidebar-pod {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  width: 100%;
-  flex-shrink: 0;
-  padding-top: 0.75rem;
+  padding: 8px 0;
 }
 
-/* ── Zona de grupos scrolleable ── */
-.sidebar-groups {
+.nav-pod {
+  padding-top: 16px;
+}
+
+.groups-pod {
+  flex: 1;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  width: 100%;
+}
+
+.user-pod {
+  margin-top: auto;
+  border-top: 1px solid var(--border);
+  padding: 12px 0;
+  background-color: var(--bg-base);
+}
+
+/* ── Títulos de Sección (Estilo Pumble) ── */
+.pod-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-tertiary);
+  padding: 12px 20px 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* ── Lista de Grupos ── */
+.groups-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sidebar-groups-list {
   flex: 1;
   overflow-y: auto;
-  overflow-x: hidden;
-  scrollbar-width: none;
-  padding: 0;
+  padding-bottom: 20px;
 }
 
-.sidebar-groups::-webkit-scrollbar {
-  display: none;
+.sidebar-groups-list::-webkit-scrollbar {
+  width: 4px;
 }
 
-/* ── Footer fijo ── */
-.sidebar-footer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  flex-shrink: 0;
-  padding-bottom: 0.75rem;
+.sidebar-groups-list::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 10px;
 }
 
-/* ── Item wrapper ── */
+/* ── Items (Minimalistas y Profesionales) ── */
 .sidebar-item-wrapper {
   position: relative;
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 100%;
-  flex-shrink: 0;
-  margin-bottom: 0.5rem;
+  padding: 0 16px;
+  height: 40px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  color: var(--text-secondary);
 }
 
-/* ── Pill indicator ── */
+.sidebar-item-wrapper:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.sidebar-item-wrapper.active {
+  background-color: var(--bg-active);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+/* Indicador Activo (Línea Izquierda) */
 .pill {
   position: absolute;
   left: 0;
-  width: 4px;
-  height: 8px;
-  background-color: var(--text-primary);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 0;
+  background-color: var(--primary);
   border-radius: 0 4px 4px 0;
-  opacity: 0;
-  transition: all 0.2s ease-in-out;
-}
-
-.sidebar-item-wrapper:hover .pill {
-  opacity: 1;
-  height: 20px;
+  transition: height 0.2s ease;
 }
 
 .sidebar-item-wrapper.active .pill {
-  opacity: 1;
-  height: 40px;
-  background-color: var(--text-primary);
+  height: 24px;
 }
 
-/* ── Botones base ── */
-.sidebar .button-general,
-.modal-button,
-.sidebar-avatar {
-  background-color: var(--bg-base);
-  color: var(--text-primary);
-  border-radius: var(--radius-circle);
-  cursor: pointer;
-  height: 3rem;
-  width: 3rem;
-  border: none;
+.sidebar-item-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.sidebar-item-icon {
+  width: 20px;
+  height: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease-in-out;
-  position: relative;
-  font-weight: 600;
+  font-size: 18px;
   flex-shrink: 0;
 }
 
-.sidebar-item-wrapper:hover .button-general,
-.sidebar-item-wrapper.active .button-general {
-  border-radius: 12px;
-  background-color: var(--primary);
+.sidebar-item-label {
+  font-size: 13.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.sidebar-item-wrapper:hover .modal-button,
-.sidebar-item-wrapper:hover .sidebar-avatar {
-  background-color: var(--success) !important;
-  border-radius: 12px;
+/* ── Avatares y Notificaciones ── */
+.sidebar-avatar-img {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  object-fit: cover;
 }
 
-.sidebar .button-general svg,
-.sidebar .modal-button svg,
-.sidebar .sidebar-avatar svg {
-  width: 1rem;
-  height: 1rem;
-  display: block;
-  margin: auto;
+.sidebar-avatar-initial {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  background-color: var(--bg-elevated);
+  color: var(--text-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  border: 1px solid var(--border);
 }
 
-/* ── Separador ── */
-.sidebar .separator {
-  width: 2rem;
-  height: 2px;
-  background-color: var(--text-secondary);
+.add-group-icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  background-color: var(--bg-elevated);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--success);
+  font-size: 14px;
+}
+
+.sidebar-dot {
+  position: absolute;
+  top: 6px;
+  left: 32px;
+  width: 8px;
+  height: 8px;
+  background-color: var(--error);
+  border-radius: 50%;
+  border: 2px solid var(--bg-soft);
+}
+
+/* ── Botón Editar ── */
+.sidebar-item-edit {
+  margin-left: auto;
+  opacity: 0;
+  color: var(--text-tertiary);
+  background: none;
   border: none;
-  margin: 0.5rem 0;
-  opacity: 0.2;
-  flex-shrink: 0;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  transition: opacity 0.2s;
 }
 
-/* ── Tooltip ── */
+.sidebar-item-wrapper:hover .sidebar-item-edit {
+  opacity: 0.6;
+}
+
+.sidebar-item-edit:hover {
+  opacity: 1 !important;
+  color: var(--primary);
+}
+
+/* ── Tooltip (Solo para minimal) ── */
 .sidebar-tooltip {
   position: fixed;
-  left: 5rem;
-  background-color: var(--bg-base);
-  color: var(--text-primary);
-  padding: 0.3rem 0.65rem;
+  left: 64px;
+  background-color: #1a1d21;
+  color: white;
+  padding: 4px 12px;
   border-radius: 6px;
-  font-size: 0.78rem;
+  font-size: 13px;
   font-weight: 500;
-  white-space: nowrap;
-  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
   opacity: 0;
-  transition: opacity 0.15s ease, transform 0.15s ease;
-  border: 1px solid rgba(128, 128, 128, 0.15);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
-  z-index: 100;
+  pointer-events: none;
+  transition: opacity 0.2s;
+  z-index: 1000;
 }
 
 .sidebar-tooltip.visible {
   opacity: 1;
-}
-
-/* ── Edit Button on Hover ── */
-.sidebar-item-edit {
-  position: absolute;
-  top: 0;
-  right: 0;
-  background-color: var(--bg-elevated);
-  color: var(--primary);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-circle);
-  width: 1.4rem;
-  height: 1.4rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.75rem;
-  cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.2s, transform 0.2s, background-color 0.2s;
-  box-shadow: 0 2px 5px var(--shadow);
-  z-index: 10;
-}
-
-.sidebar-item-wrapper:hover .sidebar-item-edit {
-  opacity: 1;
-  transform: scale(1.1);
-}
-
-.sidebar-item-edit:hover {
-  background-color: var(--primary);
-  color: #ffffff;
-}
-
-.sidebar-item-content {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-
-.sidebar-dot {
-  position: absolute;
-  bottom: -2px;
-  right: -2px;
-  width: 12px;
-  height: 12px;
-  background-color: #f23f43;
-  border-radius: 50%;
-  border: 2px solid var(--bg-soft);
-  z-index: 5;
-  animation: dot-in 0.2s ease-out;
-}
-
-@keyframes dot-in {
-  from { transform: scale(0); }
-  to { transform: scale(1); }
 }

@@ -73,6 +73,23 @@ const GroupDetailModal = ({ isOpen, onClose, group, loading: loadingData, onMemb
     }
   };
 
+  const sortedMembers = React.useMemo(() => {
+    if (!group?.members) return [];
+    
+    return [...group.members].sort((a, b) => {
+      // Current user is always at the top
+      if (a.id === currentUserId) return -1;
+      if (b.id === currentUserId) return 1;
+      
+      // Owner comes next
+      if (a.id === group.owner_id) return -1;
+      if (b.id === group.owner_id) return 1;
+      
+      // Default alphabetical sort
+      return (a.name || "").localeCompare(b.name || "");
+    });
+  }, [group?.members, currentUserId, group?.owner_id]);
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} className="group-profile-modal">
       <div className="group-detail-banner">
@@ -89,9 +106,9 @@ const GroupDetailModal = ({ isOpen, onClose, group, loading: loadingData, onMemb
       <div className="group-detail-content">
         <div className="group-info-section">
           <h2 className="group-name">{loadingData ? <Skeleton width="150px" height="24px" /> : group?.name}</h2>
-          <p className="group-meta">
+          <div className="group-meta">
             <FaUsers /> {loadingData ? <Skeleton width="80px" height="14px" /> : (group?.members?.length || 0) + " miembros"}
-          </p>
+          </div>
         </div>
 
         <div className="group-detail-divider" />
@@ -106,7 +123,7 @@ const GroupDetailModal = ({ isOpen, onClose, group, loading: loadingData, onMemb
                   <Skeleton width="100px" height="14px" />
                 </div>
               ))
-            ) : group?.members?.map((member) => (
+            ) : sortedMembers.map((member) => (
               <div
                 key={member.id}
                 className="member-item"
@@ -133,7 +150,7 @@ const GroupDetailModal = ({ isOpen, onClose, group, loading: loadingData, onMemb
                   )}
                 </div>
                 <span className="member-name">
-                  {member.name}
+                  {member.id === currentUserId ? "Tu" : member.name}
                 </span>
                 
                 {isOwner && member.id !== currentUserId && (

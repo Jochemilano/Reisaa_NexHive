@@ -2,11 +2,12 @@ import { useState } from "react";
 import LoginBox from "@/components/login/LoginBox";
 import { login, forgotPassword, resetPassword } from "@/utils/login";
 import { register, verifyCode } from "@/utils/register";
+import { isPasswordValid } from "@/components/login/LoginBox";
 
 const Login = () => {
   const [activeTab, setActiveTab] = useState("login");
   const [mode, setMode] = useState("default"); // default, verify, forgot, reset
-  const [name, setName] = useState(""); // Nickname
+  const [name, setName] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
@@ -18,57 +19,113 @@ const Login = () => {
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
 
+  // ── Helpers ───────────────────────────────────────────────
+  const clearErrors = () => {
+    setError("");
+    setFieldErrors({});
+    setSuccess(false);
+  };
+
+  const setField = (key, msg) =>
+    setFieldErrors((prev) => ({ ...prev, [key]: msg }));
+
+  // ── Submit ────────────────────────────────────────────────
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
-    setSuccess(false);
+    clearErrors();
 
-    try {
-      if (mode === "verify") {
-        if (!code) throw new Error("Ingresa el código de verificación.");
+    // ── VERIFY mode ──────────────────────────────────────────
+    if (mode === "verify") {
+      if (!code.trim()) {
+        setField("code", "Ingresa el código de verificación.");
+        return;
+      }
+      try {
         const data = await verifyCode(email, code);
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
         setSuccess(true);
         window.location.href = "/home";
+      } catch (err) {
+        setError(err.message);
+      }
+      return;
+    }
+
+    // ── FORGOT mode ──────────────────────────────────────────
+    if (mode === "forgot") {
+      if (!email.trim()) {
+        setField("email", "Ingresa tu correo.");
         return;
       }
-
-      if (mode === "forgot") {
-        if (!email) throw new Error("Ingresa tu correo.");
+      try {
         await forgotPassword(email);
         setMode("reset");
         setSuccess(true);
+      } catch (err) {
+        setError(err.message);
+      }
+      return;
+    }
+
+    // ── RESET mode ───────────────────────────────────────────
+    if (mode === "reset") {
+      const errs = {};
+      if (!code.trim()) errs.code = "Ingresa el código recibido.";
+      if (!password)    errs.password = "Ingresa tu nueva contraseña.";
+      else if (!isPasswordValid(password))
+        errs.password = "La contraseña no cumple los requisitos de seguridad.";
+      if (!confirmPassword) errs.confirmPassword = "Confirma tu contraseña.";
+      else if (password && confirmPassword !== password)
+        errs.confirmPassword = "Las contraseñas no coinciden.";
+
+      if (Object.keys(errs).length) {
+        setFieldErrors(errs);
         return;
       }
 
-      if (mode === "reset") {
-        if (!code || !password) throw new Error("Completa todos los campos.");
+      try {
         await resetPassword(email, code, password);
         setMode("default");
         setActiveTab("login");
         setSuccess(true);
         setError("Contraseña actualizada. Ya puedes iniciar sesión.");
+      } catch (err) {
+        setError(err.message);
+      }
+      return;
+    }
+
+    // ── REGISTER mode ────────────────────────────────────────
+    if (activeTab === "register") {
+      const errs = {};
+      if (!firstName.trim())  errs.first_name     = "El nombre es obligatorio.";
+      if (!lastName.trim())   errs.last_name      = "El apellido es obligatorio.";
+      if (!name.trim())       errs.name           = "El apodo es obligatorio.";
+      if (!email.trim())      errs.email          = "El correo es obligatorio.";
+      if (!password)          errs.password       = "La contraseña es obligatoria.";
+      else if (!isPasswordValid(password))
+        errs.password = "La contraseña no cumple los requisitos de seguridad.";
+      if (!confirmPassword)   errs.confirmPassword = "Confirma tu contraseña.";
+      else if (confirmPassword !== password)
+        errs.confirmPassword = "Las contraseñas no coinciden.";
+
+      if (Object.keys(errs).length) {
+        setFieldErrors(errs);
         return;
       }
 
-      if (activeTab === "register") {
-        if (!firstName.trim()) throw new Error("Enter your first name.");
-        if (!lastName.trim()) throw new Error("Enter your last name.");
-        if (!name.trim()) throw new Error("Enter your nickname.");
-        if (!email.trim()) throw new Error("Enter a valid email.");
-        if (password.length < 6) throw new Error("Password must be at least 6 characters.");
-        if (password !== confirmPassword) throw new Error("Passwords do not match.");
-
+      try {
         const data = await register(
-          name.trim(), 
-          email.trim(), 
-          password, 
-          firstName.trim(), 
-          lastName.trim(), 
-          phone.trim(), 
-          bio.trim(), 
+          name.trim(),
+          email.trim(),
+          password,
+          firstName.trim(),
+          lastName.trim(),
+          phone.trim(),
+          bio.trim(),
           birthday
         );
         if (data.needsVerification) {
@@ -76,8 +133,22 @@ const Login = () => {
           setSuccess(true);
           return;
         }
+      } catch (err) {
+        setError(err.message);
+        return;
       }
+    }
 
+    // ── LOGIN mode ───────────────────────────────────────────
+    const errs = {};
+    if (!email.trim()) errs.email = "El correo es obligatorio.";
+    if (!password)     errs.password = "La contraseña es obligatoria.";
+    if (Object.keys(errs).length) {
+      setFieldErrors(errs);
+      return;
+    }
+
+    try {
       const data = await login(email.trim(), password);
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
@@ -96,7 +167,7 @@ const Login = () => {
   const getTitle = () => {
     if (mode === "verify") return "Verificar correo";
     if (mode === "forgot") return "Recuperar contraseña";
-    if (mode === "reset") return "Cambiar contraseña";
+    if (mode === "reset")  return "Cambiar contraseña";
     return activeTab === "login" ? "Iniciar sesión" : "Registrarse";
   };
 
@@ -107,11 +178,10 @@ const Login = () => {
       setActiveTab={(tab) => {
         setActiveTab(tab);
         setMode("default");
-        setError("");
-        setSuccess(false);
+        clearErrors();
       }}
       mode={mode}
-      setMode={setMode}
+      setMode={(m) => { setMode(m); clearErrors(); }}
       code={code}
       setCode={setCode}
       name={name}
@@ -135,6 +205,7 @@ const Login = () => {
       onSubmit={handleSubmit}
       error={error}
       success={success}
+      fieldErrors={fieldErrors}
     />
   );
 };

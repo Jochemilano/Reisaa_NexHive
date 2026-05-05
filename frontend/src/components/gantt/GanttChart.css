@@ -1,0 +1,304 @@
+/* ========================= VARIABLES ========================= */
+:root {
+  --day-width: 44px;
+  --header-height: 70px;
+  --row-height: 48px;
+  --sidebar-width: 200px;
+}
+
+/* ========================= ROOT ========================= */
+.gantt-root {
+  margin-top: 24px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg-base);
+  box-shadow: 0 4px 20px var(--shadow);
+
+  width: 100%;
+  max-height: 600px;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--text-tertiary) var(--bg-soft);
+}
+
+.gantt-root * {
+  box-sizing: border-box;
+}
+
+/* ========================= SCROLLBAR ========================= */
+.gantt-root::-webkit-scrollbar {
+  width: 14px;
+  height: 14px;
+}
+
+.gantt-root::-webkit-scrollbar-track {
+  background: var(--bg-soft);
+}
+
+.gantt-root::-webkit-scrollbar-thumb {
+  background: var(--text-tertiary);
+  border-radius: 8px;
+  border: 3px solid var(--bg-soft);
+}
+
+.gantt-root::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+
+/* ========================= CONTAINER ========================= */
+.gantt-container-v3 {
+  display: flex;
+  width: max-content;
+  min-width: 100%;
+}
+
+/* ========================= SIDEBAR ========================= */
+.gantt-sidebar {
+  width: var(--sidebar-width);
+  flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  left: 0;
+  z-index: 20;
+  background: var(--bg-elevated);
+}
+
+.gantt-sidebar-header {
+  height: var(--header-height);
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  font-weight: 800;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-tertiary);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: var(--bg-elevated);
+}
+
+.gantt-sidebar-row {
+  height: var(--row-height);
+  line-height: var(--row-height);
+  display: block;
+  padding: 0 16px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ========================= TIMELINE ========================= */
+.gantt-timeline-area {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  min-width: max-content;
+}
+
+.gantt-timeline-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg-elevated);
+  width: max-content;
+}
+
+/* ========================= MONTHS ========================= */
+.gantt-months-row {
+  display: flex;
+  height: 35px;
+  border-bottom: 1px solid var(--border);
+}
+
+.gantt-month-cell {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--primary);
+  text-transform: capitalize;
+  border-right: 1px solid var(--border);
+}
+
+/* ========================= DAYS ========================= */
+.gantt-days-row {
+  display: flex;
+  height: 35px;
+  border-bottom: 1px solid var(--border);
+}
+
+.gantt-day-cell {
+  width: var(--day-width);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  border-right: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.is-weekend {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* ========================= BODY ========================= */
+.gantt-timeline-body {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: max-content;
+}
+
+.gantt-body-row {
+  display: flex;
+  height: var(--row-height);
+  position: relative;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+}
+
+.gantt-body-row:hover {
+  background: var(--bg-hover);
+}
+
+.gantt-grid-cell {
+  width: var(--day-width);
+  flex-shrink: 0;
+  border-right: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+/* ========================= BARS ========================= */
+.gantt-bar-v3 {
+  position: absolute;
+  top: 10px;
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 12px;
+  z-index: 2;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  transition: opacity 0.2s;
+  overflow: hidden;
+}
+
+.gantt-bar-v3:hover {
+  opacity: 0.9;
+  z-index: 5;
+}
+
+.gantt-bar-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gantt-bar-status {
+  font-size: 9px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.85);
+  text-transform: uppercase;
+  white-space: nowrap;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* ========================= STATUS ========================= */
+.gantt-bar-v3.status-pending {
+  background: linear-gradient(90deg, #636e72, #2d3436);
+}
+
+.gantt-bar-v3.status-in-progress,
+.gantt-bar-v3.status-in_progress {
+  background: linear-gradient(90deg, var(--primary), var(--bg-active));
+}
+
+.gantt-bar-v3.status-done,
+.gantt-bar-v3.status-completed {
+  background: linear-gradient(90deg, var(--success), #1b8d44);
+}
+
+/* ========================= EMPTY ========================= */
+.gantt-empty {
+  padding: 60px;
+  text-align: center;
+  color: var(--text-tertiary);
+  font-style: italic;
+  width: 100%;
+}
+
+/* ========================= WRAPPER & ACTIONS ========================= */
+.gantt-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.gantt-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 0 4px;
+}
+
+.gantt-export-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 20px;
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.gantt-export-btn:hover:not(:disabled) {
+  background: var(--bg-hover);
+  border-color: var(--primary);
+  color: var(--primary);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.gantt-export-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.gantt-export-btn svg {
+  font-size: 16px;
+}
+
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

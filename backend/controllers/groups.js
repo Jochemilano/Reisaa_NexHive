@@ -327,8 +327,8 @@ router.post("/groups/:groupId/leave", verifyToken, async (req, res) => {
       return res.status(404).json({ message: "Grupo no encontrado" });
 
     if (groupRows[0].owner_id === userId) {
-      return res.status(400).json({ 
-        message: "No puedes salirte siendo el owner. Transfiere el mando antes de salir." 
+      return res.status(400).json({
+        message: "No puedes salirte siendo el owner. Transfiere el mando antes de salir."
       });
     }
 
@@ -362,4 +362,4 @@ router.post("/groups/:groupId/leave", verifyToken, async (req, res) => {
   }
 });
 
-module.exports = router;
+module.exports = router;

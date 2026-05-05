@@ -2,7 +2,7 @@ import { useLocation, useParams } from "react-router-dom";
 import { useSidebar } from "@/context/SidebarContext";
 import "./SecondSidebar.css";
 import GroupSecondSidebar from "./GroupSecondSidebar";
-import HomeSecondSidebar from "./HomeSecondSidebar";
+import SocialSecondSidebar from "./SocialSecondSidebar";
 import CalendarSecondSidebar from "./CalendarSecondSidebar";
 
 const SecondSidebar = () => {
@@ -12,8 +12,8 @@ const SecondSidebar = () => {
 
   const renderContent = () => {
     if (location.pathname.startsWith("/groups")) return <GroupSecondSidebar groupId={groupId} />;
-    if (location.pathname.startsWith("/home")) return <HomeSecondSidebar />;
-    if (location.pathname.startsWith("/chat")) return <HomeSecondSidebar />;
+    if (location.pathname.startsWith("/social")) return <SocialSecondSidebar />;
+    if (location.pathname.startsWith("/chat")) return <SocialSecondSidebar />;
     if (location.pathname.startsWith("/calendar")) return <CalendarSecondSidebar />;
     return null;
   };

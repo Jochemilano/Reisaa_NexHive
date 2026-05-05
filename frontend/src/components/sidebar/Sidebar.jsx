@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { FiMessageSquare, FiStar, FiCalendar, FiPlus, FiSettings, FiUser } from "react-icons/fi";
-import Modal from "@/components/modal/Modal";
-import Separator from "@/components/separator/Separator";
-import Button from "@/components/button/Button";
+import { FaHome, FaUsers } from "react-icons/fa";
 import { useGroups } from "@/hooks/useGroups";
 import { useCreateGroupModal } from "@/hooks/useCreateGroupModal";
 import CreateGroupModal from "@/components/groups/CreateGroupModal";
@@ -14,32 +12,31 @@ import ProfileModal from '@/components/profile/ProfileModal';
 import { getProfile } from "@/utils/profile";
 import { createGroup, fetchGroups } from "@/utils/groups";
 import { getAvatarUrl } from "@/utils/media";
-import { addLongPress } from "@/utils/longPress";
 import { useUnread } from "@/context/UnreadContext";
 import { useSidebar } from "@/context/SidebarContext";
+import { useUserDetail } from "@/context/UserDetailContext";
 import Skeleton from "@/components/loading/Skeleton";
 import { toast } from "sonner";
 import "./Sidebar.css";
 
 const NAV_ITEMS = [
-  { path: "/home", icon: <FiMessageSquare />, tooltip: "Mensajes" },
-  { path: "/favorites", icon: <FiStar />, tooltip: "Favoritos" },
-  { path: "/calendar", icon: <FiCalendar />, tooltip: "Calendario" },
+  { path: "/home", icon: <FaHome />, label: "Inicio" },
+  { path: "/social", icon: <FiMessageSquare />, label: "Social" },
+  { path: "/calendar", icon: <FiCalendar />, label: "Calendario" },
+  { path: "/favorites", icon: <FiStar />, label: "Favoritos" },
 ];
 
 // ─── SidebarItem ──────────────────────────────────────────────────────────────
 const SidebarItem = ({
   label, tooltip, isActive, onClick, children, avatar,
-  onLongPress, showDot
+  onLongPress, showDot, showLabel = true
 }) => {
   const [show, setShow] = useState(false);
-  const [y, setY] = useState(0);
   const wrapperRef = useRef(null);
-
   const longPressTriggered = useRef(false);
   const timerRef = useRef(null);
 
-  const startPress = useCallback((e) => {
+  const startPress = useCallback(() => {
     longPressTriggered.current = false;
     if (!onLongPress) return;
     timerRef.current = setTimeout(() => {
@@ -53,7 +50,7 @@ const SidebarItem = ({
     clearTimeout(timerRef.current);
   }, []);
 
-  const handleClick = useCallback((e) => {
+  const handleClick = useCallback(() => {
     if (longPressTriggered.current) {
       longPressTriggered.current = false;
       return;
@@ -61,42 +58,35 @@ const SidebarItem = ({
     onClick?.();
   }, [onClick]);
 
-  const handleMouseEnter = () => {
-    const rect = wrapperRef.current?.getBoundingClientRect();
-    if (rect) setY(rect.top + rect.height / 2);
-    setShow(true);
-  };
-
   return (
     <div
       ref={wrapperRef}
       className={`sidebar-item-wrapper ${isActive ? "active" : ""}`}
-      onMouseEnter={handleMouseEnter}
+      onMouseEnter={() => setShow(true)}
       onMouseLeave={() => { setShow(false); cancelPress(); }}
       onMouseDown={startPress}
       onMouseUp={cancelPress}
       onTouchStart={startPress}
       onTouchEnd={cancelPress}
+      onClick={handleClick}
     >
       <div className="pill" />
       <div className="sidebar-item-content">
-        {children ? (
-          <div onClick={handleClick}>{children}</div>
-        ) : avatar ? (
-          <img
-            src={avatar}
-            alt={label}
-            className="sidebar-avatar"
-            onClick={handleClick}
-            draggable={false}
-          />
-        ) : (
-          <Button className="button-general" text={label} onClick={handleClick} />
+        <div className="sidebar-item-icon">
+          {children ? (
+            children
+          ) : avatar ? (
+            <img src={avatar} alt={label} className="sidebar-avatar-img" draggable={false} />
+          ) : (
+            <div className="sidebar-avatar-initial">{label?.[0]?.toUpperCase() || "?"}</div>
+          )}
+          {showDot && <div className="sidebar-dot" />}
+        </div>
+
+        {showLabel && label && (
+          <span className="sidebar-item-label">{label}</span>
         )}
 
-        {showDot && (
-          <div className="sidebar-dot" />
-        )}
         {onLongPress && (
           <button
             className="sidebar-item-edit"
@@ -107,14 +97,9 @@ const SidebarItem = ({
           </button>
         )}
       </div>
-      {tooltip && (
-        <div
-          className={`sidebar-tooltip ${show ? "visible" : ""}`}
-          style={{
-            top: y,
-            transform: `translateY(-50%) translateX(${show ? "0px" : "-4px"})`,
-          }}
-        >
+
+      {!showLabel && tooltip && (
+        <div className={`sidebar-tooltip ${show ? "visible" : ""}`}>
           {tooltip}
         </div>
       )}
@@ -126,8 +111,9 @@ const SidebarItem = ({
 const Sidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { unreadTotal, unreadByRoom, setSoundEnabled } = useUnread();
+  const { unreadByRoom, setSoundEnabled } = useUnread();
   const { toggleSidebar, setSidebarMinimized } = useSidebar();
+  const { isUserOpen, isGroupOpen } = useUserDetail();
 
   const [isOpen, setIsOpen] = useState(false);
   const [isPreferencesOpen, setIsPreferencesOpen] = useState(false);
@@ -145,21 +131,24 @@ const Sidebar = () => {
     removeCollaborator,
     reset,
   } = useCreateGroupModal(isOpen);
-  
-  const groupChatRoomIds = React.useMemo(() => groups.map(g => String(g.chat_room_id)), [groups]);
-  
-  const homeUnreadTotal = React.useMemo(() => {
-    const total = Object.entries(unreadByRoom).reduce((acc, [roomId, count]) => {
-      // Si la sala NO es de un grupo, entonces es del Home (DM)
+
+  const groupChatRoomIds = useMemo(() => groups.map(g => String(g.chat_room_id)), [groups]);
+
+  const homeUnreadTotal = useMemo(() => {
+    return Object.entries(unreadByRoom).reduce((acc, [roomId, count]) => {
       if (!groupChatRoomIds.includes(String(roomId))) {
         return acc + count;
       }
       return acc;
     }, 0);
-    // Log para depuración (opcional)
-    console.log("Sidebar homeUnreadTotal:", total, "unreadByRoom:", unreadByRoom);
-    return total;
-  }, [unreadByRoom, groupChatRoomIds, unreadTotal]); // unreadTotal como dependencia extra
+  }, [unreadByRoom, groupChatRoomIds]);
+
+  // Minimizar si se abre un perfil
+  useEffect(() => {
+    if (isUserOpen || isGroupOpen) {
+      setSidebarMinimized(true);
+    }
+  }, [isUserOpen, isGroupOpen, setSidebarMinimized]);
 
   const handleCreateGroup = async (avatarFile) => {
     if (!name.trim()) return toast.error("El nombre del grupo es requerido");
@@ -214,65 +203,71 @@ const Sidebar = () => {
   }, []);
 
   return (
-    <aside className="sidebar">
-      <div className="sidebar-header">
-        {NAV_ITEMS.map(({ path, icon, tooltip }) => (
-          <SidebarItem
-            key={path}
-            tooltip={tooltip}
-            isActive={location.pathname === path}
-            onClick={() => handleSidebarItemClick(path)}
-            showDot={path === "/home" && homeUnreadTotal > 0}
-          >
-            <Button className="button-general">{icon}</Button>
+    <>
+      <aside className="sidebar creative-sidebar">
+        {/* BLOQUE 1: NAVEGACIÓN */}
+        <div className="sidebar-pod nav-pod">
+          <h3 className="pod-title">Navegación</h3>
+          {NAV_ITEMS.map(({ path, icon, label }) => (
+            <SidebarItem
+              key={path}
+              label={label}
+              isActive={location.pathname === path}
+              onClick={() => handleSidebarItemClick(path)}
+              showDot={path === "/social" && homeUnreadTotal > 0}
+            >
+              {icon}
+            </SidebarItem>
+          ))}
+        </div>
+
+        {/* BLOQUE 2: GRUPOS */}
+        <div className="sidebar-pod groups-pod">
+          <h3 className="pod-title">Grupos</h3>
+          <div className="groups-container">
+            <SidebarItem label="Añadir Grupo" onClick={() => setIsOpen(true)}>
+              <div className="add-group-icon"><FiPlus /></div>
+            </SidebarItem>
+
+            <div className="sidebar-groups-list">
+              {loadingGroups ? (
+                <div style={{ padding: '0 16px' }}>
+                  <Skeleton width="100%" height="32px" borderRadius="4px" />
+                </div>
+              ) : (
+                groups.map(group => {
+                  const canEdit = perfil?.rol === 'admin' || perfil?.id === group.owner_id;
+                  const badgeCount = unreadByRoom[String(group.chat_room_id)] || 0;
+                  return (
+                    <SidebarItem
+                      key={group.id}
+                      label={group.name}
+                      avatar={getAvatarUrl(group.avatar)}
+                      isActive={location.pathname === `/groups/${group.id}`}
+                      onClick={() => handleSidebarItemClick(`/groups/${group.id}`)}
+                      onLongPress={canEdit ? () => setEditingGroup(group) : null}
+                      showDot={badgeCount > 0}
+                    />
+                  );
+                })
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* BLOQUE 3: AJUSTES */}
+        <div className="sidebar-pod user-pod">
+          <h3 className="pod-title">Ajustes</h3>
+          <SidebarItem label="Preferencias" onClick={() => setIsPreferencesOpen(true)}>
+            <FiSettings />
           </SidebarItem>
-        ))}
-        <Separator />
-      </div>
+          <SidebarItem label="Mi Perfil" onClick={() => setIsProfileOpen(true)}>
+            <FiUser />
+          </SidebarItem>
+        </div>
+      </aside>
 
-      <div className="sidebar-groups">
-        <SidebarItem tooltip="Nuevo grupo">
-          <Modal.Button className="modal-button" onClick={() => setIsOpen(true)}>
-            <FiPlus />
-          </Modal.Button>
-        </SidebarItem>
-
-        {loadingGroups ? (
-          <>
-            <div style={{ padding: '8px 12px' }}><Skeleton width="48px" height="48px" borderRadius="12px" /></div>
-            <div style={{ padding: '8px 12px' }}><Skeleton width="48px" height="48px" borderRadius="12px" /></div>
-            <div style={{ padding: '8px 12px' }}><Skeleton width="48px" height="48px" borderRadius="12px" /></div>
-          </>
-        ) : (
-          groups.map(group => {
-            const canEdit = perfil?.rol === 'admin' || perfil?.id === group.owner_id;
-            const badgeCount = unreadByRoom[String(group.chat_room_id)] || 0;
-            return (
-              <SidebarItem
-                key={group.id}
-                label={group.name[0].toUpperCase()}
-                avatar={getAvatarUrl(group.avatar)}
-                tooltip={group.name}
-                isActive={location.pathname === `/groups/${group.id}`}
-                onClick={() => handleSidebarItemClick(`/groups/${group.id}`)}
-                onLongPress={canEdit ? () => setEditingGroup(group) : null}
-                showDot={badgeCount > 0}
-              />
-            );
-          })
-        )}
-      </div>
-
-      <div className="sidebar-footer">
-        <Separator />
-        <SidebarItem tooltip="Preferencias">
-          <Button onClick={() => setIsPreferencesOpen(true)}><FiSettings /></Button>
-        </SidebarItem>
-        <SidebarItem tooltip="Perfil">
-          <Button onClick={() => setIsProfileOpen(true)}><FiUser /></Button>
-        </SidebarItem>
-      </div>
-
+      {/* MODALS */}
       <CreateGroupModal
         isOpen={isOpen}
         handleClose={handleClose}
@@ -284,14 +279,12 @@ const Sidebar = () => {
         removeCollaborator={removeCollaborator}
         handleCreate={handleCreateGroup}
       />
-
       <EditGroupModal
         isOpen={!!editingGroup}
         group={editingGroup}
         handleClose={() => setEditingGroup(null)}
         onUpdate={() => fetchGroups()}
       />
-
       <UserPreferencesModal
         isOpen={isPreferencesOpen}
         handleClose={() => setIsPreferencesOpen(false)}
@@ -306,7 +299,7 @@ const Sidebar = () => {
         onLogout={logout}
         onProfileUpdated={(newData) => setPerfil(prev => ({ ...prev, ...newData }))}
       />
-    </aside>
+    </>
   );
 };
 

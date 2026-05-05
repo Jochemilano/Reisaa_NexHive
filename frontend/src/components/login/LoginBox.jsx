@@ -1,6 +1,45 @@
 import "./LoginBox.css";
 import { Input, Textarea } from "@/components/input/Input";
 
+// ── Password rules ─────────────────────────────────────────
+export const PASSWORD_RULES = [
+  { key: "length",   label: "Al menos 8 caracteres",                 test: (p) => p.length >= 8 },
+  { key: "upper",    label: "Una letra mayúscula",                    test: (p) => /[A-Z]/.test(p) },
+  { key: "lower",    label: "Una letra minúscula",                    test: (p) => /[a-z]/.test(p) },
+  { key: "number",   label: "Un número",                              test: (p) => /\d/.test(p) },
+  { key: "special",  label: "Un carácter especial (!@#$%^&*...)",     test: (p) => /[^A-Za-z0-9]/.test(p) },
+];
+
+export const isPasswordValid = (p) => PASSWORD_RULES.every((r) => r.test(p));
+
+// ── Helper: required label ──────────────────────────────────
+const Req = () => <span className="input-label-required">*</span>;
+
+// ── Helper: field hint ──────────────────────────────────────
+const FieldHint = ({ msg, type = "error" }) =>
+  msg ? (
+    <div className={`field-hint ${type} visible`}>{msg}</div>
+  ) : null;
+
+// ── Password rules list ─────────────────────────────────────
+const PasswordRules = ({ password, show }) => {
+  if (!show) return null;
+  return (
+    <ul className="password-rules">
+      {PASSWORD_RULES.map((r) => {
+        const ok = r.test(password);
+        return (
+          <li key={r.key} className={ok ? "ok" : ""}>
+            <span className="rule-icon">{ok ? "✓" : "✗"}</span>
+            {r.label}
+          </li>
+        );
+      })}
+    </ul>
+  );
+};
+
+// ── Main component ──────────────────────────────────────────
 const LoginBox = ({
   title,
   activeTab,
@@ -30,13 +69,19 @@ const LoginBox = ({
   onSubmit,
   error,
   success,
+  fieldErrors = {},
 }) => {
+  const showPasswordRules =
+    (activeTab === "register" && mode === "default") || mode === "reset";
+
   return (
     <div className="login-container">
       <div className={`center-box ${activeTab === "register" ? "register-mode" : ""}`}>
         <h2>{title}</h2>
 
-        <form onSubmit={onSubmit}>
+        <form onSubmit={onSubmit} noValidate>
+
+          {/* ── VERIFY ── */}
           {mode === "verify" && (
             <>
               <p className="verify-text">
@@ -48,93 +93,135 @@ const LoginBox = ({
                 placeholder="123456"
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
+                error={!!fieldErrors.code}
               />
+              <FieldHint msg={fieldErrors.code} />
             </>
           )}
 
+          {/* ── FORGOT ── */}
           {mode === "forgot" && (
             <>
               <p className="verify-text">
                 Ingresa tu correo para recibir un código de recuperación.
               </p>
               <Input
-                label="Correo"
+                label={<>Correo<Req /></>}
                 type="email"
                 name="email"
                 autoComplete="username email"
                 placeholder="correo@ejemplo.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                error={!!fieldErrors.email}
               />
+              <FieldHint msg={fieldErrors.email} />
             </>
           )}
 
+          {/* ── RESET ── */}
           {mode === "reset" && (
             <>
               <p className="verify-text">
                 Ingresa el código que recibiste y tu nueva contraseña.
               </p>
               <Input
-                label="Código"
+                label={<>Código<Req /></>}
                 type="text"
                 placeholder="123456"
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
+                error={!!fieldErrors.code}
               />
+              <FieldHint msg={fieldErrors.code} />
+
               <Input
-                label="Nueva contraseña"
+                label={<>Nueva contraseña<Req /></>}
                 type="password"
                 name="password"
                 autoComplete="new-password"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                error={!!fieldErrors.password}
               />
+              <PasswordRules password={password} show={showPasswordRules} />
+              <FieldHint msg={fieldErrors.password} />
+
+              <Input
+                label={<>Confirmar contraseña<Req /></>}
+                type="password"
+                name="confirmPassword"
+                autoComplete="new-password"
+                placeholder="••••••••"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                error={!!fieldErrors.confirmPassword}
+              />
+              <FieldHint msg={fieldErrors.confirmPassword} />
             </>
           )}
 
+          {/* ── DEFAULT (login / register) ── */}
           {mode === "default" && (
             <>
               {activeTab === "register" && (
                 <>
                   <div className="input-group-row">
-                    <Input
-                      label="Nombres"
-                      type="text"
-                      placeholder="Tus nombres"
-                      value={first_name}
-                      onChange={(e) => setFirstName(e.target.value)}
-                    />
-                    <Input
-                      label="Apellidos"
-                      type="text"
-                      placeholder="Tus apellidos"
-                      value={last_name}
-                      onChange={(e) => setLastName(e.target.value)}
-                    />
+                    <div>
+                      <Input
+                        label={<>Nombres<Req /></>}
+                        type="text"
+                        placeholder="Tus nombres"
+                        value={first_name}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        error={!!fieldErrors.first_name}
+                      />
+                      <FieldHint msg={fieldErrors.first_name} />
+                    </div>
+                    <div>
+                      <Input
+                        label={<>Apellidos<Req /></>}
+                        type="text"
+                        placeholder="Tus apellidos"
+                        value={last_name}
+                        onChange={(e) => setLastName(e.target.value)}
+                        error={!!fieldErrors.last_name}
+                      />
+                      <FieldHint msg={fieldErrors.last_name} />
+                    </div>
                   </div>
+
                   <div className="input-group-row">
-                    <Input
-                      label="Apodo"
-                      type="text"
-                      placeholder="Cómo te dicen"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                    />
-                    <Input
-                      label="Celular"
-                      type="tel"
-                      placeholder="Tu número"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                    />
+                    <div>
+                      <Input
+                        label={<>Apodo<Req /></>}
+                        type="text"
+                        placeholder="Cómo te dicen"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        error={!!fieldErrors.name}
+                      />
+                      <FieldHint msg={fieldErrors.name} />
+                    </div>
+                    <div>
+                      <Input
+                        label="Celular"
+                        type="tel"
+                        placeholder="Tu número"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                      />
+                    </div>
                   </div>
+
                   <Input
                     label="Cumpleaños"
                     type="date"
                     value={birthday}
                     onChange={(e) => setBirthday(e.target.value)}
                   />
+
                   <Textarea
                     label="Biografía / Acerca de mí"
                     placeholder="Cuéntanos un poco sobre ti..."
@@ -145,35 +232,46 @@ const LoginBox = ({
               )}
 
               <Input
-                label="Correo"
+                label={<>Correo<Req /></>}
                 type="email"
                 name="email"
                 autoComplete="username email"
                 placeholder="correo@ejemplo.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                error={!!fieldErrors.email}
               />
+              <FieldHint msg={fieldErrors.email} />
 
               <Input
-                label="Contraseña"
+                label={<>Contraseña<Req /></>}
                 type="password"
                 name="password"
                 autoComplete={activeTab === "login" ? "current-password" : "new-password"}
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                error={!!fieldErrors.password}
               />
+              {activeTab === "register" && (
+                <PasswordRules password={password} show={showPasswordRules} />
+              )}
+              <FieldHint msg={fieldErrors.password} />
 
               {activeTab === "register" && (
-                <Input
-                  label="Confirmar contraseña"
-                  type="password"
-                  name="confirmPassword"
-                  autoComplete="new-password"
-                  placeholder="••••••••"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                />
+                <>
+                  <Input
+                    label={<>Confirmar contraseña<Req /></>}
+                    type="password"
+                    name="confirmPassword"
+                    autoComplete="new-password"
+                    placeholder="••••••••"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    error={!!fieldErrors.confirmPassword}
+                  />
+                  <FieldHint msg={fieldErrors.confirmPassword} />
+                </>
               )}
 
               {activeTab === "login" && (
@@ -187,10 +285,10 @@ const LoginBox = ({
           )}
 
           <button type="submit" className="submit-button">
-            {mode === "verify" ? "Verificar" : 
-             mode === "forgot" ? "Enviar código" :
-             mode === "reset" ? "Cambiar contraseña" :
-             (activeTab === "login" ? "Entrar" : "Registrarme")}
+            {mode === "verify"  ? "Verificar"         :
+             mode === "forgot"  ? "Enviar código"     :
+             mode === "reset"   ? "Cambiar contraseña":
+             activeTab === "login" ? "Entrar" : "Registrarme"}
           </button>
 
           {mode === "default" ? (
@@ -219,12 +317,12 @@ const LoginBox = ({
             </div>
           )}
 
-          {error && <p className="error-message active">{error}</p>}
+          {error   && <p className="error-message active">{error}</p>}
           {success && (
             <p className="success-message active">
-              {mode === "verify" && "Código enviado correctamente."}
-              {mode === "forgot" && "Correo enviado."}
-              {mode === "reset" && "Contraseña restablecida."}
+              {mode === "verify"  && "Código enviado correctamente."}
+              {mode === "forgot"  && "Correo enviado."}
+              {mode === "reset"   && "Contraseña restablecida."}
               {mode === "default" && (activeTab === "login" ? "¡Login exitoso!" : "Registro exitoso.")}
             </p>
           )}

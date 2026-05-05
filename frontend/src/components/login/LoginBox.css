@@ -1,28 +1,33 @@
 /* CONTENEDOR */
 .login-container {
   width: 100%;
-  height: 100vh;
+  min-height: 100vh;
   display: flex;
   justify-content: center;
-  align-items: center;
-  background-color:  var(--bg-soft);
+  align-items: flex-start;
+  background-color: var(--bg-soft);
+  padding: 24px 16px;
+  box-sizing: border-box;
+  overflow-y: auto;
 }
 
 /* CAJA */
 .center-box {
   background-color: var(--bg-base);
-  padding: 45px 35px;
+  padding: 36px 32px;
   border-radius: 16px;
   width: 360px;
+  max-width: 100%;
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
-
   display: flex;
   flex-direction: column;
   transition: width 0.3s ease, padding 0.3s ease;
+  margin: auto 0;
 }
 
 .center-box.register-mode {
-  width: 500px;
+  width: 520px;
+  padding: 28px 32px;
 }
 
 .toggle-container {

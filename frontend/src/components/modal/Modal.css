@@ -37,6 +37,9 @@
   z-index: 1000;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+  padding: 16px;
+  box-sizing: border-box;
+  overflow-y: auto;
 }
 
 /* Contenido flotante del modal */
@@ -45,11 +48,18 @@
   color: var(--text-primary);
   border-radius: 12px;
   width: 550px;
-  max-width: 95%;
+  max-width: 95vw;
+  max-height: 90vh;
   box-shadow: 0 10px 40px var(--shadow);
   overflow: hidden;
+  overflow-y: auto;
   animation: modal-fade 0.25s ease;
   border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary) var(--bg-soft);
+  margin: auto;
 }
 
 /* Animación de entrada */

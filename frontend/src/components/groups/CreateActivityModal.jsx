@@ -72,41 +72,54 @@ const CreateActivityModal = ({ isOpen, onClose, currentProjectId, onCreated }) =
     <Modal isOpen={isOpen} onClose={onClose}>
       <Modal.Header onClose={onClose}>Crear Actividad</Modal.Header>
       <Modal.Body>
-        <Input
-          label="Nombre de la actividad"
-          type="text"
-          placeholder="¿Qué vas a hacer?"
-          value={activityName}
-          onChange={e => setActivityName(e.target.value)}
-        />
+        <div style={{ display: 'flex', gap: '15px', alignItems: 'flex-start' }}>
+          <div style={{ flex: 2 }}>
+            <Input
+              label="Nombre de la actividad"
+              type="text"
+              placeholder="¿Qué vas a hacer?"
+              value={activityName}
+              onChange={e => setActivityName(e.target.value)}
+            />
+          </div>
+          <div style={{ flex: 1 }}>
+            <Select
+              label="Estado"
+              value={activityStatus}
+              onChange={e => setActivityStatus(e.target.value)}
+              options={[
+                { value: "pending", label: "Pendiente" },
+                { value: "in_progress", label: "En progreso" },
+                { value: "done", label: "Completada" },
+              ]}
+            />
+          </div>
+        </div>
         <Textarea
-          label="Descripción de la actividad"
+          label="Descripción"
           placeholder="¿Cómo lo vas a hacer?"
           value={activityDescription}
           onChange={e => setActivityDescription(e.target.value)}
+          rows={2}
         />
-        <Select
-          label="Estado de la actividad"
-          value={activityStatus}
-          onChange={e => setActivityStatus(e.target.value)}
-          options={[
-            { value: "pending", label: "Pending" },
-            { value: "in_progress", label: "In progress" },
-            { value: "done", label: "Done" },
-          ]}
-        />
-        <Input
-          label="Fecha de inicio"
-          type="datetime-local"
-          value={startDate}
-          onChange={e => setStartDate(e.target.value)}
-        />
-        <Input
-          label="Fecha de entrega"
-          type="datetime-local"
-          value={deadline}
-          onChange={e => setDeadline(e.target.value)}
-        />
+        <div style={{ display: 'flex', gap: '15px' }}>
+          <div style={{ flex: 1 }}>
+            <Input
+              label="Fecha de inicio"
+              type="datetime-local"
+              value={startDate}
+              onChange={e => setStartDate(e.target.value)}
+            />
+          </div>
+          <div style={{ flex: 1 }}>
+            <Input
+              label="Fecha de entrega"
+              type="datetime-local"
+              value={deadline}
+              onChange={e => setDeadline(e.target.value)}
+            />
+          </div>
+        </div>
         <CollaboratorPicker
           availableUsers={availableUsers}
           selectedCollaborators={selectedCollaborators}

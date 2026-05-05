@@ -88,9 +88,17 @@
   font-size: 0.9em;
 }
 
-.stat-item--done { color: var(--success); }
-.stat-item--progress { color: var(--primary); }
-.stat-item--pending { color: var(--text-tertiary); }
+.stat-item--done {
+  color: var(--success);
+}
+
+.stat-item--progress {
+  color: var(--primary);
+}
+
+.stat-item--pending {
+  color: var(--text-tertiary);
+}
 
 .group-page__header .modal-button {
   width: auto !important;
@@ -124,7 +132,7 @@
   margin-bottom: 1rem;
 }
 
-.group-page__search, 
+.group-page__search,
 .group-page__filter {
   padding: 0.45rem 0.8rem;
   background-color: var(--bg-soft);
@@ -140,7 +148,7 @@
   flex: 1;
 }
 
-.group-page__search:focus, 
+.group-page__search:focus,
 .group-page__filter:focus {
   border-color: var(--primary);
 }
@@ -155,7 +163,7 @@
   border: 1px solid var(--border);
   width: 100%;
   overflow-x: auto;
-  padding-bottom: 40px; 
+  padding-bottom: 40px;
 }
 
 .activity-table {
@@ -385,8 +393,15 @@
 }
 
 @keyframes menuSlide {
-  from { opacity: 0; transform: translateY(-50%) translateX(10px); }
-  to { opacity: 1; transform: translateY(-50%) translateX(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-50%) translateX(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+  }
 }
 
 .activity-menu__item {
@@ -421,19 +436,23 @@
 /* ==========================================================================
    SCROLLBAR Y HIGHLIGHT
    ========================================================================== */
-.activity-table-wrapper::-webkit-scrollbar { height: 6px; }
-.activity-table-wrapper::-webkit-scrollbar-thumb { 
-  background: var(--text-tertiary); 
-  border-radius: 10px; 
+.activity-table-wrapper::-webkit-scrollbar {
+  height: 6px;
+}
+
+.activity-table-wrapper::-webkit-scrollbar-thumb {
+  background: var(--text-tertiary);
+  border-radius: 10px;
 }
 
 .highlighted-text {
   background-color: var(--primary);
   color: #ffffff;
-  font-weight: bold; 
+  font-weight: bold;
   border-radius: 2px;
   padding: 0 2px;
 }
+
 /* ==========================================================================
    BIENVENIDA (ESTADO SIN PROYECTO)
    ========================================================================== */
@@ -487,6 +506,13 @@
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
 }

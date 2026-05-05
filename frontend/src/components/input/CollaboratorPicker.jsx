@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { FaTimes, FaSearch, FaUserPlus, FaCheck } from "react-icons/fa";
-import { addFriend } from "@/utils/friends";
+import { FaTimes, FaSearch } from "react-icons/fa";
 import "./CollaboratorPicker.css";
 
 const CollaboratorPicker = ({ availableUsers = [], selectedCollaborators = [], onSelect, onRemove, showAllByDefault = false }) => {
@@ -49,20 +48,6 @@ const CollaboratorPicker = ({ availableUsers = [], selectedCollaborators = [], o
     setIsDropdownOpen(false);
   };
 
-  const handleAddFriend = async (e, userId) => {
-    e.stopPropagation();
-    try {
-      await addFriend(userId);
-      // Actualizar localmente para mostrar que ya es amigo (aunque lo ideal sería recargar la lista)
-      // En este caso, como availableUsers viene de props, el padre debería refrescar.
-      // Pero para feedback inmediato podemos intentar algo, o simplemente confiar en que el usuario verá el cambio al reabrir.
-      // Por simplicidad, alertamos éxito.
-      alert("Solicitud de amistad enviada");
-    } catch (err) {
-      console.error(err);
-      alert("Error al agregar amigo");
-    }
-  };
 
   return (
     <div className="collaborator-picker">
@@ -94,22 +79,6 @@ const CollaboratorPicker = ({ availableUsers = [], selectedCollaborators = [], o
                       <div className="collaborator-picker__user-name">{user.name || user.username || `Usuario ${user.id}`}</div>
                       {user.email && <div className="collaborator-picker__user-email">{user.email}</div>}
                     </div>
-                    
-                    <div className="collaborator-picker__user-actions">
-                      {user.isFriend ? (
-                        <span className="collaborator-picker__friend-badge" title="Es tu amigo">
-                          <FaCheck /> Amigo
-                        </span>
-                      ) : (
-                        <button 
-                          className="collaborator-picker__add-btn" 
-                          title="Agregar a amigos"
-                          onClick={(e) => handleAddFriend(e, user.id)}
-                        >
-                          <FaUserPlus />
-                        </button>
-                      )}
-                    </div>
                   </li>
                 ))}
               </ul>
@@ -131,15 +100,18 @@ const CollaboratorPicker = ({ availableUsers = [], selectedCollaborators = [], o
           </p>
           <ul className="collaborator-picker__list">
             {selectedCollaborators.map(c => (
-              <li key={c.id} className="collaborator-picker__item">
-                <span>{c.name || c.username || `Usuario ${c.id}`}</span>
-                <button
-                  type="button"
-                  onClick={() => onRemove(c.id)}
-                  className="collaborator-picker__remove-btn"
-                >
-                  <FaTimes />
-                </button>
+              <li key={c.id} className="collaborator-picker__item" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', padding: '8px 12px', gap: '4px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+                  <span style={{ fontWeight: 600 }}>{c.name || c.username || `Usuario ${c.id}`}</span>
+                  <button
+                    type="button"
+                    onClick={() => onRemove(c.id)}
+                    className="collaborator-picker__remove-btn"
+                  >
+                    <FaTimes />
+                  </button>
+                </div>
+                {c.email && <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>{c.email}</span>}
               </li>
             ))}
           </ul>

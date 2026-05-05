@@ -3,6 +3,10 @@ import Modal from "@/components/modal/Modal";
 import Skeleton from "@/components/loading/Skeleton";
 import { getAvatarUrl } from "@/utils/media";
 import { FaPhone, FaBirthdayCake, FaInfoCircle, FaCalendarAlt, FaUserPlus, FaComments, FaVideo, FaClock } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+import { useCall } from "@/context/CallContext";
+import { apiFetch } from "@/utils/apiClient";
+import { toast } from "sonner";
 import "./UserDetailModal.css";
 
 const ROL_LABEL = {
@@ -13,6 +17,95 @@ const ROL_LABEL = {
 const UserDetailModal = ({ isOpen, onClose, user, loading, onAddFriend, onNavigateToChat, onStartCall }) => {
   const isFriend = user?.friendship_status === 'accepted';
   const isPending = user?.friendship_status === 'pending';
+  const navigate = useNavigate();
+  const callContext = useCall();
+  const startCall = callContext?.startCall;
+  const currentUserId = parseInt(localStorage.getItem("userId"));
+
+  const handleNavigateToChat = async () => {
+    if (onNavigateToChat) {
+      onNavigateToChat();
+      return;
+    }
+    
+    if (!user) return;
+    
+    try {
+      const res = await apiFetch(`rooms/direct/${user.id}`);
+      navigate(`/chat/${res.roomId}`);
+      onClose();
+    } catch (err) {
+      try {
+        const res = await apiFetch("rooms", {
+          method: "POST",
+          body: JSON.stringify({
+            name: `chat-${[currentUserId, user.id].sort().join("-")}`,
+            type: "chat",
+            userIds: [currentUserId, user.id]
+          })
+        });
+        navigate(`/chat/${res.roomId}`);
+        onClose();
+      } catch (postErr) {
+        console.error("Error al navegar al chat:", postErr);
+        toast.error("Error al abrir el chat");
+      }
+    }
+  };
+
+  const handleStartCall = async () => {
+    if (onStartCall) {
+      onStartCall();
+      return;
+    }
+    
+    if (!user || !startCall) return;
+    
+    try {
+      // Intentar obtener la sala directa
+      let roomId = null;
+      try {
+        const res = await apiFetch(`rooms/direct/${user.id}`);
+        roomId = res.roomId;
+      } catch (err) {
+        // Si no existe, crearla para poder iniciar la llamada
+        const res = await apiFetch("rooms", {
+          method: "POST",
+          body: JSON.stringify({
+            name: `chat-${[currentUserId, user.id].sort().join("-")}`,
+            type: "chat",
+            userIds: [currentUserId, user.id]
+          })
+        });
+        roomId = res.roomId;
+      }
+      
+      startCall(user.id, user.name || user.first_name, roomId);
+      onClose();
+    } catch (err) {
+      console.error("Error al iniciar llamada:", err);
+      toast.error("Error al iniciar llamada");
+    }
+  };
+
+  const handleAddFriend = async (id) => {
+    if (onAddFriend) {
+      onAddFriend(id);
+      return;
+    }
+    
+    try {
+      await apiFetch("friends", {
+        method: "POST",
+        body: JSON.stringify({ friendId: id })
+      });
+      toast.success("¡Solicitud enviada con éxito!");
+      onClose();
+    } catch (err) {
+      console.error("Error agregando amigo:", err);
+      toast.error("Error al enviar solicitud de amistad");
+    }
+  };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} className="simple-profile-v3">
@@ -96,23 +189,28 @@ const UserDetailModal = ({ isOpen, onClose, user, loading, onAddFriend, onNaviga
               )}
 
               <div className="v3-footer">
-                {isFriend ? (
+                {/* Solo mostrar acciones si no es el usuario actual */}
+                {user?.id === currentUserId ? null : isFriend ? (
                   <div className="v3-friend-actions">
-                    <button className="v3-btn-primary" onClick={onNavigateToChat}>
+                    <button className="v3-btn-primary" onClick={handleNavigateToChat}>
                       <FaComments /> Enviar Mensaje
                     </button>
-                    <button className="v3-btn-outline" onClick={onStartCall}>
+                    <button className="v3-btn-outline" onClick={handleStartCall}>
                       <FaVideo /> Llamada
                     </button>
                   </div>
                 ) : isPending ? (
-                  <button className="v3-btn-disabled" disabled>
-                    <FaClock /> Solicitud Pendiente
-                  </button>
+                  <div className="v3-friend-actions">
+                    <button className="v3-btn-disabled" disabled>
+                      <FaClock /> Solicitud Pendiente
+                    </button>
+                  </div>
                 ) : (
-                  <button className="v3-btn-primary" onClick={() => onAddFriend(user.id)}>
-                    <FaUserPlus /> Enviar Solicitud de Amistad
-                  </button>
+                  <div className="v3-friend-actions">
+                    <button className="v3-btn-primary" onClick={() => handleAddFriend(user.id)}>
+                      <FaUserPlus /> Enviar Solicitud de Amistad
+                    </button>
+                  </div>
                 )}
                 
                 <div className="v3-footer-secondary">

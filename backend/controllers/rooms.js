@@ -229,7 +229,7 @@ router.post("/messages", verifyToken, async (req, res) => {
 router.get("/rooms/:roomId/details", verifyToken, async (req, res) => {
   const { roomId } = req.params;
   const userId = req.userId;
- 
+
   try {
     const [rooms] = await db.query(
       "SELECT id, name, avatar, type, owner_id FROM rooms WHERE id = ?",
@@ -245,12 +245,12 @@ router.get("/rooms/:roomId/details", verifyToken, async (req, res) => {
        WHERE rp.room_id = ?`,
       [roomId]
     );
- 
+
     res.json({
       ...room,
       members: participants
     });
- 
+
   } catch (err) {
     console.error("ERROR GET ROOM DETAILS:", err);
     res.status(500).json({ message: "Error obteniendo detalles de la sala" });
@@ -261,7 +261,7 @@ router.get("/rooms/:roomId/details", verifyToken, async (req, res) => {
 router.get("/rooms/:roomId/participants", verifyToken, async (req, res) => {
   const { roomId } = req.params;
   const userId = req.userId;
- 
+
   try {
     // Verificar que el usuario pertenece a la sala
     const [access] = await db.query(
@@ -269,7 +269,7 @@ router.get("/rooms/:roomId/participants", verifyToken, async (req, res) => {
       [roomId, userId]
     );
     if (access.length === 0) return res.status(403).json({ error: "No autorizado" });
- 
+
     // Traer los otros participantes (no el que consulta)
     const [participants] = await db.query(
       `SELECT u.id, u.name, u.profile_pic
@@ -278,9 +278,9 @@ router.get("/rooms/:roomId/participants", verifyToken, async (req, res) => {
        WHERE rp.room_id = ? AND rp.user_id != ?`,
       [roomId, userId]
     );
- 
+
     res.json(participants);
- 
+
   } catch (err) {
     console.error("ERROR GET PARTICIPANTS:", err);
     res.status(500).json({ message: "Error obteniendo participantes" });
@@ -289,9 +289,9 @@ router.get("/rooms/:roomId/participants", verifyToken, async (req, res) => {
 
 // Buscar sala directa (tipo "direct") entre el usuario autenticado y otro usuario
 router.get("/rooms/direct/:otherUserId", verifyToken, async (req, res) => {
-  const userId      = req.userId;
+  const userId = req.userId;
   const otherUserId = parseInt(req.params.otherUserId);
- 
+
   try {
     const [rows] = await db.query(
       `SELECT r.id
@@ -306,9 +306,9 @@ router.get("/rooms/direct/:otherUserId", verifyToken, async (req, res) => {
         `chat-${otherUserId}-${userId}`
       ]
     );
- 
+
     if (rows.length === 0) return res.status(404).json({ message: "No existe sala directa" });
- 
+
     res.json({ roomId: rows[0].id });
   } catch (err) {
     console.error("ERROR GET DIRECT ROOM:", err);
@@ -408,8 +408,8 @@ router.post("/rooms/:roomId/leave", verifyToken, async (req, res) => {
     if (room.length === 0) return res.status(404).json({ message: "Sala no encontrada" });
 
     if (room[0].owner_id === userId) {
-      return res.status(400).json({ 
-        message: "No puedes salirte siendo el owner. Transfiere el mando o elimina la sala." 
+      return res.status(400).json({
+        message: "No puedes salirte siendo el owner. Transfiere el mando o elimina la sala."
       });
     }
 
@@ -458,4 +458,4 @@ router.delete("/rooms/:roomId", verifyToken, async (req, res) => {
   }
 });
 
-module.exports = router;
+module.exports = router;

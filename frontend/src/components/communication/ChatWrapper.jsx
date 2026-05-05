@@ -9,7 +9,7 @@ export default function ChatWrapper() {
   const userId = parseInt(localStorage.getItem("userId"));
 
   const [authorized, setAuthorized] = useState(false);
-  const [loading, setLoading]       = useState(true);
+  const [loading, setLoading] = useState(true);
   const [targetUser, setTargetUser] = useState({ id: null, name: null, avatar: null });
 
   const { activeCall, setIsMinimized } = useCall();
@@ -29,7 +29,7 @@ export default function ChatWrapper() {
           });
         } else {
           const participants = await apiFetch(`rooms/${chatRoomId}/participants`);
-          
+
           if (participants.length > 1) {
             // Es un grupo pequeño (room group)
             const roomData = await apiFetch(`rooms/${chatRoomId}/details`);
@@ -63,8 +63,8 @@ export default function ChatWrapper() {
     return () => { if (activeCall) setIsMinimized(true); };
   }, [activeCall, setIsMinimized]);
 
-  if (!chatRoomId)  return <p>Chat no encontrado</p>;
-  if (!loading && !authorized)  return <p>No tienes acceso a este chat</p>;
+  if (!chatRoomId) return <p>Chat no encontrado</p>;
+  if (!loading && !authorized) return <p>No tienes acceso a este chat</p>;
 
   return (
     <Chat

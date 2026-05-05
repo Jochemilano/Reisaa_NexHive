@@ -12,12 +12,14 @@ import { apiFetch } from "@/utils/apiClient";
 import { deleteActivity } from "@/utils/activities";
 import { useCalendar } from "@/context/CalendarContext";
 import KanbanBoard from "@/components/kanban/KanbanBoard";
+import GanttChart from "@/components/gantt/GanttChart";
 import { useUserDetail } from "@/context/UserDetailContext";
 import { getAvatarUrl } from "@/utils/media";
 import Skeleton from "@/components/loading/Skeleton";
 import { toast } from "sonner";
 import "./GroupPage.css";
 import "@/components/kanban/KanbanBoard.css";
+import "@/components/gantt/GanttChart.css";
 
 const STATUS_LABELS = {
   pending: "Pendiente",
@@ -66,7 +68,7 @@ const GroupPage = () => {
   const [loadingProjects, setLoadingProjects] = useState(true);
   const [loadingProject, setLoadingProject] = useState(false);
   const [sortConfig, setSortConfig] = useState({ key: "id", direction: "desc" });
-  const [viewMode, setViewMode] = useState("table"); // "table" | "kanban"
+  const [viewMode, setViewMode] = useState("table"); // "table" | "kanban" | "gantt"
 
   // Cargar nombre del grupo para breadcrumbs
   useEffect(() => {
@@ -223,36 +225,36 @@ const GroupPage = () => {
                 <Skeleton width="60px" height="24px" />
               </div>
             ) : selectedProject && (() => {
-            const total = activities.length;
-            const pct = total === 0 ? 0 : Math.round((stats.done / total) * 100);
-            const isComplete = pct === 100;
-            return (
-              <>
-                <div className="project-stats">
-                  <span className="stat-item stat-item--done" title="Completadas">
-                    <FaCheck /> {stats.done}
-                  </span>
-                  <span className="stat-item stat-item--progress" title="En progreso">
-                    <FaClock /> {stats.inProgress}
-                  </span>
-                  <span className="stat-item stat-item--pending" title="Pendientes">
-                    <FaThumbtack /> {stats.pending}
-                  </span>
-                </div>
-                {total > 0 && (
-                  <div className="project-progress">
-                    <div className="progress-bar-track">
-                      <div
-                        className={`progress-bar-fill ${isComplete ? "progress-bar-fill--complete" : ""}`}
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
-                    <span className="progress-label">{pct}%</span>
+              const total = activities.length;
+              const pct = total === 0 ? 0 : Math.round((stats.done / total) * 100);
+              const isComplete = pct === 100;
+              return (
+                <>
+                  <div className="project-stats">
+                    <span className="stat-item stat-item--done" title="Completadas">
+                      <FaCheck /> {stats.done}
+                    </span>
+                    <span className="stat-item stat-item--progress" title="En progreso">
+                      <FaClock /> {stats.inProgress}
+                    </span>
+                    <span className="stat-item stat-item--pending" title="Pendientes">
+                      <FaThumbtack /> {stats.pending}
+                    </span>
                   </div>
-                )}
-              </>
-            );
-          })()}
+                  {total > 0 && (
+                    <div className="project-progress">
+                      <div className="progress-bar-track">
+                        <div
+                          className={`progress-bar-fill ${isComplete ? "progress-bar-fill--complete" : ""}`}
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                      <span className="progress-label">{pct}%</span>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </div>
           {selectedProject && (
             <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
@@ -271,6 +273,13 @@ const GroupPage = () => {
                   title="Vista Kanban"
                 >
                   <FaThLarge /> Kanban
+                </button>
+                <button
+                  className={`view-toggle__btn ${viewMode === "gantt" ? "view-toggle__btn--active" : ""}`}
+                  onClick={() => setViewMode("gantt")}
+                  title="Diagrama de Gantt"
+                >
+                  <FaSort style={{ transform: 'rotate(90deg)' }} /> Gantt
                 </button>
               </div>
               <Modal.Button onClick={() => setCreateModal(true)}>
@@ -383,27 +392,27 @@ const GroupPage = () => {
                       </tr>
                     ) : (
                       filteredActivities.map((a) => (
-                         <tr key={`activity-${a.id}`}>
-                           <td>{highlightText(a.name || "Sin nombre", searchTerm)}</td>
-                           <td>
-                             <div 
-                               className="activity-owner-cell" 
-                               onClick={() => a.owner_id && showUserProfile(a.owner_id)}
-                             >
-                               {a.profile_pic ? (
-                                 <img 
-                                   src={getAvatarUrl(a.profile_pic)} 
-                                   alt={a.owner_name} 
-                                   className="activity-table-avatar" 
-                                 />
-                               ) : (
-                                 <div className="activity-table-avatar-placeholder">
-                                   {a.owner_name?.[0]?.toUpperCase() || "?"}
-                                 </div>
-                               )}
-                               <span>{highlightText(a.owner_name || "—", searchTerm)}</span>
-                             </div>
-                           </td>
+                        <tr key={`activity-${a.id}`}>
+                          <td>{highlightText(a.name || "Sin nombre", searchTerm)}</td>
+                          <td>
+                            <div
+                              className="activity-owner-cell"
+                              onClick={() => a.owner_id && showUserProfile(a.owner_id)}
+                            >
+                              {a.profile_pic ? (
+                                <img
+                                  src={getAvatarUrl(a.profile_pic)}
+                                  alt={a.owner_name}
+                                  className="activity-table-avatar"
+                                />
+                              ) : (
+                                <div className="activity-table-avatar-placeholder">
+                                  {a.owner_name?.[0]?.toUpperCase() || "?"}
+                                </div>
+                              )}
+                              <span>{highlightText(a.owner_name || "—", searchTerm)}</span>
+                            </div>
+                          </td>
                           <td>
                             <span className={`activity-status activity-status--${a.status}`}>
                               {STATUS_LABELS[a.status] ?? "—"}
@@ -479,7 +488,16 @@ const GroupPage = () => {
                 }}
               />
             )}
+
+            {/* ── VISTA GANTT ── */}
+            {viewMode === "gantt" && (
+              <GanttChart
+                activities={activities}
+                onView={(a) => setViewModal({ open: true, activityId: a.id })}
+              />
+            )}
           </>
+
         ) : (
           <div className="group-page__welcome-container">
             <div className="welcome-content">

@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import UserDetailModal from "@/components/profile/UserDetailModal";
 import GroupDetailModal from "@/components/profile/GroupDetailModal";
 import { apiFetch } from "@/utils/apiClient";
@@ -8,6 +9,7 @@ const UserDetailContext = createContext();
 export const useUserDetail = () => useContext(UserDetailContext);
 
 export const UserDetailProvider = ({ children }) => {
+  const location = useLocation();
   // Perfil de usuario
   const [isUserOpen, setIsUserOpen] = useState(false);
   const [user, setUser] = useState(null);
@@ -17,6 +19,11 @@ export const UserDetailProvider = ({ children }) => {
   const [isGroupOpen, setIsGroupOpen] = useState(false);
   const [groupData, setGroupData] = useState(null);
   const [loadingGroup, setLoadingGroup] = useState(false);
+
+  useEffect(() => {
+    setIsUserOpen(false);
+    setIsGroupOpen(false);
+  }, [location.pathname]);
 
   const showUserProfile = async (userId) => {
     if (!userId) return;

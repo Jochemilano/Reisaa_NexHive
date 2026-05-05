@@ -66,6 +66,82 @@
   border-color: var(--primary);
 }
 
+/* ── Error state ── */
+.input-field.input-error {
+  border-color: var(--error, #e05252) !important;
+  animation: shake 0.3s ease;
+}
+
+@keyframes shake {
+  0%   { transform: translateX(0); }
+  25%  { transform: translateX(-5px); }
+  50%  { transform: translateX(5px); }
+  75%  { transform: translateX(-3px); }
+  100% { transform: translateX(0); }
+}
+
+/* ── Required asterisk ── */
+.input-label-required {
+  color: var(--error, #e05252);
+  margin-left: 3px;
+  font-weight: 700;
+}
+
+/* ── Field hint / error message below input ── */
+.field-hint {
+  font-size: 12px;
+  margin-top: 4px;
+  margin-left: 2px;
+  line-height: 1.4;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.field-hint.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.field-hint.error {
+  color: var(--error, #e05252);
+}
+
+.field-hint.info {
+  color: var(--text-secondary);
+}
+
+/* ── Password strength rules ── */
+.password-rules {
+  margin-top: 6px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--bg-soft), transparent 30%);
+  border: 1px solid color-mix(in srgb, var(--text-secondary), transparent 70%);
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.password-rules li {
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-secondary);
+  transition: color 0.2s;
+}
+
+.password-rules li.ok {
+  color: var(--success, #4caf50);
+}
+
+.password-rules li .rule-icon {
+  font-size: 11px;
+  font-weight: 700;
+}
+
 /* Estilos para inputs de fecha */
 .input-field[type="date"],
 .input-field[type="datetime-local"] {

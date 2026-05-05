@@ -6,6 +6,7 @@ import Login from "@/pages/Login";
 import Favorites from "@/components/favorites/Favorites";
 import GroupPage from "@/components/groups/GroupPage";
 import Home from "@/components/home/Home";
+import Social from "@/components/social/Social";
 import ChatWrapper from "@/components/communication/ChatWrapper";
 import VoiceRoomWrapper from "@/components/communication/VoiceRoomWrapper";
 import { CallProvider } from "@/context/CallContext";
@@ -21,8 +22,8 @@ export default function AppRouter() {
     <SidebarProvider>
       <SocketProvider>
         <UnreadProvider>
-          <UserDetailProvider>
-            <CallProvider>
+          <CallProvider>
+            <UserDetailProvider>
             {/* Visible en CUALQUIER página */}
             <IncomingCallModal />
             <FloatingCall />
@@ -32,6 +33,7 @@ export default function AppRouter() {
               
               <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
                 <Route path="/home"                                        element={<Home />} />
+                <Route path="/social"                                      element={<Social />} />
                 <Route path="/favorites"                                   element={<Favorites />} />
                 <Route path="/calendar"                                    element={<Calendar />} />
                 <Route path="groups/:groupId"                              element={<GroupPage />} />
@@ -42,8 +44,8 @@ export default function AppRouter() {
 
               <Route path="/login" element={<Login />} />
             </Routes>
-            </CallProvider>
-          </UserDetailProvider>
+            </UserDetailProvider>
+          </CallProvider>
         </UnreadProvider>
       </SocketProvider>
     </SidebarProvider>
