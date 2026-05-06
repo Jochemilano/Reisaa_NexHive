@@ -48,7 +48,7 @@ const MediaPanel = ({ messages = [], onClose, onImageClick, onVideoClick, onGoTo
                 return (
                   <div key={msg.id} className="media-item-container">
                     {isVideo ? (
-                      <div className="media-item-video" onClick={() => onVideoClick(url)}>
+                      <div className="media-item-video" onClick={() => onVideoClick(msg.id)}>
                         <video src={url} />
                         <div className="media-play-icon">
                           <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg>
@@ -58,7 +58,7 @@ const MediaPanel = ({ messages = [], onClose, onImageClick, onVideoClick, onGoTo
                       <img
                         src={url}
                         alt="media"
-                        onClick={() => onImageClick(url)}
+                        onClick={() => onImageClick(msg.id)}
                       />
                     )}
                     <button 

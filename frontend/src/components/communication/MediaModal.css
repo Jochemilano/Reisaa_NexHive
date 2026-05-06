@@ -93,3 +93,41 @@
 video.media-modal-content {
   outline: none;
 }
+
+/* ── Navegación ── */
+.nav-btn {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2100;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(5px);
+}
+
+.nav-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  scale: 1.1;
+}
+
+.prev-btn {
+  left: 2rem;
+}
+
+.next-btn {
+  right: 2rem;
+}
+
+@media (max-width: 768px) {
+  .prev-btn { left: 1rem; }
+  .next-btn { right: 1rem; }
+  .nav-btn { width: 40px; height: 40px; }
+}

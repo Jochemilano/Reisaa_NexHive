@@ -1,7 +1,7 @@
 import React from "react";
 import "./MediaModal.css";
 
-const MediaModal = ({ media, onClose }) => {
+const MediaModal = ({ media, onClose, onPrev, onNext, hasMore }) => {
   if (!media || !media.src) return null;
 
   const { src, type } = media;
@@ -43,6 +43,21 @@ const MediaModal = ({ media, onClose }) => {
           </svg>
         </button>
       </div>
+
+      {hasMore && (
+        <>
+          <button className="nav-btn prev-btn" onClick={(e) => { e.stopPropagation(); onPrev(); }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="15 18 9 12 15 6"/>
+            </svg>
+          </button>
+          <button className="nav-btn next-btn" onClick={(e) => { e.stopPropagation(); onNext(); }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </button>
+        </>
+      )}
 
       <div className="media-modal-wrapper" onClick={(e) => e.stopPropagation()}>
         {type === 'video' ? (

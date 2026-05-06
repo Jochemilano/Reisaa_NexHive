@@ -86,13 +86,13 @@ module.exports = (io, connectedUsers) => {
     });
 
     // Enviar mensaje
-    socket.on("send-message", async ({ roomId, type, content, replyToId }) => {
-      console.log("Received send-message:", { roomId, type, content, replyToId, userId: socket.userId });
+    socket.on("send-message", async ({ roomId, type, content, caption, fileSize, replyToId }) => {
+      console.log("Received send-message:", { roomId, type, content, caption, fileSize, replyToId, userId: socket.userId });
       try {
         // 1️⃣ Insertar el mensaje en la base de datos
         const [result] = await db.query(
-          "INSERT INTO messages (room_id, sender_id, type, content, reply_to_id) VALUES (?, ?, ?, ?, ?)",
-          [roomId, socket.userId, type, content, replyToId || null]
+          "INSERT INTO messages (room_id, sender_id, type, content, caption, file_size, reply_to_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
+          [roomId, socket.userId, type, content, caption || null, fileSize || null, replyToId || null]
         );
 
         // 2️⃣ Obtener el nombre y foto de perfil del remitente
@@ -100,20 +100,22 @@ module.exports = (io, connectedUsers) => {
 
         // 3️⃣ Preparar datos de mensaje original si es una respuesta
         let replyContent = null;
+        let replyCaption = null;
         let replySenderName = null;
 
         if (replyToId) {
-          const [replyMsg] = await db.query(
-            "SELECT content, sender_id FROM messages WHERE id = ?",
+          const [replyMsgRows] = await db.query(
+            "SELECT content, caption, sender_id FROM messages WHERE id = ?",
             [replyToId]
           );
 
-          if (replyMsg?.[0]) {
-            replyContent = replyMsg[0].content;
+          if (replyMsgRows?.[0]) {
+            replyContent = replyMsgRows[0].content;
+            replyCaption = replyMsgRows[0].caption;
 
             const [replyUser] = await db.query(
               "SELECT name FROM users WHERE id = ?",
-              [replyMsg[0].sender_id]
+              [replyMsgRows[0].sender_id]
             );
 
             replySenderName = replyUser?.[0]?.name || "Usuario";
@@ -129,8 +131,11 @@ module.exports = (io, connectedUsers) => {
           sender_avatar: user?.[0]?.profile_pic || null,
           type,
           content,
+          caption: caption || null,
+          file_size: fileSize || null,
           reply_to_id: replyToId || null,
           reply_content: replyContent,
+          reply_caption: replyCaption,
           reply_sender_name: replySenderName,
           created_at: new Date(),
           edited: 0,

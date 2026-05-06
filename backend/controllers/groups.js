@@ -79,12 +79,24 @@ router.get("/groups", verifyToken, async (req, res) => {
 
   try {
     const results = await query(
-      `SELECT g.id, g.name, g.owner_id, g.avatar, c.chat_room_id
+      `SELECT 
+        g.id, 
+        g.name, 
+        g.owner_id, 
+        g.avatar, 
+        c.chat_room_id,
+        (SELECT COUNT(*) FROM messages m
+         JOIN room_participants rp ON m.room_id = rp.room_id
+         WHERE m.room_id = c.chat_room_id 
+           AND rp.user_id = ? 
+           AND m.sender_id != ?
+           AND (rp.last_read_at IS NULL OR m.created_at > rp.last_read_at)
+        ) as unread_count
        FROM groups g
        JOIN user_groups ug ON g.id = ug.group_id
        LEFT JOIN channels c ON c.group_id = g.id
        WHERE ug.user_id = ?`,
-      [userId]
+      [userId, userId, userId]
     );
     res.json(results);
   } catch (err) {

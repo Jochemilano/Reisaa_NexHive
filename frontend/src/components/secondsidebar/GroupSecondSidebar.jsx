@@ -74,13 +74,13 @@ const GroupSecondSidebar = ({ groupId }) => {
       .catch(console.error);
   }, []);
 
-  const loadProjects = async () => {
+  const loadProjects = async (shouldSelect = false) => {
     if (!groupId) return;
     setLoadingProjects(true);
     try {
       const data = await fetchGroupProjects(groupId);
       setProjects(data);
-      if (data.length > 0 && !selectedProjectId) {
+      if (data.length > 0 && (shouldSelect || !selectedProjectId)) {
         setSelectedProjectId(data[0].id);
       }
     } catch (err) {
@@ -94,7 +94,7 @@ const GroupSecondSidebar = ({ groupId }) => {
   useEffect(() => {
     setSelectedProjectId(null);
     loadDetails();
-    loadProjects();
+    loadProjects(true);
   }, [groupId]);
 
   useEffect(() => {

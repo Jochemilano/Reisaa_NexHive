@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useChat } from "@/hooks/useChat";
 import { useCall } from "@/context/CallContext";
@@ -7,7 +7,9 @@ import MediaModal from "./MediaModal";
 import MediaPanel from "./MediaPanel";
 import ImageEditorModal from "./ImageEditorModal";
 import ChatSearch from "./ChatSearch";
-import { FaPaperclip, FaPaperPlane, FaStar, FaPhone, FaReply, FaEdit, FaTrash, FaTimes, FaImages, FaCopy, FaPlus, FaVolumeUp, FaVolumeMute } from "react-icons/fa";
+import { FaPaperclip, FaPaperPlane, FaStar, FaPhone, FaReply, FaEdit, FaTrash, FaTimes, FaImages, FaCopy, FaPlus, FaVolumeUp, FaVolumeMute, FaFileAlt, FaDownload } from "react-icons/fa";
+import MessageAlbum from "./MessageAlbum";
+import "./MessageAlbum.css";
 import { MdDoneAll } from "react-icons/md";
 import { FiCheck } from "react-icons/fi";
 import { useUnread } from "@/context/UnreadContext";
@@ -55,14 +57,21 @@ const renderMessageContent = (text, search) => {
   });
 };
 
+const formatFileSize = (bytes) => {
+  if (!bytes) return "";
+  if (bytes < 1024) return bytes + " B";
+  if (bytes < 1048576) return (bytes / 1024).toFixed(1) + " KB";
+  return (bytes / 1048576).toFixed(1) + " MB";
+};
+
 const formatTime = (dateStr) => {
   if (!dateStr) return "";
   const d = new Date(dateStr);
   return d.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" });
 };
 
-const renderReplyContent = (content) => {
-  if (!content) return null;
+const renderReplyContent = (content, caption = null) => {
+  if (!content) return caption ? <div className="reply-text">{caption}</div> : null;
   // Ensure it's a path or url to avoid false positives on normal text that happens to end in .jpg
   const isPath = content.startsWith('/uploads/') || content.startsWith('http') || content.startsWith('blob:');
   const isImage = isPath && (content.match(/\.(jpeg|jpg|gif|png|webp)(\?.*)?$/i) || content.startsWith('blob:'));
@@ -72,7 +81,7 @@ const renderReplyContent = (content) => {
     return (
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
         <img src={getFileUrl(content)} alt="reply" style={{ height: '30px', width: '30px', objectFit: 'cover', borderRadius: '4px' }} />
-        <span style={{ fontSize: '12px', fontStyle: 'italic', opacity: 0.8 }}>Foto</span>
+        <span style={{ fontSize: '12px', fontStyle: 'italic', opacity: 0.8 }}>{caption || 'Foto'}</span>
       </div>
     );
   }
@@ -80,12 +89,12 @@ const renderReplyContent = (content) => {
     return (
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
         <video src={getFileUrl(content)} style={{ height: '30px', width: '30px', objectFit: 'cover', borderRadius: '4px' }} />
-        <span style={{ fontSize: '12px', fontStyle: 'italic', opacity: 0.8 }}>Video</span>
+        <span style={{ fontSize: '12px', fontStyle: 'italic', opacity: 0.8 }}>{caption || 'Video'}</span>
       </div>
     );
   }
   if (content.startsWith('/uploads/')) {
-    return <span style={{ fontSize: '12px', fontStyle: 'italic', opacity: 0.8, display: 'block', marginTop: '4px' }}>Archivo adjunto</span>;
+    return <span style={{ fontSize: '12px', fontStyle: 'italic', opacity: 0.8, display: 'block', marginTop: '4px' }}>{caption || 'Archivo adjunto'}</span>;
   }
   return <div className="reply-text">{content}</div>;
 };
@@ -131,24 +140,55 @@ const MessageContent = React.memo(({ msg, onImageClick, onVideoClick, isMine, on
             style={{ cursor: "pointer" }}
           >
             <div className="reply-author">{msg.reply_sender_name}</div>
-            {renderReplyContent(msg.reply_content)}
+            {renderReplyContent(msg.reply_content, msg.reply_caption)}
           </div>
         )}
 
         {{
-          image: <img className="content-image" src={src} alt="imagen" onClick={() => onImageClick(src)} />,
-          video: (
-            <div className="video-preview-wrapper" onClick={() => onVideoClick(src)}>
-              <video className="content-video" src={src} />
-              <div className="video-play-overlay">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
-                  <path d="M8 5v14l11-7z" />
-                </svg>
-              </div>
+          image: (
+            <div className="message-media-container">
+              <img className="content-image" src={src} alt="imagen" onClick={() => onImageClick(msg.id)} />
+              {msg.caption && <p className="content caption">{renderMessageContent(msg.caption, searchTerm)}</p>}
             </div>
           ),
-          audio: <audio className="content-audio" src={src} controls />,
-          file: <a className="content-file" href={src} target="_blank" rel="noreferrer">{getFileName(msg.content)}</a>,
+          video: (
+            <div className="message-media-container">
+              <div className="video-preview-wrapper" onClick={() => onVideoClick(msg.id)}>
+                <video className="content-video" src={src} />
+                <div className="video-play-overlay">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                </div>
+              </div>
+              {msg.caption && <p className="content caption">{renderMessageContent(msg.caption, searchTerm)}</p>}
+            </div>
+          ),
+          audio: (
+            <div className="message-media-container">
+              <audio className="content-audio" src={src} controls />
+              {msg.caption && <p className="content caption">{renderMessageContent(msg.caption, searchTerm)}</p>}
+            </div>
+          ),
+          file: (
+            <div className="message-media-container">
+              <div className="document-attachment">
+                <div className="doc-icon-container">
+                  <FaFileAlt size={20} />
+                </div>
+                <div className="doc-details">
+                  <a className="doc-name" href={src} target="_blank" rel="noreferrer" title="Abrir en nueva pestaña">
+                    {getFileName(msg.content)}
+                  </a>
+                  <span className="doc-size">{formatFileSize(msg.file_size)}</span>
+                </div>
+                <a className="doc-download-btn" href={src} download={getFileName(msg.content)} title="Descargar">
+                  <FaDownload />
+                </a>
+              </div>
+              {msg.caption && <p className="content caption">{renderMessageContent(msg.caption, searchTerm)}</p>}
+            </div>
+          ),
           text: <p className="content">{renderMessageContent(msg.content, searchTerm)}</p>,
         }[msg.type]}
 
@@ -211,7 +251,7 @@ const Chat = ({ roomId, userId, groupId, targetUserId, targetUserName, targetUse
   const [showUnreadSep, setShowUnreadSep] = useState(initialUnreadCount > 0);
 
   const [input, setInput] = useState("");
-  const [modalMedia, setModalMedia] = useState(null);
+  const [activeMediaId, setActiveMediaId] = useState(null);
   const [previewFiles, setPreviewFiles] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
   const [replyTo, setReplyTo] = useState(null);
@@ -253,7 +293,7 @@ const Chat = ({ roomId, userId, groupId, targetUserId, targetUserName, targetUse
     }
   }, []);
 
-  const scrollToBottom = (instant = false) => {
+  const scrollToBottom = useCallback((instant = false) => {
     const container = scrollContainerRef.current;
     if (!container) return;
     if (instant) {
@@ -263,7 +303,7 @@ const Chat = ({ roomId, userId, groupId, targetUserId, targetUserName, targetUse
       const targetPos = container.scrollHeight - container.clientHeight;
       smoothScroll(container, targetPos, { maxDuration: 500, onComplete: () => setIsAtBottom(true) });
     }
-  };
+  }, []);
 
   const handleScroll = () => {
     const container = scrollContainerRef.current;
@@ -321,18 +361,32 @@ const Chat = ({ roomId, userId, groupId, targetUserId, targetUserName, targetUse
     }
   }, [location.state, messages, navigate, location.pathname]);
 
-  const clearUnread = () => {
+  const clearUnread = useCallback(() => {
     setShowUnreadSep(false);
-  };
+  }, []);
 
-  const handleSend = () => {
+  const handleSend = useCallback(() => {
     clearUnread();
-    if (previewFiles.length > 0) {
-      previewFiles.forEach(file => sendFile(file));
+    
+    const hasFiles = previewFiles.length > 0;
+    const hasText = input.trim().length > 0;
+
+    if (!hasFiles && !hasText) return;
+
+    if (hasFiles) {
+      // Mandar el primer archivo con el texto del input como caption
+      sendFile(previewFiles[0], input.trim() || null, replyTo?.id || null);
+      
+      // Mandar el resto de archivos normalmente
+      if (previewFiles.length > 1) {
+        previewFiles.slice(1).forEach(file => sendFile(file));
+      }
+      
       setPreviewFiles([]);
-    }
-    if (!input.trim() && previewFiles.length === 0) return;
-    if (input.trim()) {
+      setInput("");
+      setReplyTo(null);
+      setTimeout(() => { scrollToBottom(); }, 50);
+    } else if (hasText) {
       if (editingMsg) {
         editMessage(editingMsg.id, input);
         setEditingMsg(null);
@@ -343,7 +397,59 @@ const Chat = ({ roomId, userId, groupId, targetUserId, targetUserName, targetUse
       setInput("");
       setTimeout(() => { scrollToBottom(); }, 50);
     }
+  }, [input, previewFiles, editingMsg, replyTo, send, sendFile, editMessage, clearUnread, scrollToBottom]);
+
+  const mediaMessages = messages.filter(m => m.type === "image" || m.type === "video");
+  const currentMedia = mediaMessages.find(m => m.id === activeMediaId);
+
+  const handleOpenMedia = (msgId) => {
+    setActiveMediaId(msgId);
   };
+
+  const handleNextMedia = useCallback(() => {
+    const idx = mediaMessages.findIndex(m => m.id === activeMediaId);
+    if (idx < mediaMessages.length - 1) setActiveMediaId(mediaMessages[idx + 1].id);
+  }, [activeMediaId, mediaMessages]);
+
+  const handlePrevMedia = useCallback(() => {
+    const idx = mediaMessages.findIndex(m => m.id === activeMediaId);
+    if (idx > 0) setActiveMediaId(mediaMessages[idx - 1].id);
+  }, [activeMediaId, mediaMessages]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!activeMediaId) return;
+      if (e.key === "ArrowRight") handleNextMedia();
+      if (e.key === "ArrowLeft") handlePrevMedia();
+      if (e.key === "Escape") setActiveMediaId(null);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [activeMediaId, handleNextMedia, handlePrevMedia]);
+
+  useEffect(() => {
+    const handleGlobalKeyDown = (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        // Evitar enviar si hay modales abiertos o el editor de imágenes
+        if (isEditorOpen || activeMediaId) return;
+
+        const activeElement = document.activeElement;
+        const isInputOrTextarea = activeElement.tagName === "INPUT" || activeElement.tagName === "TEXTAREA";
+        const isButton = activeElement.tagName === "BUTTON";
+
+        // Si no estamos en un elemento interactivo, enviamos el mensaje si hay contenido o archivos
+        if (!isInputOrTextarea && !isButton) {
+          if (input.trim() || previewFiles.length > 0) {
+            e.preventDefault();
+            handleSend();
+          }
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleGlobalKeyDown);
+    return () => window.removeEventListener("keydown", handleGlobalKeyDown);
+  }, [handleSend, isEditorOpen, activeMediaId, input, previewFiles]);
 
   const handleFileChange = (e) => {
     const selectedFiles = Array.from(e.target.files);
@@ -460,8 +566,9 @@ const Chat = ({ roomId, userId, groupId, targetUserId, targetUserName, targetUse
     const items = [];
     let lastDateKey = null;
     let lastSenderId = null;
-    
-    messages.forEach((msg) => {
+
+    for (let i = 0; i < messages.length; i++) {
+      const msg = messages[i];
       const msgDate = new Date(msg.created_at);
       const dateKey = msgDate.toDateString();
       let separatorAdded = false;
@@ -476,17 +583,48 @@ const Chat = ({ roomId, userId, groupId, targetUserId, targetUserName, targetUse
         separatorAdded = true;
       }
 
-      const isConsecutive = !separatorAdded && lastSenderId === msg.sender_id;
+      // Agrupar imágenes consecutivas sin caption
+      if (msg.type === "image" && !msg.caption) {
+        const group = [msg];
+        let j = i + 1;
+        while (
+          j < messages.length &&
+          messages[j].type === "image" &&
+          !messages[j].caption &&
+          Number(messages[j].sender_id) === Number(msg.sender_id) &&
+          (new Date(messages[j].created_at) - new Date(messages[j - 1].created_at)) < 30000
+        ) {
+          group.push(messages[j]);
+          j++;
+        }
+
+        if (group.length >= 2) {
+          items.push({
+            album: true,
+            messages: group,
+            sender_id: msg.sender_id,
+            sender_name: msg.sender_name,
+            created_at: msg.created_at,
+            id: msg.id,
+            key: `album-${msg.id}`
+          });
+          i = j - 1;
+          lastSenderId = msg.sender_id;
+          continue;
+        }
+      }
+
+      const isConsecutive = !separatorAdded && Number(lastSenderId) === Number(msg.sender_id);
       lastSenderId = msg.sender_id;
 
-      items.push({ 
-        ...msg, 
-        originalMsg: msg, 
-        separator: false, 
+      items.push({
+        ...msg,
+        originalMsg: msg,
+        separator: false,
         isConsecutive,
-        key: msg.id || `temp-${msg.sender_id}-${msg.created_at}-${msg.content?.substring(0, 20) || Math.random()}` 
+        key: msg.id || `temp-${msg.sender_id}-${msg.created_at}-${msg.content?.substring(0, 20) || Math.random()}`
       });
-    });
+    }
     return items;
   };
 
@@ -568,6 +706,18 @@ const Chat = ({ roomId, userId, groupId, targetUserId, targetUserName, targetUse
                 <span>{item.label}</span>
                 <button className="clear-unread-btn" onClick={clearUnread}><FaTimes /></button>
               </div>
+            ) : item.album ? (
+              <div key={item.key} ref={(el) => (messageRefs.current[item.id] = el)} className={`chat-message ${Number(item.sender_id) === Number(userId) ? "mine" : "other"}`}>
+                <span className="sender">{item.sender_name}</span>
+                <div className="message-wrapper">
+                  <div className="message-content album-content">
+                    <MessageAlbum messages={item.messages} onImageClick={handleOpenMedia} searchTerm={searchTerm} />
+                    <div className="message-meta">
+                      <span className="message-time">{formatTime(item.created_at)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             ) : (
               <div key={item.key} ref={(el) => (messageRefs.current[item.id] = el)} className={`chat-message ${Number(item.sender_id) === Number(userId) ? "mine" : "other"} ${item.isConsecutive ? "consecutive" : ""}`}>
                 {!item.isConsecutive && (
@@ -579,12 +729,12 @@ const Chat = ({ roomId, userId, groupId, targetUserId, targetUserName, targetUse
                     {item.sender_name || item.sender_id}
                   </span>
                 )}
-                <MessageContent msg={item.originalMsg || item} searchTerm={searchTerm} onImageClick={(src) => setModalMedia({ src, type: 'image' })} onVideoClick={(src) => setModalMedia({ src, type: 'video' })} isMine={Number(item.sender_id) === Number(userId)} onReply={handleReply} onReplyToOriginal={handleScrollToOriginal} onEdit={handleEdit} onDelete={deleteMessage} />
+                <MessageContent msg={item.originalMsg || item} searchTerm={searchTerm} onImageClick={handleOpenMedia} onVideoClick={handleOpenMedia} isMine={Number(item.sender_id) === Number(userId)} onReply={handleReply} onReplyToOriginal={handleScrollToOriginal} onEdit={handleEdit} onDelete={deleteMessage} />
               </div>
             )
           ))}
         </div>
-        {showMediaPanel && <MediaPanel messages={messages} onClose={() => setShowMediaPanel(false)} onImageClick={(src) => setModalMedia({ src, type: 'image' })} onVideoClick={(src) => setModalMedia({ src, type: 'video' })} onGoToMessage={handleScrollToOriginal} />}
+        {showMediaPanel && <MediaPanel messages={messages} onClose={() => setShowMediaPanel(false)} onImageClick={handleOpenMedia} onVideoClick={handleOpenMedia} onGoToMessage={handleScrollToOriginal} />}
         <div className="chat-footer">
           {previewFiles.length > 0 && (
             <div className="preview-multi-container">
@@ -600,7 +750,7 @@ const Chat = ({ roomId, userId, groupId, targetUserId, targetUserName, targetUse
           {(replyTo || editingMsg) && (
             <div className="action-banner">
               <div className="action-content">
-                {replyTo && <><FaReply className="action-icon" /><div className="action-info"><span className="reply-label">Respondiendo a <b>{replyTo.sender_name}</b></span><div className="reply-text-truncate">{renderReplyContent(replyTo.content)}</div></div></>}
+                {replyTo && <><FaReply className="action-icon" /><div className="action-info"><span className="reply-label">Respondiendo a <b>{replyTo.sender_name}</b></span><div className="reply-text-truncate">{renderReplyContent(replyTo.content, replyTo.caption)}</div></div></>}
                 {editingMsg && <><FaEdit className="action-icon" /><span>Editando mensaje...</span></>}
               </div>
               <button className="cancel-action" onClick={cancelAction}><FaTimes /></button>
@@ -630,7 +780,13 @@ const Chat = ({ roomId, userId, groupId, targetUserId, targetUserName, targetUse
         </div>
       </div>
       {!isAtBottom && <button className="scroll-to-bottom-btn" onClick={scrollToBottom} type="button">↓</button>}
-      <MediaModal media={modalMedia} onClose={() => setModalMedia(null)} />
+      <MediaModal 
+        media={currentMedia ? { src: getFileUrl(currentMedia.content), type: currentMedia.type } : null} 
+        onClose={() => setActiveMediaId(null)} 
+        onNext={handleNextMedia}
+        onPrev={handlePrevMedia}
+        hasMore={mediaMessages.length > 1}
+      />
       {isEditorOpen && <ImageEditorModal files={editorFiles} onSave={(edited) => { setPreviewFiles(prev => [...prev, ...edited]); setIsEditorOpen(false); setEditorFiles([]); }} onClose={() => { setIsEditorOpen(false); setEditorFiles([]); }} onAddMore={(newFiles) => { setEditorFiles(prev => [...prev, ...newFiles]); }} />}
     </div>
   );

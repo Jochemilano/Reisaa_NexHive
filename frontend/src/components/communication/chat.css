@@ -809,6 +809,121 @@
   background: var(--bg-base);
 }
 
+.message-media-container {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.message-media-container .content.caption {
+  margin-top: 4px;
+  word-break: break-word;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.chat-message.mine .message-media-container .content.caption {
+  color: #fff;
+}
+
+.chat-message.other .message-media-container .content.caption {
+  color: var(--text-primary);
+}
+
+.album-content {
+  padding: 4px !important;
+  max-width: 308px;
+}
+
+/* ── DOCUMENT ATTACHMENT (Discord Style) ── */
+.document-attachment {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.05);
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  min-width: 240px;
+  max-width: 100%;
+}
+
+.chat-message.mine .document-attachment {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.doc-icon-container {
+  width: 40px;
+  height: 40px;
+  background: var(--primary);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+.chat-message.mine .doc-icon-container {
+  background: #fff;
+  color: var(--primary);
+}
+
+.doc-details {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+.doc-name {
+  font-weight: 600;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: inherit;
+  text-decoration: none;
+}
+
+.doc-name:hover {
+  text-decoration: underline;
+}
+
+.doc-size {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.doc-download-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.05);
+  color: inherit;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.chat-message.mine .doc-download-btn {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.doc-download-btn:hover {
+  background: var(--primary);
+  color: white;
+  transform: scale(1.1);
+}
+
+.chat-message.mine .doc-download-btn:hover {
+  background: #fff;
+  color: var(--primary);
+}
+
 /* ── REGLAS DE CONEXIÓN ── */
 
 .preview-multi-container+.chat-input {

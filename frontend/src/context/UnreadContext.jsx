@@ -82,11 +82,8 @@ export function UnreadProvider({ children }) {
       
       setAllRooms(unifiedRooms); 
 
-      const counts = {};
-      rooms.forEach(r => {
-        counts[r.id] = r.unread_count || 0;
-      });
-      setUnreadByRoom(counts);
+      // Usar los counts que vienen del nuevo endpoint unread/total
+      setUnreadByRoom(totalData.byRoom || {});
     } catch (err) {
       console.error("Error fetching unread counts:", err);
     }
@@ -105,11 +102,15 @@ export function UnreadProvider({ children }) {
       if (soundEnabledRef.current && !isRoomMuted) {
         playNotificationSound(selectedSound);
       }
-      setUnreadByRoom(prev => ({
-        ...prev,
-        [data.room_id]: (prev[data.room_id] || 0) + 1
-      }));
-      setUnreadTotal(prev => prev + 1);
+      setUnreadByRoom(prev => {
+        const roomId = String(data.room_id);
+        const oldCount = Number(prev[roomId] || 0);
+        return {
+          ...prev,
+          [roomId]: oldCount + 1
+        };
+      });
+      setUnreadTotal(prev => Number(prev || 0) + 1);
     };
 
     const handleRoomRead = ({ roomId, userId }) => {

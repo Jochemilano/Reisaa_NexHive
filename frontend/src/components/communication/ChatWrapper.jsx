@@ -28,24 +28,35 @@ export default function ChatWrapper() {
             avatar: group.avatar,
           });
         } else {
+          const roomData = await apiFetch(`rooms/${chatRoomId}/details`);
           const participants = await apiFetch(`rooms/${chatRoomId}/participants`);
 
-          if (participants.length > 1) {
-            // Es un grupo pequeño (room group)
-            const roomData = await apiFetch(`rooms/${chatRoomId}/details`);
+          // Es un grupo si el tipo es 'group' o si tiene un nombre que no sigue el patrón de DM
+          const isGroup = roomData.type === 'group' || (roomData.name && !roomData.name.startsWith('chat-'));
+
+          if (isGroup) {
             setTargetUser({
               id: null,
               name: roomData.name || "Grupo",
               avatar: roomData.avatar,
             });
-          } else if (participants.length === 1) {
+          } else {
             // Es un DM
-            const other = participants[0];
-            setTargetUser({
-              id: other.id,
-              name: other.name,
-              avatar: other.profile_pic,
-            });
+            if (participants.length > 0) {
+              const other = participants[0];
+              setTargetUser({
+                id: other.id,
+                name: other.name,
+                avatar: other.profile_pic,
+              });
+            } else {
+              // Caso donde el otro usuario se salió o no hay nadie más
+              setTargetUser({
+                id: null,
+                name: "Chat vacío",
+                avatar: null,
+              });
+            }
           }
         }
       } catch (err) {

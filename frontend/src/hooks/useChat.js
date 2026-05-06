@@ -97,7 +97,7 @@ export const useChat = (roomId, userId) => {
     });
   };
 
-  const sendFile = async (file) => {
+  const sendFile = async (file, caption = null, replyToId = null) => {
     if (!file) return;
     const data = await uploadFile(file);
     let type = "file";
@@ -110,6 +110,9 @@ export const useChat = (roomId, userId) => {
       senderId: userId,
       type,
       content: data.url,
+      caption,
+      fileSize: data.size,
+      replyToId: replyToId || null,
     });
   };
   const editMessage = async (messageId, content) => {

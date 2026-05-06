@@ -136,7 +136,7 @@ const SocialSecondSidebar = () => {
         method: "POST",
         body: JSON.stringify({
           name: groupName,
-          type: "chat",
+          type: "group",
           userIds
         })
       });
@@ -270,7 +270,7 @@ const SocialSecondSidebar = () => {
                     style={{ position: 'relative', width: '32px', height: '32px', cursor: 'pointer' }}
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (r.participant_count > 2) {
+                      if (r.type === 'group' || r.participant_count > 2) {
                         showRoomProfile(r.id);
                       } else if (r.display_id) {
                         showUserProfile(r.display_id);
@@ -301,7 +301,7 @@ const SocialSecondSidebar = () => {
                     }}>
                       {r.display_name}
                     </div>
-                    {r.participant_count > 2 && (
+                    { (r.type === 'group' || r.participant_count > 2) && (
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
                         {r.participant_count} miembros
                       </div>

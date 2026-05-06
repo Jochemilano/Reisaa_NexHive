@@ -23,9 +23,12 @@ router.post("/rooms", verifyToken, async (req, res) => {
   }
 
   try {
+    const isGroup = userIds.length > 2;
+    const roomType = isGroup ? 'group' : type;
+
     const roomResult = await query(
       "INSERT INTO rooms (name, type, owner_id, avatar) VALUES (?, ?, ?, ?)",
-      [name || null, type, createdBy, avatar]
+      [name || null, roomType, createdBy, avatar]
     );
 
     const roomId = roomResult.insertId;
@@ -83,13 +86,15 @@ router.get("/rooms", verifyToken, async (req, res) => {
        FROM rooms r
        JOIN room_participants rp ON r.id = rp.room_id
        LEFT JOIN channels c ON (r.id = c.chat_room_id OR r.id = c.voice_room_id)
-       WHERE rp.user_id = ? AND c.id IS NULL AND r.type = 'chat'`,
+       WHERE rp.user_id = ? AND c.id IS NULL AND (r.type = 'chat' OR r.type = 'group')`,
       [userId, userId]
     );
 
-    // Enriquecer salas: si es DM (2 participantes), buscar el nombre/avatar del otro
+    // Enriquecer salas: si es DM (tipo chat y nombre chat-X-Y), buscar el nombre/avatar del otro
     const enrichedRooms = await Promise.all(rooms.map(async (room) => {
-      if (room.participant_count === 2 && room.type === 'chat') {
+      const isDM = room.type === 'chat' && (room.name && room.name.startsWith('chat-'));
+      
+      if (isDM && room.participant_count === 2) {
         const [other] = await db.query(
           `SELECT u.id, u.name, u.profile_pic 
            FROM room_participants rp
@@ -121,20 +126,28 @@ router.get("/rooms", verifyToken, async (req, res) => {
   }
 });
 
-// Obtener total de mensajes no leídos (global)
 router.get("/rooms/unread/total", verifyToken, async (req, res) => {
   const userId = req.userId;
   try {
-    const [result] = await db.query(
-      `SELECT COUNT(*) as total
+    const [counts] = await db.query(
+      `SELECT m.room_id, COUNT(*) as unread_count
        FROM messages m
        JOIN room_participants rp ON m.room_id = rp.room_id
        WHERE rp.user_id = ? 
          AND m.sender_id != ?
-         AND (rp.last_read_at IS NULL OR m.created_at > rp.last_read_at)`,
+         AND (rp.last_read_at IS NULL OR m.created_at > rp.last_read_at)
+       GROUP BY m.room_id`,
       [userId, userId]
     );
-    res.json({ total: result[0].total });
+
+    const byRoom = {};
+    let total = 0;
+    counts.forEach(c => {
+      byRoom[c.room_id] = c.unread_count;
+      total += c.unread_count;
+    });
+
+    res.json({ total, byRoom });
   } catch (err) {
     console.error("ERROR GET UNREAD TOTAL:", err);
     res.status(500).json({ message: "Error obteniendo total de no leídos" });
@@ -163,12 +176,15 @@ router.get("/rooms/:roomId/messages", verifyToken, async (req, res) => {
           m.sender_id, 
           m.type, 
           m.content,
+          m.caption,                             -- 👈 caption del mensaje
+          m.file_size,                           -- 👈 tamaño del archivo
           m.edited,
           m.reply_to_id,
           m.created_at,                          -- 👈 hora
           u.name AS sender_name,
           u.profile_pic AS profile_pic,
           rm.content  AS reply_content,          -- 👈 texto del mensaje citado
+          rm.caption  AS reply_caption,          -- 👈 caption del mensaje citado
           ru.name     AS reply_sender_name,      -- 👈 autor del mensaje citado
           CASE WHEN f.id IS NULL THEN 0 ELSE 1 END AS favorite
       FROM messages m
@@ -206,7 +222,7 @@ router.get("/rooms/:roomId/messages", verifyToken, async (req, res) => {
 
 // Enviar mensaje a sala
 router.post("/messages", verifyToken, async (req, res) => {
-  const { roomId, type, content, replyToId } = req.body; // 👈 agrega replyToId
+  const { roomId, type, content, caption, replyToId } = req.body; // 👈 agrega caption y replyToId
   const senderId = req.userId;
 
   if (!roomId || !type || !content)
@@ -214,8 +230,8 @@ router.post("/messages", verifyToken, async (req, res) => {
 
   try {
     const result = await query(
-      "INSERT INTO messages (room_id, sender_id, type, content, reply_to_id) VALUES (?, ?, ?, ?, ?)",
-      [roomId, senderId, type, content, replyToId || null]
+      "INSERT INTO messages (room_id, sender_id, type, content, caption, file_size, reply_to_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [roomId, senderId, type, content, caption || null, fileSize || null, replyToId || null]
     );
 
     res.json({ success: true, messageId: result.insertId });

@@ -77,7 +77,7 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.post("/upload", upload.single("file"), (req, res) => {
   if (!req.file) return res.status(400).json({ error: "Archivo no recibido" });
-  res.json({ url: `/uploads/${req.file.filename}` });
+  res.json({ url: `/uploads/${req.file.filename}`, size: req.file.size });
 });
 
 // ============================================================

@@ -84,6 +84,7 @@ const GroupPage = () => {
   useEffect(() => {
     if (!groupId) return;
     setLoadingProjects(true);
+    setSelectedProject(null); // Resetear proyecto seleccionado al cambiar de grupo
     fetchGroupProjects(groupId)
       .then(setProjects)
       .catch(err => console.error("Error cargando proyectos:", err))
@@ -92,7 +93,10 @@ const GroupPage = () => {
 
   // Cargar detalle del proyecto seleccionado (con actividades)
   useEffect(() => {
-    if (!selectedProjectId) return;
+    if (!selectedProjectId) {
+      setSelectedProject(null);
+      return;
+    }
     setLoadingProject(true);
     fetchProjectDetails(selectedProjectId)
       .then(setSelectedProject)
