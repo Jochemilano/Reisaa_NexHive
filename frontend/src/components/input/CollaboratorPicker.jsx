@@ -12,7 +12,7 @@ const CollaboratorPicker = ({ availableUsers = [], selectedCollaborators = [], o
     const name = user.name || user.username || `Usuario ${user.id}`;
     const email = user.email || "";
     const searchLower = searchQuery.toLowerCase();
-    
+
     // Si no hay búsqueda
     if (searchQuery.trim() === "") {
       return showAllByDefault || user.isFriend;
@@ -70,8 +70,8 @@ const CollaboratorPicker = ({ availableUsers = [], selectedCollaborators = [], o
             {filteredUsers.length > 0 ? (
               <ul className="collaborator-picker__dropdown-list">
                 {filteredUsers.map(user => (
-                  <li 
-                    key={user.id} 
+                  <li
+                    key={user.id}
                     className="collaborator-picker__dropdown-item"
                     onClick={() => handleSelect(user)}
                   >
@@ -84,8 +84,8 @@ const CollaboratorPicker = ({ availableUsers = [], selectedCollaborators = [], o
               </ul>
             ) : (
               <div className="collaborator-picker__dropdown-empty">
-                {searchQuery.trim() === "" 
-                  ? "Busca usuarios por nombre o correo para agregarlos" 
+                {searchQuery.trim() === ""
+                  ? "Busca usuarios por nombre o correo para agregarlos"
                   : "No se encontraron usuarios"}
               </div>
             )}
@@ -96,22 +96,26 @@ const CollaboratorPicker = ({ availableUsers = [], selectedCollaborators = [], o
       {selectedCollaborators.length > 0 && (
         <div className="collaborator-picker__list-wrapper">
           <p className="collaborator-picker__list-title">
-            Colaboradores seleccionados ({selectedCollaborators.length}):
+            Colaboradores seleccionados
           </p>
           <ul className="collaborator-picker__list">
             {selectedCollaborators.map(c => (
-              <li key={c.id} className="collaborator-picker__item" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', padding: '8px 12px', gap: '4px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
-                  <span style={{ fontWeight: 600 }}>{c.name || c.username || `Usuario ${c.id}`}</span>
-                  <button
-                    type="button"
-                    onClick={() => onRemove(c.id)}
-                    className="collaborator-picker__remove-btn"
-                  >
-                    <FaTimes />
-                  </button>
-                </div>
-                {c.email && <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>{c.email}</span>}
+              <li
+                key={c.id}
+                className="collaborator-picker__item"
+                data-email={c.email || ''}
+              >
+                <span className="collaborator-picker__item-name">
+                  {c.name || c.username || `Usuario ${c.id}`}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => onRemove(c.id)}
+                  className="collaborator-picker__remove-btn"
+                  aria-label={`Quitar a ${c.name || c.username || 'usuario'}`}
+                >
+                  <FaTimes />
+                </button>
               </li>
             ))}
           </ul>

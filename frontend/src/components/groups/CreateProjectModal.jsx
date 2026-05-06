@@ -11,6 +11,7 @@ const CreateProjectModal = ({ isOpen, onClose, groupId, availableUsers = [], onC
   const [projectDescription, setProjectDescription] = useState("");
   const [startDate, setStartDate] = useState("");
   const [deadline, setDeadline] = useState("");
+  const [status, setStatus] = useState("pending");
 
   const {
     availableUsers: filteredUsers,
@@ -25,7 +26,7 @@ const CreateProjectModal = ({ isOpen, onClose, groupId, availableUsers = [], onC
     try {
       const newProject = await createProject(
         projectName, projectDescription, groupId,
-        startDate || null, deadline || null,
+        startDate || null, deadline || null, status,
         selectedCollaborators.map(c => c.id)
       );
       toast.success(`Proyecto "${projectName}" creado con éxito`);
@@ -34,6 +35,7 @@ const CreateProjectModal = ({ isOpen, onClose, groupId, availableUsers = [], onC
       setProjectDescription("");
       setStartDate("");
       setDeadline("");
+      setStatus("pending");
       resetCollaborators();
       onClose();
     } catch (err) {
@@ -52,10 +54,25 @@ const CreateProjectModal = ({ isOpen, onClose, groupId, availableUsers = [], onC
         <Textarea label="Descripción del proyecto"
           placeholder="Danos una breve descripción de tu proyecto"
           value={projectDescription} onChange={e => setProjectDescription(e.target.value)} />
-        <Input label="Fecha de inicio" type="date"
-          value={startDate} onChange={e => setStartDate(e.target.value)} />
-        <Input label="Fecha límite" type="date"
-          value={deadline} onChange={e => setDeadline(e.target.value)} />
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+          <Input label="Fecha de inicio" type="date"
+            value={startDate} onChange={e => setStartDate(e.target.value)} />
+          <Input label="Fecha límite" type="date"
+            value={deadline} onChange={e => setDeadline(e.target.value)} />
+        </div>
+
+        <div className="input-group">
+          <label>Estado</label>
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+            className="input-field"
+          >
+            <option value="pending">Pendiente</option>
+            <option value="in_progress">En Progreso</option>
+            <option value="done">Hecho</option>
+          </select>
+        </div>
         <CollaboratorPicker
           availableUsers={filteredUsers}
           selectedCollaborators={selectedCollaborators}

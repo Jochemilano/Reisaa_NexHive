@@ -59,10 +59,10 @@ router.post("/activities", verifyToken, async (req, res) => {
     const [activityResult] = await db.query(
       `INSERT INTO activities (name, project_id, description, status, start_date, deadline, owner_id)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [ name, projectId, description || "", status || "pending",
-      startSQL,
-      deadlineSQL,
-      userId ]
+      [name, projectId, description || "", status || "pending",
+        startSQL,
+        deadlineSQL,
+        userId]
     );
     const activityId = activityResult.insertId;
 
@@ -172,15 +172,26 @@ router.get("/activities/:id/users", verifyToken, async (req, res) => {
   const userId = req.userId;
 
   try {
-    const [member] = await db.query(
-      "SELECT * FROM user_activities WHERE user_id=? AND activity_id=?",
-      [userId, activityId]
+    const [activityRows] = await db.query(
+      `SELECT p.group_id FROM activities a
+       JOIN projects p ON a.project_id = p.id
+       WHERE a.id = ?`,
+      [activityId]
     );
-    if (member.length === 0)
-      return res.status(403).json({ message: "No pertenece a esta actividad" });
+
+    if (activityRows.length === 0) {
+      return res.status(404).json({ message: "Actividad no encontrada" });
+    }
+
+    const [check] = await db.query(
+      "SELECT * FROM user_groups WHERE user_id=? AND group_id=?",
+      [userId, activityRows[0].group_id]
+    );
+    if (check.length === 0)
+      return res.status(403).json({ message: "No tiene acceso a esta actividad" });
 
     const [users] = await db.query(
-      `SELECT u.id, u.name, u.profile_pic AS avatar FROM users u
+      `SELECT u.id, u.name, u.email, u.profile_pic AS avatar FROM users u
        JOIN user_activities ua ON u.id = ua.user_id
        WHERE ua.activity_id = ?`,
       [activityId]
@@ -216,7 +227,7 @@ router.put("/activities/:id", verifyToken, async (req, res) => {
     await db.query(
       `UPDATE activities SET name=?, description=?, status=?, start_date=?, deadline=? WHERE id=?`,
       [name, description || "", status || "pending",
-       formatDateForSQL(start_date), formatDateForSQL(deadline), activityId]
+        formatDateForSQL(start_date), formatDateForSQL(deadline), activityId]
     );
 
     await db.query(
@@ -320,7 +331,7 @@ router.delete("/activities/:id", verifyToken, async (req, res) => {
       const eventIds = events.map(e => e.event_id);
       await db.query("DELETE FROM calendar_events WHERE id IN (?)", [eventIds]);
     }
-    
+
     // 4. Limpiar usuarios
     await db.query("DELETE FROM user_activities WHERE activity_id=?", [activityId]);
 

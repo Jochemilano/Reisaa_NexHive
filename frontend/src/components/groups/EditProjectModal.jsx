@@ -7,12 +7,13 @@ import { fetchGroupUsers } from "@/utils/groups";
 import { toast } from "sonner";
 
 const EditProjectModal = ({ isOpen, onClose, project, groupId, onUpdated }) => {
-  const [name, setName]               = useState("");
+  const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [startDate, setStartDate]     = useState("");
-  const [deadline, setDeadline]       = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [deadline, setDeadline] = useState("");
+  const [status, setStatus] = useState("pending");
   const [selectedCollaborators, setSelectedCollaborators] = useState([]);
-  const [availableUsers, setAvailableUsers]               = useState([]);
+  const [availableUsers, setAvailableUsers] = useState([]);
 
   useEffect(() => {
     if (isOpen && project) {
@@ -22,6 +23,7 @@ const EditProjectModal = ({ isOpen, onClose, project, groupId, onUpdated }) => {
       setDescription(project.description || "");
       setStartDate(project.start_date?.split("T")[0] || "");
       setDeadline(project.deadline?.split("T")[0] || "");
+      setStatus(project.status || "pending");
 
       // Traer colaboradores actuales del proyecto
       fetchProjectUsers(project.id)
@@ -57,7 +59,7 @@ const EditProjectModal = ({ isOpen, onClose, project, groupId, onUpdated }) => {
   const handleSave = async () => {
     try {
       const collaboratorIds = selectedCollaborators.map(c => c.id);
-      await updateProject(project.id, name, description, startDate, deadline, collaboratorIds);
+      await updateProject(project.id, name, description, startDate, deadline, status, collaboratorIds);
       toast.warning("Proyecto actualizado");
       onUpdated(project.id);
       onClose();
@@ -66,7 +68,7 @@ const EditProjectModal = ({ isOpen, onClose, project, groupId, onUpdated }) => {
       toast.error("Error al actualizar el proyecto");
     }
   };
-  
+
   const isOwner = project?.owner_id === Number(localStorage.getItem("userId"));
 
   const handleDelete = async () => {
@@ -91,10 +93,24 @@ const EditProjectModal = ({ isOpen, onClose, project, groupId, onUpdated }) => {
           value={name} onChange={e => setName(e.target.value)} />
         <Textarea label="Descripción"
           value={description} onChange={e => setDescription(e.target.value)} />
-        <Input label="Fecha de inicio" type="date"
-          value={startDate} onChange={e => setStartDate(e.target.value)} />
-        <Input label="Fecha límite" type="date"
-          value={deadline} onChange={e => setDeadline(e.target.value)} />
+        <div className="input-group">
+          <label>Estado</label>
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+            className="input-field"
+          >
+            <option value="pending">Pendiente</option>
+            <option value="in_progress">En Progreso</option>
+            <option value="done">Hecho</option>
+          </select>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+          <Input label="Fecha de inicio" type="date"
+            value={startDate} onChange={e => setStartDate(e.target.value)} />
+          <Input label="Fecha límite" type="date"
+            value={deadline} onChange={e => setDeadline(e.target.value)} />
+        </div>
         <CollaboratorPicker
           availableUsers={availableUsers}
           selectedCollaborators={selectedCollaborators}

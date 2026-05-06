@@ -1,6 +1,6 @@
 import { apiFetch } from "./apiClient";
 
-export const createProject = (name, description, groupId, start_date = null, deadline = null, collaborators = []) =>
+export const createProject = (name, description, groupId, start_date = null, deadline = null, status = 'pending', collaborators = []) =>
   apiFetch("projects", {
     method: "POST",
     body: JSON.stringify({ 
@@ -9,6 +9,7 @@ export const createProject = (name, description, groupId, start_date = null, dea
       groupId, 
       start_date, 
       deadline, 
+      status,
       collaborators 
     }),
   });
@@ -19,10 +20,10 @@ export const getProjects = (groupId) =>
 export const fetchProjectUsers = (projectId) =>
   apiFetch(`projects/${projectId}/users`);
 
-export const updateProject = (projectId, name, description, start_date, deadline, collaboratorIds = []) =>
+export const updateProject = (projectId, name, description, start_date, deadline, status, collaboratorIds = []) =>
   apiFetch(`projects/${projectId}`, {
     method: "PATCH",
-    body: JSON.stringify({ name, description, start_date, deadline, collaborators: collaboratorIds }),
+    body: JSON.stringify({ name, description, start_date, deadline, status, collaborators: collaboratorIds }),
   });
 
   export const fetchGroupProjects = (groupId) =>

@@ -4,7 +4,7 @@ import { fetchGroupProjects } from "@/utils/projects";
 import Modal from "@/components/modal/Modal";
 import CreateProjectModal from "@/components/groups/CreateProjectModal";
 import EditProjectModal from "@/components/groups/EditProjectModal";
-import { FaHashtag, FaVolumeUp, FaEdit, FaFolderOpen } from "react-icons/fa";
+import { FaHashtag, FaVolumeUp, FaEdit, FaChevronRight, FaChevronDown } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useGroup } from "@/context/GroupContext";
 import { useCalendar } from "@/context/CalendarContext";
@@ -17,6 +17,8 @@ const GroupSecondSidebar = ({ groupId }) => {
   const [projects, setProjects] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
   const [editingProject, setEditingProject] = useState(null);
+  const [showPending, setShowPending] = useState(false);
+  const [showDone, setShowDone] = useState(false);
   const { selectedProjectId, setSelectedProjectId } = useGroup();
   const { refreshEvents } = useCalendar();
   const navigate = useNavigate();
@@ -195,32 +197,130 @@ const GroupSecondSidebar = ({ groupId }) => {
               <span>Sin proyectos</span>
             </div>
           ) : (
-            projects.map((p) => {
-              const canEdit = userRole === 'admin' || myId === p.owner_id || myId === details.owner_id;
-              return (
-                <div
-                  key={`project-${p.id}`}
-                  className={`user-item ${selectedProjectId === p.id ? "project-item--active" : ""}`}
-                  onMouseDown={() => startPress(p)}
-                  onMouseUp={cancelPress}
-                  onMouseLeave={cancelPress}
-                  onTouchStart={() => startPress(p)}
-                  onTouchEnd={cancelPress}
-                  onClick={() => handleProjectClick(p)}
-                >
-                  <span>{p.name}</span>
-                  {canEdit && (
-                    <button
-                      className="project-edit-btn"
-                      onClick={(e) => { e.stopPropagation(); setEditingProject(p); }}
-                      title="Editar proyecto"
-                    >
-                      <FaEdit />
-                    </button>
-                  )}
+            <>
+              {projects.filter(p => !p.status || p.status === 'in_progress').map((p) => {
+                const canEdit = userRole === 'admin' || myId === p.owner_id || myId === details.owner_id;
+                return (
+                  <div
+                    key={`project-${p.id}`}
+                    className={`user-item ${selectedProjectId === p.id ? "project-item--active" : ""}`}
+                    onMouseDown={() => startPress(p)}
+                    onMouseUp={cancelPress}
+                    onMouseLeave={cancelPress}
+                    onTouchStart={() => startPress(p)}
+                    onTouchEnd={cancelPress}
+                    onClick={() => handleProjectClick(p)}
+                  >
+                    <span>{p.name}</span>
+                    {canEdit && (
+                      <button
+                        className="project-edit-btn"
+                        onClick={(e) => { e.stopPropagation(); setEditingProject(p); }}
+                        title="Editar proyecto"
+                      >
+                        <FaEdit />
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+
+              {/* Los desplegables se movieron afuera del project-list para que queden hasta abajo, pero pueden estar aqui tambien al final de la lista */}
+            </>
+          )}
+        </div>
+
+        {/* Proyectos Pendientes */}
+        <div className="status-section" style={{ marginTop: 'auto' }}>
+          <div 
+            className="status-header user-item" 
+            onClick={() => setShowPending(!showPending)}
+            style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 15px' }}
+          >
+            <span>Pendientes</span>
+            {showPending ? <FaChevronDown className="channel-icon" /> : <FaChevronRight className="channel-icon" />}
+          </div>
+          {showPending && (
+            <div className="status-list" style={{ paddingLeft: '10px' }}>
+              {projects.filter(p => p.status === 'pending').map((p) => {
+                const canEdit = userRole === 'admin' || myId === p.owner_id || myId === details.owner_id;
+                return (
+                  <div
+                    key={`project-${p.id}`}
+                    className={`user-item ${selectedProjectId === p.id ? "project-item--active" : ""}`}
+                    onMouseDown={() => startPress(p)}
+                    onMouseUp={cancelPress}
+                    onMouseLeave={cancelPress}
+                    onTouchStart={() => startPress(p)}
+                    onTouchEnd={cancelPress}
+                    onClick={() => handleProjectClick(p)}
+                  >
+                    <span>{p.name}</span>
+                    {canEdit && (
+                      <button
+                        className="project-edit-btn"
+                        onClick={(e) => { e.stopPropagation(); setEditingProject(p); }}
+                        title="Editar proyecto"
+                      >
+                        <FaEdit />
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+              {projects.filter(p => p.status === 'pending').length === 0 && (
+                <div className="user-item" style={{ opacity: 0.5, pointerEvents: 'none' }}>
+                  <span>Ninguno</span>
                 </div>
-              );
-            })
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Proyectos Hechos */}
+        <div className="status-section">
+          <div 
+            className="status-header user-item" 
+            onClick={() => setShowDone(!showDone)}
+            style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 15px' }}
+          >
+            <span>Hechos</span>
+            {showDone ? <FaChevronDown className="channel-icon" /> : <FaChevronRight className="channel-icon" />}
+          </div>
+          {showDone && (
+            <div className="status-list" style={{ paddingLeft: '10px' }}>
+              {projects.filter(p => p.status === 'done').map((p) => {
+                const canEdit = userRole === 'admin' || myId === p.owner_id || myId === details.owner_id;
+                return (
+                  <div
+                    key={`project-${p.id}`}
+                    className={`user-item ${selectedProjectId === p.id ? "project-item--active" : ""}`}
+                    onMouseDown={() => startPress(p)}
+                    onMouseUp={cancelPress}
+                    onMouseLeave={cancelPress}
+                    onTouchStart={() => startPress(p)}
+                    onTouchEnd={cancelPress}
+                    onClick={() => handleProjectClick(p)}
+                  >
+                    <span>{p.name}</span>
+                    {canEdit && (
+                      <button
+                        className="project-edit-btn"
+                        onClick={(e) => { e.stopPropagation(); setEditingProject(p); }}
+                        title="Editar proyecto"
+                      >
+                        <FaEdit />
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+              {projects.filter(p => p.status === 'done').length === 0 && (
+                <div className="user-item" style={{ opacity: 0.5, pointerEvents: 'none' }}>
+                  <span>Ninguno</span>
+                </div>
+              )}
+            </div>
           )}
         </div>
       </div>

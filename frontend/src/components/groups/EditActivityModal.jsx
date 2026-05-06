@@ -45,14 +45,14 @@ const EditActivityModal = ({ isOpen, onClose, activityId, onUpdated, onDeleted }
         // Traer usuarios de la actividad
         const { fetchActivityUsers } = await import("@/utils/activities");
         const activityUsers = await fetchActivityUsers(activityId);
-        setSelectedCollaborators(activityUsers.filter(u => u.id !== myId));
+        setSelectedCollaborators(activityUsers);
 
         const alreadyIn = new Set(activityUsers.map(u => u.id));
 
         // Traer usuarios del proyecto como disponibles
         const projectUsers = await fetchProjectUsers(data.project_id);
         setAvailableUsers(
-          projectUsers.filter(u => !alreadyIn.has(u.id) && u.id !== myId)
+          projectUsers.filter(u => !alreadyIn.has(u.id))
         );
       } catch (err) {
         console.error(err);
@@ -106,7 +106,7 @@ const EditActivityModal = ({ isOpen, onClose, activityId, onUpdated, onDeleted }
       e.preventDefault();
       e.stopPropagation();
     }
-    
+
     if (!window.confirm(`¿Eliminar la actividad "${activityData.name}"?`)) return;
     try {
       await deleteActivity(activityId);
@@ -194,9 +194,9 @@ const EditActivityModal = ({ isOpen, onClose, activityId, onUpdated, onDeleted }
       </Modal.Body>
       <Modal.Footer onClose={onClose}>
         {isOwner && (
-          <button 
+          <button
             type="button"
-            className="modal-danger" 
+            className="modal-danger"
             onClick={handleDelete}
           >
             Eliminar Actividad

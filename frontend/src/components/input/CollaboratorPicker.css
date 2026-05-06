@@ -3,7 +3,6 @@
 }
 
 .collaborator-picker {
-  margin-top: 20px;
   width: 100%;
 }
 
@@ -152,34 +151,84 @@
 }
 
 .collaborator-picker__list-wrapper {
-  margin-top: 15px;
+  margin-top: 12px;
 }
 
 .collaborator-picker__list-title {
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   font-weight: 500;
-  font-size: 14px;
+  font-size: 12px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .collaborator-picker__list {
   list-style: none;
   padding: 0;
   margin: 0;
+  padding-top: 34px;
+  margin-top: -26px;
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 
 .collaborator-picker__item {
-  display: flex;
+  position: relative;
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  border-radius: 16px;
+  gap: 8px;
+  padding: 4px 12px;
+  border-radius: 20px;
   font-size: 13px;
+  font-weight: 500;
   background-color: var(--bg-hover);
   color: var(--text-primary);
   border: 1px solid var(--border);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.collaborator-picker__item:hover {
+  background-color: var(--bg-elevated);
+  border-color: var(--text-secondary);
+  z-index: 100;
+}
+
+.collaborator-picker__item-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+}
+
+.collaborator-picker__item[data-email]:not([data-email=""])::after {
+  content: attr(data-email);
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  transform: translateY(-8px);
+  background-color: var(--text-primary);
+  color: var(--bg-elevated);
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  pointer-events: none;
+  z-index: 10;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.collaborator-picker__item[data-email]:not([data-email=""]):hover::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(-4px);
 }
 
 .collaborator-picker__remove-btn {
@@ -189,11 +238,17 @@
   cursor: pointer;
   display: flex;
   align-items: center;
-  padding: 0;
+  justify-content: center;
+  padding: 2px;
+  margin-right: -4px;
   font-size: 12px;
-  transition: color 0.2s;
+  transition: all 0.2s ease;
+  border-radius: 50%;
+  height: 20px;
+  width: 20px;
 }
 
 .collaborator-picker__remove-btn:hover {
   color: var(--error);
+  background-color: rgba(239, 68, 68, 0.1);
 }

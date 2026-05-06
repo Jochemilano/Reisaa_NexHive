@@ -16,9 +16,8 @@ const CreateActivityModal = ({ isOpen, onClose, currentProjectId, onCreated }) =
 
   useEffect(() => {
     if (isOpen && currentProjectId) {
-      const myId = Number(localStorage.getItem("userId"));
       fetchProjectUsers(currentProjectId)
-        .then(users => setAvailableUsers(users.filter(u => u.id !== myId)))
+        .then(users => setAvailableUsers(users))
         .catch(console.error);
     }
   }, [isOpen, currentProjectId]);

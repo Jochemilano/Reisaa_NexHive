@@ -5,7 +5,7 @@ const verifyToken = require("../middleware/verifyToken");
 
 // Crear proyecto
 router.post("/projects", verifyToken, async (req, res) => {
-  const { name, description, groupId, start_date, deadline, collaborators } = req.body;
+  const { name, description, groupId, start_date, deadline, status, collaborators } = req.body;
   const userId = req.userId;
 
   if (!name || !groupId)
@@ -20,8 +20,8 @@ router.post("/projects", verifyToken, async (req, res) => {
       return res.status(403).json({ message: "No pertenece al grupo" });
 
     const result = await query(
-      "INSERT INTO projects (name, description, group_id, start_date, deadline, owner_id) VALUES (?, ?, ?, ?, ?, ?)",
-      [name, description || "", groupId, start_date || null, deadline || null, userId]
+      "INSERT INTO projects (name, description, group_id, start_date, deadline, status, owner_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [name, description || "", groupId, start_date || null, deadline || null, status || 'pending', userId]
     );
     const projectId = result.insertId;
 
@@ -47,6 +47,7 @@ router.post("/projects", verifyToken, async (req, res) => {
       group_id: groupId,
       start_date: start_date || null,
       deadline: deadline || null,
+      status: status || 'pending',
       owner_id: userId,
       collaborators: collaborators || []
     });
@@ -80,7 +81,7 @@ router.get("/groups/:groupId/projects", verifyToken, async (req, res) => {
     if (isGroupOwner || isAdmin) {
       // Owner del grupo o Admin ve todos los proyectos del grupo
       projects = await query(
-        `SELECT p.id, p.name, p.description, p.start_date, p.deadline, p.owner_id, u.name AS owner_name
+        `SELECT p.id, p.name, p.description, p.start_date, p.deadline, p.status, p.owner_id, u.name AS owner_name
          FROM projects p
          LEFT JOIN users u ON u.id = p.owner_id
          WHERE p.group_id = ?
@@ -90,7 +91,7 @@ router.get("/groups/:groupId/projects", verifyToken, async (req, res) => {
     } else {
       // Usuario normal solo ve proyectos donde es owner o colaborador
       projects = await query(
-        `SELECT p.id, p.name, p.description, p.start_date, p.deadline, p.owner_id, u.name AS owner_name
+        `SELECT p.id, p.name, p.description, p.start_date, p.deadline, p.status, p.owner_id, u.name AS owner_name
          FROM projects p
          LEFT JOIN users u ON u.id = p.owner_id
          WHERE p.group_id = ? 
@@ -114,7 +115,7 @@ router.get("/projects/:projectId", verifyToken, async (req, res) => {
 
   try {
     const projectRows = await query(
-      `SELECT p.id, p.name, p.description, p.start_date, p.deadline, p.owner_id, p.group_id, u.name AS owner_name
+      `SELECT p.id, p.name, p.description, p.start_date, p.deadline, p.status, p.owner_id, p.group_id, u.name AS owner_name
        FROM projects p
        LEFT JOIN users u ON u.id = p.owner_id
        WHERE p.id = ?`,
@@ -179,7 +180,7 @@ router.get("/projects/:projectId/users", verifyToken, async (req, res) => {
       return res.status(403).json({ message: "No pertenece al proyecto" });
 
     const users = await query(
-      `SELECT u.id, u.name FROM users u
+      `SELECT u.id, u.name, u.email FROM users u
        JOIN users_projects up ON u.id = up.user_id
        WHERE up.project_id = ?`,
       [projectId]
@@ -194,7 +195,7 @@ router.get("/projects/:projectId/users", verifyToken, async (req, res) => {
 // Editar proyecto — solo owner
 router.patch("/projects/:projectId", verifyToken, async (req, res) => {
   const { projectId } = req.params;
-  const { name, description, start_date, deadline, collaborators } = req.body;
+  const { name, description, start_date, deadline, status, collaborators } = req.body;
   const userId = req.userId;
 
   try {
@@ -221,9 +222,10 @@ router.patch("/projects/:projectId", verifyToken, async (req, res) => {
        SET name = COALESCE(?, name),
            description = COALESCE(?, description),
            start_date = COALESCE(?, start_date),
-           deadline = COALESCE(?, deadline)
+           deadline = COALESCE(?, deadline),
+           status = COALESCE(?, status)
        WHERE id = ?`,
-      [name ?? null, description ?? null, start_date ?? null, deadline ?? null, projectId]
+      [name ?? null, description ?? null, start_date ?? null, deadline ?? null, status ?? null, projectId]
     );
 
     if (Array.isArray(collaborators)) {
