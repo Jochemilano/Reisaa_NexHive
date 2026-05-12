@@ -3,13 +3,15 @@ const router = express.Router();
 const db = require("../db");
 const verifyToken = require("../middleware/verifyToken");
 
-// Marcar / desmarcar favorito
+/**
+ * NOTE: Lógica de conmutación (toggle) para mensajes favoritos.
+ * Si el vínculo existe en la tabla 'favorites', lo elimina; de lo contrario, lo inserta.
+ */
 router.post("/messages/:messageId/favorite", verifyToken, async (req, res) => {
   const userId = req.userId; // viene del token
   const messageId = parseInt(req.params.messageId);
 
   try {
-    // Verificar si ya existe el favorito
     const [existing] = await db.query(
       "SELECT * FROM favorites WHERE user_id = ? AND message_id = ?",
       [userId, messageId]

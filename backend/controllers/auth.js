@@ -6,22 +6,33 @@ const query = require("../helpers/query");
 const verifyToken = require("../middleware/verifyToken");
 const { sendVerificationEmail } = require("../helpers/mailer");
 
-// Generar código de 6 dígitos
+/**
+ * NOTE: Utilidad interna para generar códigos numéricos aleatorios.
+ * Utilizado para verificación de correo y recuperación de contraseña.
+ */
 const generateCode = () => Math.floor(100000 + Math.random() * 900000).toString();
 
-// REGISTER
+// ============================================================
+// REGISTER - Gestión de usuarios y verificación inicial
+// ============================================================
 router.post("/register", async (req, res) => {
   const { name, email, password, first_name, last_name, phone, bio, birthday } = req.body;
 
+  // Validaciones básicas de integridad
   if (!name || !email || !password || !first_name || !last_name) {
     return res.status(400).json({ message: "Nickname, email, password, first name and last name are required" });
   }
 
   try {
     const existing = await query("SELECT id, is_verified FROM users WHERE email = ?", [email]);
+    
+    /**
+     * NOTE: Lógica de re-registro.
+     * Si el usuario existe pero no está verificado, permitimos actualizar sus datos
+     * y reenviar el código. Esto evita el bloqueo de correos que no completaron el flujo.
+     */
     if (existing.length) {
       if (!existing[0].is_verified) {
-        // Re-generate code and update user
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
         const vCode = generateCode();
@@ -41,11 +52,10 @@ router.post("/register", async (req, res) => {
       return res.status(409).json({ message: "El correo ya está registrado" });
     }
 
-    // Hash de contraseña
+    // Seguridad: Hasheo asíncrono de contraseñas
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
     
-    // Código de verificación
     const vCode = generateCode();
 
     const result = await query(
@@ -53,7 +63,7 @@ router.post("/register", async (req, res) => {
       [name, email, hashedPassword, vCode, first_name, last_name, phone || null, bio || null, birthday || null]
     );
 
-    // Enviar correo (no bloqueamos el registro si falla el correo, pero el usuario no estará verificado)
+    // NOTE: El registro continúa aunque falle el envío del correo (side effect no bloqueante)
     await sendVerificationEmail(email, vCode);
 
     res.status(201).json({
@@ -67,7 +77,9 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// VERIFY CODE
+// ============================================================
+// VERIFY CODE - Activación de cuenta
+// ============================================================
 router.post("/verify-code", async (req, res) => {
   const { email, code } = req.body;
 
@@ -85,6 +97,7 @@ router.post("/verify-code", async (req, res) => {
       return res.status(401).json({ message: "Código incorrecto" });
     }
 
+    // Limpieza: El código de verificación se elimina una vez usado
     await query(
       "UPDATE users SET is_verified = 1, verification_code = NULL WHERE email = ?",
       [email]
@@ -104,7 +117,9 @@ router.post("/verify-code", async (req, res) => {
   }
 });
 
-// LOGIN
+// ============================================================
+// LOGIN - Autenticación y generación de JWT
+// ============================================================
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
@@ -120,7 +135,7 @@ router.post("/login", async (req, res) => {
 
     const user = results[0];
 
-    // Verificar si está verificado
+    // WARNING: Bloqueo de acceso si la cuenta no ha sido activada vía correo
     if (!user.is_verified) {
       return res.status(403).json({ 
         message: "Cuenta no verificada. Revisa tu correo.",
@@ -129,19 +144,20 @@ router.post("/login", async (req, res) => {
       });
     }
 
-    // Comparar contraseña
+    // Validación de credenciales
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({ message: "Contraseña incorrecta" });
     }
 
+    // Emisión de Token (JWT) válido por 24 horas
     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "1d" });
 
     res.json({
       token,
       user: {
         id: user.id,
-        nombre: user.name, // Nickname
+        nombre: user.name, // NOTE: Se mapea 'name' como 'nombre' para compatibilidad con el frontend
         first_name: user.first_name,
         last_name: user.last_name,
         email: user.email,
@@ -159,7 +175,9 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// FORGOT PASSWORD
+// ============================================================
+// FORGOT PASSWORD - Inicio de recuperación
+// ============================================================
 router.post("/forgot-password", async (req, res) => {
   const { email } = req.body;
 
@@ -186,7 +204,9 @@ router.post("/forgot-password", async (req, res) => {
   }
 });
 
-// RESET PASSWORD
+// ============================================================
+// RESET PASSWORD - Finalización de recuperación
+// ============================================================
 router.post("/reset-password", async (req, res) => {
   const { email, code, newPassword } = req.body;
 
@@ -207,6 +227,7 @@ router.post("/reset-password", async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(newPassword, salt);
 
+    // Reseteo de contraseña y limpieza de código de recuperación
     await query(
       "UPDATE users SET password = ?, reset_code = NULL WHERE email = ?",
       [hashedPassword, email]
@@ -219,7 +240,9 @@ router.post("/reset-password", async (req, res) => {
   }
 });
 
-// PERFIL
+// ============================================================
+// PERFIL - Obtención de datos protegidos
+// ============================================================
 router.get("/perfil", verifyToken, async (req, res) => {
   try {
     const results = await query(

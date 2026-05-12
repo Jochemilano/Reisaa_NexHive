@@ -3,7 +3,9 @@ const router = express.Router();
 const query = require("../helpers/query");
 const verifyToken = require("../middleware/verifyToken");
 
-// Crear proyecto
+// ============================================================
+// CREATE PROJECT
+// ============================================================
 router.post("/projects", verifyToken, async (req, res) => {
   const { name, description, groupId, start_date, deadline, status, collaborators } = req.body;
   const userId = req.userId;
@@ -12,6 +14,7 @@ router.post("/projects", verifyToken, async (req, res) => {
     return res.status(400).json({ message: "Datos incompletos" });
 
   try {
+    // Validación de pertenencia al grupo antes de crear el proyecto
     const userGroup = await query(
       "SELECT * FROM user_groups WHERE user_id=? AND group_id=?",
       [userId, groupId]
@@ -25,13 +28,13 @@ router.post("/projects", verifyToken, async (req, res) => {
     );
     const projectId = result.insertId;
 
-    // Agregar owner
+    // Registrar al dueño en la tabla de relación
     await query(
       "INSERT INTO users_projects (user_id, project_id) VALUES (?, ?)",
       [userId, projectId]
     );
 
-    // Agregar colaboradores
+    // Registro masivo de colaboradores del proyecto
     if (Array.isArray(collaborators) && collaborators.length > 0) {
       const filtered = collaborators.filter(id => id !== userId);
       if (filtered.length > 0) {
@@ -57,7 +60,12 @@ router.post("/projects", verifyToken, async (req, res) => {
   }
 });
 
-// Traer proyectos de un grupo
+/**
+ * NOTE: Listado de proyectos por grupo.
+ * Regla de visibilidad:
+ * - Admin y Dueño del Grupo: Ven todos los proyectos del grupo.
+ * - Usuarios normales: Solo ven proyectos donde participan o son dueños.
+ */
 router.get("/groups/:groupId/projects", verifyToken, async (req, res) => {
   const { groupId } = req.params;
   const userId = req.userId;
@@ -108,7 +116,10 @@ router.get("/groups/:groupId/projects", verifyToken, async (req, res) => {
   }
 });
 
-// Traer detalle de proyecto con actividades
+/**
+ * NOTE: Detalle del proyecto con actividades vinculadas.
+ * Verifica permisos de acceso antes de retornar la información y sus sub-recursos.
+ */
 router.get("/projects/:projectId", verifyToken, async (req, res) => {
   const { projectId } = req.params;
   const userId = req.userId;
@@ -192,7 +203,11 @@ router.get("/projects/:projectId/users", verifyToken, async (req, res) => {
   }
 });
 
-// Editar proyecto — solo owner
+/**
+ * NOTE: Edición de proyecto.
+ * Permite actualizar metadatos y sincronizar la lista de colaboradores.
+ * Permisos: Dueño del proyecto, Admin o Dueño del Grupo.
+ */
 router.patch("/projects/:projectId", verifyToken, async (req, res) => {
   const { projectId } = req.params;
   const { name, description, start_date, deadline, status, collaborators } = req.body;
@@ -228,6 +243,7 @@ router.patch("/projects/:projectId", verifyToken, async (req, res) => {
       [name ?? null, description ?? null, start_date ?? null, deadline ?? null, status ?? null, projectId]
     );
 
+    // Sincronización de colaboradores
     if (Array.isArray(collaborators)) {
       await query(
         "DELETE FROM users_projects WHERE project_id=? AND user_id != ?",
@@ -283,7 +299,10 @@ router.patch("/projects/:projectId/transfer", verifyToken, async (req, res) => {
   }
 });
 
-// Eliminar proyecto — solo owner
+/**
+ * NOTE: Eliminación de proyecto.
+ * Limpia la tabla de relación 'users_projects' antes de borrar el registro principal.
+ */
 router.delete("/projects/:projectId", verifyToken, async (req, res) => {
   const { projectId } = req.params;
   const userId = req.userId;
@@ -309,7 +328,7 @@ router.delete("/projects/:projectId", verifyToken, async (req, res) => {
 
     await query("DELETE FROM users_projects WHERE project_id=?", [projectId]);
 
-    // Eliminar el proyecto
+    // Eliminación final
     await query("DELETE FROM projects WHERE id=?", [projectId]);
 
     res.json({ message: "Proyecto eliminado correctamente" });

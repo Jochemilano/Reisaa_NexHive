@@ -3,7 +3,10 @@ const router = express.Router();
 const db = require("../db");
 const verifyToken = require("../middleware/verifyToken");
 
-// Traer datos del usuario autenticado
+/**
+ * NOTE: Recuperación de datos del perfil autenticado.
+ * Retorna información sensible y metadatos del usuario actual.
+ */
 router.get("/profile", verifyToken, async (req, res) => {
   try {
     const [results] = await db.query(
@@ -31,7 +34,11 @@ router.get("/users", async (req, res) => {
   }
 });
 
-// Traer datos de un usuario específico por ID (con estado de amistad)
+/**
+ * NOTE: Consulta de perfil de terceros.
+ * Incluye un subquery para determinar el estado de amistad entre el usuario que consulta
+ * y el usuario consultado (pending, accepted, etc.).
+ */
 router.get("/users/:id", verifyToken, async (req, res) => {
   try {
     const [results] = await db.query(

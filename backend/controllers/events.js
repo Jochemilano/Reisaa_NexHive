@@ -3,7 +3,10 @@ const router = express.Router();
 const query = require("../helpers/query");
 const verifyToken = require("../middleware/verifyToken");
 
-// Crear evento personal
+/**
+ * NOTE: Creación de eventos personales.
+ * Permite la inclusión de colaboradores, vinculándolos a través de la tabla 'calendar_event_users'.
+ */
 router.post("/events", verifyToken, async (req, res) => {
   const { title, description, start, end, collaborators = [] } = req.body;
   const userId = req.userId;
@@ -55,7 +58,11 @@ router.post("/events", verifyToken, async (req, res) => {
   }
 });
 
-// Obtener eventos del usuario
+/**
+ * NOTE: Recuperación de eventos del calendario global.
+ * Agrega tanto eventos personales como eventos automáticos generados por actividades
+ * de los grupos a los que el usuario pertenece.
+ */
 router.get("/events", verifyToken, async (req, res) => {
   const userId = req.userId;
 
@@ -179,7 +186,11 @@ router.put("/events/:id", verifyToken, async (req, res) => {
   }
 });
 
-// Eliminar evento personal o salirse de él
+/**
+ * NOTE: Eliminación de evento o salida del mismo.
+ * - Si el usuario es el DUEÑO: El evento se borra por completo para todos.
+ * - Si el usuario es COLABORADOR: Solo se elimina su vínculo en 'calendar_event_users'.
+ */
 router.delete("/events/:id", verifyToken, async (req, res) => {
   const eventId = req.params.id;
   const userId = req.userId;

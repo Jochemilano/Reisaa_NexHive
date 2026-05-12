@@ -4,7 +4,12 @@ const db = require("../db");
 const query = require("../helpers/query");
 const verifyToken = require("../middleware/verifyToken");
 
-// Crear sala
+/**
+ * NOTE: Creación de salas de chat.
+ * Soporta dos tipos:
+ * 1. DMs (Direct Messages): Entre 2 usuarios.
+ * 2. Chat de Grupo (Discord style): Más de 2 usuarios, limitado a 10 por simplicidad y UX.
+ */
 router.post("/rooms", verifyToken, async (req, res) => {
   const { name, type, userIds, avatar = null } = req.body;
   const createdBy = req.userId;
@@ -12,7 +17,7 @@ router.post("/rooms", verifyToken, async (req, res) => {
   if (!type || !userIds || !Array.isArray(userIds))
     return res.status(400).json({ message: "Datos incompletos" });
 
-  // Validaciones para Chat de Grupo (Discord style)
+  // Reglas de negocio para grupos pequeños/DMs grupales
   if (userIds.length > 2) {
     if (userIds.length > 10) {
       return res.status(400).json({ message: "Máximo 10 participantes permitidos" });
@@ -33,6 +38,7 @@ router.post("/rooms", verifyToken, async (req, res) => {
 
     const roomId = roomResult.insertId;
 
+    // Registro de participantes vinculados a la sala
     for (const userId of userIds) {
       await query("INSERT INTO room_participants (room_id, user_id) VALUES (?, ?)", [roomId, userId]);
     }
@@ -67,7 +73,11 @@ router.put("/rooms/:roomId/read", verifyToken, async (req, res) => {
   }
 });
 
-// Listar salas del usuario con conteo de no leídos y metadata enriquecida
+/**
+ * NOTE: Listado de salas con enriquecimiento dinámico.
+ * Si es una sala tipo DM (2 participantes), el sistema busca automáticamente
+ * los datos del 'otro' participante para mostrarlos como identidad de la sala.
+ */
 router.get("/rooms", verifyToken, async (req, res) => {
   const userId = req.userId;
   try {
@@ -90,7 +100,6 @@ router.get("/rooms", verifyToken, async (req, res) => {
       [userId, userId]
     );
 
-    // Enriquecer salas: si es DM (tipo chat y nombre chat-X-Y), buscar el nombre/avatar del otro
     const enrichedRooms = await Promise.all(rooms.map(async (room) => {
       const isDM = room.type === 'chat' && (room.name && room.name.startsWith('chat-'));
       
@@ -111,7 +120,6 @@ router.get("/rooms", verifyToken, async (req, res) => {
           };
         }
       }
-      // Para grupos (>2) o si no se encontró el otro, usar info de la sala
       return {
         ...room,
         display_name: room.name || "Grupo sin nombre",
@@ -126,6 +134,7 @@ router.get("/rooms", verifyToken, async (req, res) => {
   }
 });
 
+// Traer total de mensajes no leídos globalmente
 router.get("/rooms/unread/total", verifyToken, async (req, res) => {
   const userId = req.userId;
   try {
@@ -154,13 +163,16 @@ router.get("/rooms/unread/total", verifyToken, async (req, res) => {
   }
 });
 
-// Traer mensajes de sala
+/**
+ * NOTE: Recuperación de historial de mensajes.
+ * Calcula el estado de 'leído' comparando el timestamp de los mensajes con
+ * la última lectura (last_read_at) de los otros participantes.
+ */
 router.get("/rooms/:roomId/messages", verifyToken, async (req, res) => {
   const { roomId } = req.params;
   const userId = req.userId;
 
   try {
-    // Verificar que el usuario pertenece a la sala
     const [participants] = await db.query(
       "SELECT * FROM room_participants WHERE room_id=? AND user_id=?",
       [roomId, userId]
@@ -168,7 +180,6 @@ router.get("/rooms/:roomId/messages", verifyToken, async (req, res) => {
 
     if (participants.length === 0) return res.status(403).json({ error: "No autorizado" });
 
-    // Traer mensajes
     const [messages] = await db.query(
       `SELECT 
           m.id, 
@@ -176,16 +187,16 @@ router.get("/rooms/:roomId/messages", verifyToken, async (req, res) => {
           m.sender_id, 
           m.type, 
           m.content,
-          m.caption,                             -- 👈 caption del mensaje
-          m.file_size,                           -- 👈 tamaño del archivo
+          m.caption,
+          m.file_size,
           m.edited,
           m.reply_to_id,
-          m.created_at,                          -- 👈 hora
+          m.created_at,
           u.name AS sender_name,
           u.profile_pic AS profile_pic,
-          rm.content  AS reply_content,          -- 👈 texto del mensaje citado
-          rm.caption  AS reply_caption,          -- 👈 caption del mensaje citado
-          ru.name     AS reply_sender_name,      -- 👈 autor del mensaje citado
+          rm.content  AS reply_content,
+          rm.caption  AS reply_caption,
+          ru.name     AS reply_sender_name,
           CASE WHEN f.id IS NULL THEN 0 ELSE 1 END AS favorite
       FROM messages m
       JOIN users u ON u.id = m.sender_id
@@ -206,6 +217,10 @@ router.get("/rooms/:roomId/messages", verifyToken, async (req, res) => {
 
     const messagesWithRead = messages.map((msg) => {
       const isSentByMe = Number(msg.sender_id) === Number(userId);
+      /**
+       * NOTE: Un mensaje mío se marca como leído si TODOS los demás participantes
+       * han leído la sala en un momento posterior a la creación del mensaje.
+       */
       const read = isSentByMe && otherReaders.length > 0 && otherReaders.every((reader) => {
         return reader.last_read_at && new Date(reader.last_read_at) >= new Date(msg.created_at);
       });
@@ -222,7 +237,7 @@ router.get("/rooms/:roomId/messages", verifyToken, async (req, res) => {
 
 // Enviar mensaje a sala
 router.post("/messages", verifyToken, async (req, res) => {
-  const { roomId, type, content, caption, replyToId } = req.body; // 👈 agrega caption y replyToId
+  const { roomId, type, content, caption, replyToId, fileSize } = req.body;
   const senderId = req.userId;
 
   if (!roomId || !type || !content)
@@ -279,14 +294,12 @@ router.get("/rooms/:roomId/participants", verifyToken, async (req, res) => {
   const userId = req.userId;
 
   try {
-    // Verificar que el usuario pertenece a la sala
     const [access] = await db.query(
       "SELECT * FROM room_participants WHERE room_id = ? AND user_id = ?",
       [roomId, userId]
     );
     if (access.length === 0) return res.status(403).json({ error: "No autorizado" });
 
-    // Traer los otros participantes (no el que consulta)
     const [participants] = await db.query(
       `SELECT u.id, u.name, u.profile_pic
        FROM room_participants rp
@@ -303,7 +316,10 @@ router.get("/rooms/:roomId/participants", verifyToken, async (req, res) => {
   }
 });
 
-// Buscar sala directa (tipo "direct") entre el usuario autenticado y otro usuario
+/**
+ * NOTE: Buscador de salas directas existentes.
+ * Evita la creación de salas duplicadas entre los mismos dos usuarios.
+ */
 router.get("/rooms/direct/:otherUserId", verifyToken, async (req, res) => {
   const userId = req.userId;
   const otherUserId = parseInt(req.params.otherUserId);
@@ -332,7 +348,7 @@ router.get("/rooms/direct/:otherUserId", verifyToken, async (req, res) => {
   }
 });
 
-// Editar mensaje
+// Editar mensaje — solo permitido al autor
 router.put("/messages/:messageId", verifyToken, async (req, res) => {
   const { messageId } = req.params;
   const { content } = req.body;
@@ -359,7 +375,7 @@ router.put("/messages/:messageId", verifyToken, async (req, res) => {
   }
 });
 
-// Borrar mensaje
+// Borrar mensaje — solo permitido al autor
 router.delete("/messages/:messageId", verifyToken, async (req, res) => {
   const { messageId } = req.params;
   const userId = req.userId;
@@ -394,7 +410,6 @@ router.patch("/rooms/:roomId/transfer", verifyToken, async (req, res) => {
     if (room.length === 0)
       return res.status(403).json({ message: "No eres owner de la sala" });
 
-    // Verificar que el nuevo owner es participante
     const participant = await query(
       "SELECT * FROM room_participants WHERE user_id=? AND room_id=?",
       [newOwnerId, roomId]
@@ -423,6 +438,7 @@ router.post("/rooms/:roomId/leave", verifyToken, async (req, res) => {
     const room = await query("SELECT owner_id FROM rooms WHERE id = ?", [roomId]);
     if (room.length === 0) return res.status(404).json({ message: "Sala no encontrada" });
 
+    // Regla de negocio: El dueño no puede abandonar sin transferir el mando
     if (room[0].owner_id === userId) {
       return res.status(400).json({
         message: "No puedes salirte siendo el owner. Transfiere el mando o elimina la sala."
@@ -445,7 +461,11 @@ router.post("/rooms/:roomId/leave", verifyToken, async (req, res) => {
   }
 });
 
-// Eliminar sala (incluyendo chats de 10 personas)
+/**
+ * NOTE: Eliminación de sala.
+ * Realiza una limpieza manual de mensajes y participantes asociados
+ * para asegurar la integridad referencial en la DB.
+ */
 router.delete("/rooms/:roomId", verifyToken, async (req, res) => {
   const { roomId } = req.params;
   const userId = req.userId;
@@ -462,7 +482,7 @@ router.delete("/rooms/:roomId", verifyToken, async (req, res) => {
       return res.status(403).json({ message: "No tienes permisos para eliminar esta sala" });
     }
 
-    // Limpiar mensajes y participantes
+    // Limpieza de sub-recursos
     await query("DELETE FROM messages WHERE room_id = ?", [roomId]);
     await query("DELETE FROM room_participants WHERE room_id = ?", [roomId]);
     await query("DELETE FROM rooms WHERE id = ?", [roomId]);

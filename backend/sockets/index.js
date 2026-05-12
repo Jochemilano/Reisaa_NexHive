@@ -1,10 +1,17 @@
 const jwt = require("jsonwebtoken");
 const db = require("../db");
 
+/**
+ * NOTE: Lógica central de WebSockets (Socket.io).
+ * Gestiona la comunicación en tiempo real, incluyendo chat, notificaciones,
+ * señalización WebRTC para llamadas y estados de conexión.
+ */
 module.exports = (io, connectedUsers) => {
+  // NOTE: Almacena el estado de las salas de voz activas en memoria (userId -> userName)
   const voiceRooms = new Map();
 
   io.on("connection", async (socket) => {
+    // Seguridad: Verificación de token en el handshake inicial
     const token = socket.handshake.auth?.token;
     if (!token) return socket.disconnect();
 
@@ -12,7 +19,7 @@ module.exports = (io, connectedUsers) => {
       const payload = jwt.verify(token, process.env.JWT_SECRET);
       socket.userId = payload.id;
 
-      // traer datos del usuario
+      // Obtención de metadata del usuario para identificarlo en eventos
       const [rows] = await db.query(
         "SELECT id, name, profile_pic FROM users WHERE id = ?",
         [payload.id]
@@ -21,16 +28,18 @@ module.exports = (io, connectedUsers) => {
       const userData = rows[0];
 
       socket.userInfo = userData;
+      // Registrar usuario en el Map global de conexiones activas
       connectedUsers.set(socket.userId, { socketId: socket.id, userData });
 
+      // Unirse a una sala privada propia basada en su ID para recibir notificaciones directas
       socket.join(socket.userId.toString());
 
       console.log("Usuario conectado:", socket.userId);
 
-      // enviar info completa
+      // Notificar a todos los clientes el cambio en la lista de usuarios online
       io.emit("usuarios:lista", [...connectedUsers.values()].map(v => v.userData));
 
-      // Permitir que el cliente pida la lista (ej: al volver a Home)
+      // Sincronización bajo demanda de usuarios conectados
       socket.on("get-online-users", () => {
         socket.emit("usuarios:lista", [...connectedUsers.values()].map(v => v.userData));
       });
@@ -40,19 +49,24 @@ module.exports = (io, connectedUsers) => {
       return socket.disconnect();
     }
 
-    // Unirse a sala de chat
+    // ──────────────────────────────────────────────────────────────────────
+    // GESTIÓN DE SALAS DE CHAT
+    // ──────────────────────────────────────────────────────────────────────
+
     socket.on("join-room", (roomId) => {
       socket.join(roomId.toString());
       console.log("Usuario", socket.userId, "se unió a sala", roomId);
     });
 
-    // Salir de sala de chat
     socket.on("leave-room", (roomId) => {
       socket.leave(roomId.toString());
       console.log("Usuario", socket.userId, "salió de sala", roomId);
     });
 
-    // Indicador de escritura (Modificado para ser 100% fiable con el nombre)
+    /**
+     * NOTE: Indicadores de escritura.
+     * Se emite a otros miembros de la sala para feedback visual inmediato (UX).
+     */
     socket.on("typing", ({ roomId }) => {
       const userName = socket.userInfo?.name || "Usuario";
       socket.to(roomId.toString()).emit("user-typing", { 
@@ -66,10 +80,12 @@ module.exports = (io, connectedUsers) => {
       socket.to(roomId.toString()).emit("user-stop-typing", { roomId, userId: socket.userId });
     });
 
-    // Marcar sala como leída vía socket
+    /**
+     * NOTE: Marcado de lectura en tiempo real.
+     * Sincroniza el estado de la base de datos y avisa a los demás participantes.
+     */
     socket.on("mark-room-read", async ({ roomId }) => {
       if (!roomId) return;
-      console.log(`Marking room ${roomId} as read for user ${socket.userId}`);
       try {
         await db.query(
           "UPDATE room_participants SET last_read_at = NOW() WHERE room_id = ? AND user_id = ?",
@@ -85,24 +101,27 @@ module.exports = (io, connectedUsers) => {
       }
     });
 
-    // Enviar mensaje
+    /**
+     * NOTE: Flujo de envío de mensajes.
+     * 1. Persistencia en DB.
+     * 2. Recuperación de metadata (usuario, respuestas).
+     * 3. Emisión a la sala activa.
+     * 4. Notificaciones push-like a cada participante (para contadores de no leídos).
+     */
     socket.on("send-message", async ({ roomId, type, content, caption, fileSize, replyToId }) => {
-      console.log("Received send-message:", { roomId, type, content, caption, fileSize, replyToId, userId: socket.userId });
       try {
-        // 1️⃣ Insertar el mensaje en la base de datos
         const [result] = await db.query(
           "INSERT INTO messages (room_id, sender_id, type, content, caption, file_size, reply_to_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
           [roomId, socket.userId, type, content, caption || null, fileSize || null, replyToId || null]
         );
 
-        // 2️⃣ Obtener el nombre y foto de perfil del remitente
         const [user] = await db.query("SELECT name, profile_pic FROM users WHERE id=?", [socket.userId]);
 
-        // 3️⃣ Preparar datos de mensaje original si es una respuesta
         let replyContent = null;
         let replyCaption = null;
         let replySenderName = null;
 
+        // Gestión de lógica de respuestas (replies)
         if (replyToId) {
           const [replyMsgRows] = await db.query(
             "SELECT content, caption, sender_id FROM messages WHERE id = ?",
@@ -122,7 +141,6 @@ module.exports = (io, connectedUsers) => {
           }
         }
 
-        // 4️⃣ Construir el mensaje completo para enviar por socket
         const messageData = {
           id: result.insertId,
           room_id: roomId,
@@ -143,23 +161,18 @@ module.exports = (io, connectedUsers) => {
           read: false,
         };
 
-        // 5️⃣ Emitir mensaje a la sala de chat (para useChat)
+        // Emitir el mensaje a todos en la sala de chat
         io.to(roomId.toString()).emit("receive-message", messageData);
 
-        // 6️⃣ Notificar a cada participante individualmente (para UnreadContext)
+        // Notificar a cada participante fuera de la sala actual para actualizar contadores de mensajes no leídos
         const [participants] = await db.query(
           "SELECT user_id FROM room_participants WHERE room_id = ?",
           [roomId]
         );
 
         participants.forEach(p => {
-          // No notificar al remitente (usar String para evitar problemas de tipos)
-          if (String(p.user_id) === String(socket.userId)) {
-            console.log("Skipping notification for sender:", socket.userId);
-            return;
-          }
+          if (String(p.user_id) === String(socket.userId)) return;
           
-          console.log(`Sending notification to ${p.user_id} for message from ${socket.userId}`);
           io.to(p.user_id.toString()).emit("new-message-notification", {
             room_id: roomId,
             sender_id: socket.userId,
@@ -167,23 +180,20 @@ module.exports = (io, connectedUsers) => {
         });
 
       } catch (err) {
-
         console.error("ERROR SOCKET MESSAGE:", err);
       }
     });
 
-    // Llamadas 1 a 1
+    // ──────────────────────────────────────────────────────────────────────
+    // LLAMADAS 1 A 1 (WebRTC Signaling)
+    // ──────────────────────────────────────────────────────────────────────
+
     socket.on("call-user", async ({ toUserId, offer }) => {
-      console.log("Received call-user from", socket.userId, "to", toUserId);
       const target = connectedUsers.get(toUserId);
-      if (!target) {
-        console.log("Target not connected:", toUserId);
-        return;
-      }
+      if (!target) return;
 
       try {
         const [user] = await db.query("SELECT name FROM users WHERE id=?", [socket.userId]);
-        console.log("Emitting incoming-call to", target.socketId);
         io.to(target.socketId).emit("incoming-call", {
           fromUserId: socket.userId,
           fromUserName: user?.[0]?.name || "Usuario",
@@ -210,27 +220,29 @@ module.exports = (io, connectedUsers) => {
       if (target) io.to(target.socketId).emit("call-ended");
     });
 
-    // ── Sala de voz grupal (mesh) ──────────────────────────────────────────
+    // ──────────────────────────────────────────────────────────────────────
+    // SALA DE VOZ GRUPAL (Mesh Architecture)
+    // ──────────────────────────────────────────────────────────────────────
 
     socket.on("join-voice-room", async ({ voiceRoomId }) => {
-      // Evitar doble entrada del mismo usuario
       const roomKey = `voice-${voiceRoomId}`;
-      if (!voiceRooms.has(roomKey)) voiceRooms.set(roomKey, new Map()); // userId -> userName
+      if (!voiceRooms.has(roomKey)) voiceRooms.set(roomKey, new Map());
       const room = voiceRooms.get(roomKey);
 
-      if (room.has(socket.userId)) return; // ya está, ignorar duplicado
+      // Evitar entradas duplicadas por reconexión rápida
+      if (room.has(socket.userId)) return;
 
       const [user] = await db.query("SELECT name FROM users WHERE id=?", [socket.userId]);
       const userName = user?.[0]?.name || "Usuario";
 
-      // Decirle al recién llegado quiénes ya están
+      // 1. Informar al nuevo integrante quiénes están presentes para iniciar negociación WebRTC
       const existingUsers = Array.from(room.entries()).map(([uid, uname]) => ({
         userId: uid,
         userName: uname,
       }));
       socket.emit("voice-room-users", { users: existingUsers });
 
-      // Avisar a los que ya están que llegó alguien nuevo
+      // 2. Notificar a los actuales que hay un nuevo integrante
       room.forEach((_, existingUserId) => {
         const existing = connectedUsers.get(existingUserId);
         if (existing) {
@@ -241,12 +253,15 @@ module.exports = (io, connectedUsers) => {
         }
       });
 
-      // Agregar al recién llegado
       room.set(socket.userId, userName);
       socket.join(roomKey);
       console.log(`Usuario ${socket.userId} (${userName}) entró a sala de voz ${voiceRoomId}`);
     });
 
+    /**
+     * NOTE: Intercambio de señales (signals) para WebRTC mesh.
+     * Permite que los clientes establezcan conexiones P2P directas para el audio.
+     */
     socket.on("voice-signal", ({ toUserId, signal }) => {
       const target = connectedUsers.get(toUserId);
       if (target) {
@@ -270,8 +285,11 @@ module.exports = (io, connectedUsers) => {
     });
 
     // ──────────────────────────────────────────────────────────────────────
+    // DESCONEXIÓN Y LIMPIEZA
+    // ──────────────────────────────────────────────────────────────────────
 
     socket.on("disconnect", () => {
+      // Limpiar rastro del usuario en salas de voz activas
       voiceRooms.forEach((room, roomKey) => {
         if (room.has(socket.userId)) {
           room.delete(socket.userId);
@@ -280,9 +298,12 @@ module.exports = (io, connectedUsers) => {
         }
       });
 
+      // Eliminar de la lista global de conectados
       connectedUsers.delete(socket.userId);
       console.log("Usuario desconectado:", socket.userId);
-      io.emit("usuarios:lista", [...connectedUsers.values()].map(v => v.userData)); // ← fuera del forEach y con .values()
+      
+      // Notificar a todos que el usuario se ha desconectado
+      io.emit("usuarios:lista", [...connectedUsers.values()].map(v => v.userData));
     });
   });
 };

@@ -1,5 +1,9 @@
 const nodemailer = require("nodemailer");
 
+/**
+ * NOTE: Configuración del transporte de correo.
+ * Utiliza Gmail como servicio base. Requiere las variables MAIL_USER y MAIL_PASS (App Password).
+ */
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -8,6 +12,9 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+/**
+ * NOTE: Envío de email de bienvenida y código de verificación.
+ */
 const sendVerificationEmail = async (email, code) => {
   const mailOptions = {
     from: process.env.MAIL_FROM,
@@ -33,6 +40,7 @@ const sendVerificationEmail = async (email, code) => {
     return true;
   } catch (error) {
     console.error("Error enviando email:", error);
+    // WARNING: Fallback para desarrollo. Imprime el código en consola si el servicio de correo falla.
     console.log("CÓDIGO DE VERIFICACIÓN (DEV):", code);
     return false;
   }

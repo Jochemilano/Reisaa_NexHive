@@ -3,7 +3,10 @@ const router = express.Router();
 const query = require("../helpers/query");
 const verifyToken = require("../middleware/verifyToken");
 
-// Guardar o actualizar preferencias
+/**
+ * NOTE: Persistencia de preferencias de usuario.
+ * Utiliza un patrón de 'upsert' manual (verificación previa y luego UPDATE o INSERT).
+ */
 router.put("/preferences", verifyToken, async (req, res) => {
   const { language, theme, notifications_enabled } = req.body;
   const userId = req.userId;
@@ -12,14 +15,12 @@ router.put("/preferences", verifyToken, async (req, res) => {
     return res.status(400).json({ message: "Datos incompletos" });
 
   try {
-    // Verificar si ya existen
     const existing = await query(
       "SELECT * FROM user_preferences WHERE user_id = ?",
       [userId]
     );
 
     if (existing.length > 0) {
-      // Update
       await query(
         `UPDATE user_preferences 
          SET language=?, theme=?, notifications_enabled=? 
@@ -27,7 +28,6 @@ router.put("/preferences", verifyToken, async (req, res) => {
         [language, theme, notifications_enabled, userId]
       );
     } else {
-      // Insert
       await query(
         `INSERT INTO user_preferences 
          (user_id, language, theme, notifications_enabled) 

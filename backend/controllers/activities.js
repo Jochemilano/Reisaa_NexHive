@@ -3,6 +3,9 @@ const router = express.Router();
 const db = require("../db");
 const verifyToken = require("../middleware/verifyToken");
 
+/**
+ * NOTE: Utilidad interna para normalizar fechas al formato aceptado por MySQL.
+ */
 function formatDateForSQL(date) {
   if (!date) return null;
   const d = new Date(date);
@@ -10,7 +13,10 @@ function formatDateForSQL(date) {
   return d.toISOString().slice(0, 19).replace("T", " ");
 }
 
-// Obtener mis actividades (trabajando)
+/**
+ * NOTE: Listado de actividades activas del usuario.
+ * Filtra por el estado 'in_progress' para mostrar el trabajo pendiente inmediato.
+ */
 router.get("/my-activities", verifyToken, async (req, res) => {
   const userId = req.userId;
   try {
@@ -34,7 +40,13 @@ router.get("/my-activities", verifyToken, async (req, res) => {
   }
 });
 
-// Crear actividad
+/**
+ * NOTE: Flujo de creación de actividad con integración de calendario.
+ * 1. Valida acceso al proyecto raíz.
+ * 2. Inserta la actividad base.
+ * 3. Registra dueños y colaboradores.
+ * 4. Genera automáticamente un evento de calendario vinculado.
+ */
 router.post("/activities", verifyToken, async (req, res) => {
   const { name, projectId, description, status, start_date, deadline, collaborators } = req.body;
   const userId = req.userId;
@@ -66,13 +78,13 @@ router.post("/activities", verifyToken, async (req, res) => {
     );
     const activityId = activityResult.insertId;
 
-    // Agregar owner a user_activities
+    // Registrar participación del creador
     await db.query(
       "INSERT INTO user_activities (user_id, activity_id) VALUES (?, ?)",
       [userId, activityId]
     );
 
-    // Agregar colaboradores
+    // Registro masivo de colaboradores de la actividad
     if (Array.isArray(collaborators) && collaborators.length > 0) {
       const filtered = collaborators.filter(id => id !== userId);
       if (filtered.length > 0) {
@@ -84,7 +96,7 @@ router.post("/activities", verifyToken, async (req, res) => {
       }
     }
 
-    // Calendario
+    // Integración automática con el Calendario global
     const [eventResult] = await db.query(
       `INSERT INTO calendar_events (title, description, start_datetime, end_datetime, type, owner_id)
        VALUES (?, ?, ?, ?, 'ACTIVITY', ?)`,
@@ -121,7 +133,9 @@ router.post("/activities", verifyToken, async (req, res) => {
   }
 });
 
-// Traer detalle de actividad
+/**
+ * NOTE: Detalle de actividad con validación de pertenencia al grupo padre.
+ */
 router.get("/activities/:id", verifyToken, async (req, res) => {
   const activityId = req.params.id;
   const userId = req.userId;
@@ -203,7 +217,11 @@ router.get("/activities/:id/users", verifyToken, async (req, res) => {
   }
 });
 
-// Editar actividad — solo owner
+/**
+ * NOTE: Edición de actividad y sincronización de recursos vinculados.
+ * Actualiza tanto la actividad principal como el evento de calendario asociado.
+ * Gestiona también la sincronización de colaboradores (vía DELETE/INSERT).
+ */
 router.put("/activities/:id", verifyToken, async (req, res) => {
   const activityId = req.params.id;
   const { name, description, status, start_date, deadline, collaborators } = req.body;
@@ -230,6 +248,7 @@ router.put("/activities/:id", verifyToken, async (req, res) => {
         formatDateForSQL(start_date), formatDateForSQL(deadline), activityId]
     );
 
+    // NOTE: Actualizar automáticamente el evento de calendario vinculado
     await db.query(
       `UPDATE calendar_events e
        JOIN calendar_event_activities cea ON e.id = cea.event_id
@@ -238,16 +257,14 @@ router.put("/activities/:id", verifyToken, async (req, res) => {
       [name, description || "", formatDateForSQL(start_date), formatDateForSQL(deadline), activityId]
     );
 
-    // Actualizar colaboradores
+    // Sincronización de colaboradores
     if (Array.isArray(collaborators)) {
-      // Eliminar todos excepto al owner
       await db.query(
         "DELETE FROM user_activities WHERE activity_id=? AND user_id != ?",
         [activityId, activity.owner_id]
       );
 
       if (collaborators.length > 0) {
-        // Filtrar al owner de los nuevos colaboradores para no duplicar
         const filtered = collaborators.filter(id => Number(id) !== Number(activity.owner_id));
         if (filtered.length > 0) {
           const values = filtered.map(id => [id, activityId]);
@@ -306,7 +323,11 @@ router.patch("/activities/:id/transfer", verifyToken, async (req, res) => {
   }
 });
 
-// Eliminar actividad — solo owner
+/**
+ * NOTE: Eliminación de actividad y limpieza profunda.
+ * Limpia manualmente eventos de calendario y tablas pivot asociadas antes de
+ * borrar el registro principal de la actividad.
+ */
 router.delete("/activities/:id", verifyToken, async (req, res) => {
   const activityId = req.params.id;
   const userId = req.userId;
@@ -319,25 +340,21 @@ router.delete("/activities/:id", verifyToken, async (req, res) => {
     if (rows.length === 0)
       return res.status(404).json({ message: "Actividad no encontrada" });
 
-    // 1. Obtener IDs de eventos vinculados
+    // Limpieza de eventos de calendario vinculados
     const [events] = await db.query(
       "SELECT event_id FROM calendar_event_activities WHERE activity_id = ?",
       [activityId]
     );
 
-    // 2. Limpiar tabla pivot
     await db.query("DELETE FROM calendar_event_activities WHERE activity_id=?", [activityId]);
 
-    // 3. Limpiar eventos de calendario
     if (events.length > 0) {
       const eventIds = events.map(e => e.event_id);
       await db.query("DELETE FROM calendar_events WHERE id IN (?)", [eventIds]);
     }
 
-    // 4. Limpiar usuarios
+    // Limpieza de relaciones de usuario y actividad base
     await db.query("DELETE FROM user_activities WHERE activity_id=?", [activityId]);
-
-    // 5. Eliminar actividad
     await db.query("DELETE FROM activities WHERE id=?", [activityId]);
 
     res.json({ message: "Actividad eliminada correctamente" });

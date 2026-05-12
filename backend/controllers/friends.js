@@ -3,7 +3,10 @@ const router = express.Router();
 const query = require("../helpers/query");
 const verifyToken = require("../middleware/verifyToken");
 
-// GET /api/friends - Obtener lista de amigos aceptados
+/**
+ * NOTE: Recuperación de lista de amigos.
+ * Realiza una unión simétrica para encontrar amigos independientemente de quién inició la solicitud.
+ */
 router.get("/friends", verifyToken, async (req, res) => {
   try {
     const results = await query(`
@@ -60,7 +63,10 @@ router.get("/users/search", verifyToken, async (req, res) => {
   }
 });
 
-// POST /api/friends - Enviar solicitud de amistad
+/**
+ * NOTE: Envío de solicitud de amistad.
+ * Valida que no exista una relación previa (pendiente o aceptada) para evitar duplicidad.
+ */
 router.post("/friends", verifyToken, async (req, res) => {
   const { friendId } = req.body;
 
@@ -73,7 +79,7 @@ router.post("/friends", verifyToken, async (req, res) => {
   }
 
   try {
-    // Verificar si ya existe alguna relación
+    // Verificación de integridad: evita solicitudes redundantes
     const existing = await query(
       "SELECT status FROM friends WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)",
       [req.userId, friendId, friendId, req.userId]

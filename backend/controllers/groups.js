@@ -3,7 +3,16 @@ const router = express.Router();
 const query = require("../helpers/query");
 const verifyToken = require("../middleware/verifyToken");
 
-// Crear grupo
+/**
+ * NOTE: Creación de Grupos.
+ * Este flujo es complejo ya que requiere una secuencia coordinada de inserciones:
+ * 1. El grupo base.
+ * 2. Asociación del dueño al grupo.
+ * 3. Asociación de colaboradores iniciales.
+ * 4. Creación automática de salas de chat y voz ("general").
+ * 5. Registro de todos los miembros en dichas salas.
+ * 6. Vinculación final en la tabla 'channels'.
+ */
 router.post("/groups", verifyToken, async (req, res) => {
   const { name, collaborators = [], avatar = null } = req.body;
   const ownerId = req.userId;
@@ -17,13 +26,13 @@ router.post("/groups", verifyToken, async (req, res) => {
     );
     const groupId = result.insertId;
 
-    // Agregar owner
+    // Registrar al creador como miembro primario
     await query(
       "INSERT INTO user_groups (user_id, group_id) VALUES (?, ?)",
       [ownerId, groupId]
     );
 
-    // Agregar colaboradores excluyendo owner
+    // Registro masivo de colaboradores
     if (collaborators.length > 0) {
       const filtered = collaborators.filter(id => id !== ownerId);
       if (filtered.length > 0) {
@@ -34,7 +43,7 @@ router.post("/groups", verifyToken, async (req, res) => {
 
     const allUsers = [ownerId, ...collaborators.filter(id => id !== ownerId)];
 
-    // Crear rooms
+    // Generación de salas por defecto para el grupo
     const chatRoom = await query(
       "INSERT INTO rooms (name, type, owner_id) VALUES (?, ?, ?)",
       ["general-chat", "chat", ownerId]
@@ -47,6 +56,7 @@ router.post("/groups", verifyToken, async (req, res) => {
     const chatRoomId = chatRoom.insertId;
     const voiceRoomId = voiceRoom.insertId;
 
+    // Sincronización de participantes en las nuevas salas
     if (allUsers.length > 0) {
       const chatValues = allUsers.map(id => [chatRoomId, id]);
       const voiceValues = allUsers.map(id => [voiceRoomId, id]);
@@ -54,6 +64,7 @@ router.post("/groups", verifyToken, async (req, res) => {
       await query("INSERT INTO room_participants (room_id, user_id) VALUES ?", [voiceValues]);
     }
 
+    // Mapeo del canal principal del grupo
     await query(
       "INSERT INTO channels (group_id, voice_room_id, chat_room_id) VALUES (?, ?, ?)",
       [groupId, voiceRoomId, chatRoomId]
@@ -73,7 +84,11 @@ router.post("/groups", verifyToken, async (req, res) => {
   }
 });
 
-// Traer grupos del usuario
+/**
+ * NOTE: Listado de grupos del usuario.
+ * Incluye una subconsulta para calcular el 'unread_count' comparando la fecha del 
+ * último mensaje con 'last_read_at' del participante en la sala de chat del grupo.
+ */
 router.get("/groups", verifyToken, async (req, res) => {
   const userId = req.userId;
 
@@ -180,7 +195,11 @@ router.get("/groups/:groupId/users", verifyToken, async (req, res) => {
   }
 });
 
-// Editar grupo — solo owner
+/**
+ * NOTE: Edición de grupo con sincronización de miembros.
+ * Si se modifican los colaboradores, el sistema limpia las asociaciones previas
+ * (excepto al dueño) y recrea las entradas en 'user_groups' y 'room_participants'.
+ */
 router.patch("/groups/:groupId", verifyToken, async (req, res) => {
   const { groupId } = req.params;
   const { name, avatar, collaborators } = req.body;
@@ -209,6 +228,7 @@ router.patch("/groups/:groupId", verifyToken, async (req, res) => {
       [name ?? null, avatar ?? null, groupId]
     );
 
+    // Sincronización destructiva y reconstructiva de miembros
     if (Array.isArray(collaborators)) {
       await query(
         "DELETE FROM user_groups WHERE group_id=? AND user_id != ?",
@@ -264,7 +284,7 @@ router.patch("/groups/:groupId/transfer", verifyToken, async (req, res) => {
     if (group.length === 0)
       return res.status(403).json({ message: "No eres owner del grupo" });
 
-    // Verificar que el nuevo owner es miembro del grupo
+    // Regla de negocio: El nuevo dueño debe ser un miembro activo del grupo
     const member = await query(
       "SELECT * FROM user_groups WHERE user_id=? AND group_id=?",
       [newOwnerId, groupId]
@@ -284,7 +304,11 @@ router.patch("/groups/:groupId/transfer", verifyToken, async (req, res) => {
   }
 });
 
-// Eliminar grupo — solo owner
+/**
+ * NOTE: Eliminación de grupo.
+ * Realiza una limpieza en cascada manual de participantes y salas asociadas
+ * antes de eliminar el grupo para mantener la integridad de la base de datos.
+ */
 router.delete("/groups/:groupId", verifyToken, async (req, res) => {
   const { groupId } = req.params;
   const userId = req.userId;
@@ -304,7 +328,7 @@ router.delete("/groups/:groupId", verifyToken, async (req, res) => {
     if (!isOwner && !isAdmin)
       return res.status(403).json({ message: "No tienes permisos (No eres owner ni admin)" });
 
-    // Traer canales para limpiar rooms y participantes
+    // Limpieza de recursos vinculados
     const channels = await query("SELECT chat_room_id, voice_room_id FROM channels WHERE group_id=?", [groupId]);
 
     for (const channel of channels) {
@@ -315,7 +339,7 @@ router.delete("/groups/:groupId", verifyToken, async (req, res) => {
     await query("DELETE FROM channels WHERE group_id=?", [groupId]);
     await query("DELETE FROM user_groups WHERE group_id=?", [groupId]);
 
-    // Eliminar el grupo
+    // Eliminación final
     await query("DELETE FROM groups WHERE id=?", [groupId]);
 
     res.json({ message: "Grupo eliminado correctamente" });
@@ -338,13 +362,14 @@ router.post("/groups/:groupId/leave", verifyToken, async (req, res) => {
     if (groupRows.length === 0)
       return res.status(404).json({ message: "Grupo no encontrado" });
 
+    // Regla de negocio: El dueño no puede abandonar el grupo sin transferir el mando
     if (groupRows[0].owner_id === userId) {
       return res.status(400).json({
         message: "No puedes salirte siendo el owner. Transfiere el mando antes de salir."
       });
     }
 
-    // Traer canales para limpiar participantes de los rooms asociados
+    // Limpieza de participación en salas del grupo
     const channels = await query(
       "SELECT chat_room_id, voice_room_id FROM channels WHERE group_id=?",
       [groupId]
@@ -357,7 +382,6 @@ router.post("/groups/:groupId/leave", verifyToken, async (req, res) => {
       );
     }
 
-    // Eliminar de user_groups
     const result = await query(
       "DELETE FROM user_groups WHERE group_id = ? AND user_id = ?",
       [groupId, userId]
