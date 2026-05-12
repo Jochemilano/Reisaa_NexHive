@@ -1,9 +1,18 @@
+/**
+ * Motor de sonido basado en Web Audio API.
+ * Genera tonos y melodías programáticamente para evitar la carga de archivos pesados
+ * y permitir variaciones dinámicas en tiempo real.
+ */
 const NOTIFICATION_SOUND_BASE64 = "data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU5LjI3LjEwMAAAAAAAAAAAAAAA//tQxAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//tQxOAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//tQxOAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//tQxOAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//tQxOAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq"; 
 
 let ringtoneInterval = null;
 let sharedAudioCtx = null;
 let currentRingtoneSession = 0;
 
+/**
+ * Singleton para el contexto de audio.
+ * Evita la creación múltiple de contextos que pueden bloquearse entre sí.
+ */
 const getAudioCtx = () => {
   if (!sharedAudioCtx) {
     const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -12,12 +21,19 @@ const getAudioCtx = () => {
   return sharedAudioCtx;
 };
 
+/**
+ * NOTE: Los navegadores bloquean el audio hasta que hay una interacción del usuario.
+ * Esta función asegura que el contexto esté activo antes de reproducir.
+ */
 const resumeAudio = async () => {
   const ctx = getAudioCtx();
   if (ctx && ctx.state === 'suspended') await ctx.resume();
   return ctx;
 };
 
+/**
+ * Detiene cualquier sonido recurrente (como timbres de llamada).
+ */
 export const stopRingtone = () => {
   currentRingtoneSession++;
   if (ringtoneInterval) {
@@ -26,6 +42,9 @@ export const stopRingtone = () => {
   }
 };
 
+/**
+ * Utilidad para crear un pulso de sonido básico (Oscilador + Gain).
+ */
 const createOscPulse = (ctx, freq, vol, duration, now, oscType = 'sine') => {
   const osc = ctx.createOscillator();
   const gainNode = ctx.createGain();
@@ -40,6 +59,9 @@ const createOscPulse = (ctx, freq, vol, duration, now, oscType = 'sine') => {
   osc.stop(now + duration);
 };
 
+/**
+ * Reproduce sonidos de notificación cortos predefinidos.
+ */
 export const playNotificationSound = async (type = "crystal") => {
   try {
     const ctx = await resumeAudio();
@@ -83,7 +105,10 @@ export const playNotificationSound = async (type = "crystal") => {
   } catch (e) { console.warn("Audio Error:", e); }
 };
 
-// Función para tocar una melodía (una sola vez)
+/**
+ * Toca una melodía (secuencia de notas) una sola vez.
+ * Valida la sesión para evitar que melodías viejas sigan sonando si se detuvieron.
+ */
 const playMelody = async (type, mySession) => {
   const ctx = await resumeAudio();
   if (!ctx || mySession !== currentRingtoneSession) return;
@@ -121,6 +146,9 @@ export const playRingtoneOnce = async (type = "retro") => {
   playMelody(type, mySession);
 };
 
+/**
+ * Inicia el bucle de timbre para llamadas entrantes o salientes.
+ */
 export const playRingtone = async (type = "retro") => {
   stopRingtone();
   const mySession = currentRingtoneSession;

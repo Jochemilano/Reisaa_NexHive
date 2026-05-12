@@ -8,6 +8,10 @@ import { useUnread } from "@/context/UnreadContext";
 
 const CallContext = createContext(null);
 
+/**
+ * Gestiona llamadas WebRTC (P2P) y sincronización vía Sockets.
+ * Utiliza simple-peer para la abstracción de WebRTC.
+ */
 export const CallProvider = ({ children }) => {
   const [incomingCall, setIncomingCall] = useState(null);
   const [activeCall, setActiveCall] = useState(null);
@@ -21,6 +25,8 @@ export const CallProvider = ({ children }) => {
   const localStreamRef = useRef(null);
   const peerRef = useRef(null);
   const isRingingRef = useRef(false);
+  
+  // NOTE: Se usan Refs para evitar problemas de clausura en los listeners de Socket.io
   const callsEnabledRef = useRef(callsEnabled);
   const callSoundRef = useRef(callSound);
   const navigate = useNavigate();
@@ -31,6 +37,10 @@ export const CallProvider = ({ children }) => {
     callSoundRef.current = callSound;
   }, [callsEnabled, callSound]);
 
+  /**
+   * Inicializa hardware de audio/video.
+   * WARNING: Requiere HTTPS o localhost para funcionar en navegadores modernos.
+   */
   const initMedia = async () => {
     if (localStreamRef.current) return localStreamRef.current;
 
@@ -50,6 +60,9 @@ export const CallProvider = ({ children }) => {
     }
   };
 
+  /**
+   * Limpieza de tracks para liberar el hardware.
+   */
   const stopMedia = () => {
     localStreamRef.current?.getTracks().forEach(t => t.stop());
     localStreamRef.current = null;
@@ -64,11 +77,12 @@ export const CallProvider = ({ children }) => {
 
       const isMuted = mutedRooms?.includes(roomId);
       
-      // USAMOS REFS PARA VALORES SIEMPRE ACTUALIZADOS
+      // Regla de negocio: No sonar si la sala está silenciada o llamadas desactivadas
       if (!isMuted && callsEnabledRef.current) {
         isRingingRef.current = true;
         playRingtone(callSoundRef.current); 
 
+        // Doble verificación con el servidor por si las preferencias cambiaron en otra pestaña
         apiFetch("preferences")
           .then(prefs => {
             if (isRingingRef.current) {
@@ -113,6 +127,9 @@ export const CallProvider = ({ children }) => {
     };
   }, []);
 
+  /**
+   * Inicia proceso de oferta WebRTC (Iniciador).
+   */
   const startCall = async (targetUserId, targetUserName, chatRoomId) => {
     console.log("Starting call to", targetUserId, targetUserName);
     try {
@@ -134,10 +151,13 @@ export const CallProvider = ({ children }) => {
     }
   };
 
+  /**
+   * Responde a una oferta WebRTC recibida.
+   */
   const acceptCall = async () => {
     if (!incomingCall) return;
     isRingingRef.current = false;
-    stopRingtone(); // Detener el sonido al contestar
+    stopRingtone(); 
     try {
       const stream = await initMedia();
 
@@ -151,7 +171,7 @@ export const CallProvider = ({ children }) => {
       setRemoteStream(null);
       setIncomingCall(null);
 
-      // Buscar sala directa para saber a dónde navegar
+      // Buscar sala directa para coordinar navegación del chat junto con la llamada
       try {
         const data = await apiFetch(`rooms/direct/${incomingCall.fromUserId}`);
         setActiveCall({
@@ -162,7 +182,7 @@ export const CallProvider = ({ children }) => {
         setIsMinimized(false);
         navigate(`/chat/${data.roomId}`);
       } catch {
-        // Sin sala directa — guardar sin chatRoomId y flotar
+        // Fallback: Si no hay sala, la llamada se mantiene en modo flotante
         setActiveCall({
           targetUserId: incomingCall.fromUserId,
           targetUserName: incomingCall.fromUserName,
@@ -175,7 +195,9 @@ export const CallProvider = ({ children }) => {
     }
   };
 
-  // Expandir desde el flotante — navega si hay chatRoomId
+  /**
+   * Expandir desde el modo flotante — restaura contexto de chat si existe.
+   */
   const expandCall = () => {
     if (activeCall?.chatRoomId) {
       setIsMinimized(false);
@@ -192,9 +214,13 @@ export const CallProvider = ({ children }) => {
     setIncomingCall(null);
   };
 
+  /**
+   * Finaliza la sesión actual y limpia recursos.
+   * @param {boolean} notify - Si debe enviar evento de 'call-ended' al peer.
+   */
   const hangUp = (notify = true) => {
     isRingingRef.current = false;
-    stopRingtone(); // Asegurar que se detiene el tono al colgar
+    stopRingtone(); 
     if (notify && activeCall) socket.emit("call-ended", { toUserId: activeCall.targetUserId });
     peerRef.current?.destroy();
     peerRef.current = null;

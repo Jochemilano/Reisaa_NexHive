@@ -1,33 +1,48 @@
-// utils/activities.js
+/**
+ * Utilidades para la gestión de actividades vinculadas a proyectos.
+ * Centraliza las llamadas al API para mantener la lógica de negocio aislada.
+ */
 import { apiFetch } from "./apiClient";
 
-// Obtener detalles de una actividad
+/**
+ * Obtiene el detalle completo de una actividad específica.
+ */
 export const getActivityDetails = (activityId) =>
   apiFetch(`activities/${activityId}`);
 
-// Editar actividad
+/**
+ * Actualiza los datos de una actividad (título, descripción, fechas, estado).
+ */
 export const updateActivity = (activityId, data) =>
   apiFetch(`activities/${activityId}`, {
     method: "PUT",
     body: JSON.stringify(data),
   });
 
-// Crear actividad (ya existe)
+/**
+ * Crea una nueva actividad dentro de un contexto de proyecto.
+ */
 export const createActivity = (data) =>
   apiFetch("activities", {
     method: "POST",
     body: JSON.stringify(data),
   });
 
-// Obtener actividades de un proyecto (ya existe)
+/**
+ * Lista todas las actividades pertenecientes a un proyecto.
+ */
 export const getActivities = (projectId) =>
   apiFetch(`projects/${projectId}/activities`);
 
-//traer usuarios de actividades
+/**
+ * Obtiene el listado de usuarios (colaboradores) asignados a una actividad.
+ */
 export const fetchActivityUsers = (activityId) =>
   apiFetch(`activities/${activityId}/users`);
 
-// Eliminar actividad
+/**
+ * Elimina de forma permanente una actividad.
+ */
 export const deleteActivity = (activityId) =>
   apiFetch(`activities/${activityId}`, {
     method: "DELETE",

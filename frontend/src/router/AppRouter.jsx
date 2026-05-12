@@ -18,6 +18,11 @@ import { SocketProvider } from "@/context/SocketContext";
 import { UserDetailProvider } from "@/context/UserDetailContext";
 import { SidebarProvider } from "@/context/SidebarContext";
 
+/**
+ * Enrutador Principal de la Aplicación.
+ * Orquesta la jerarquía de Context Providers y define las reglas de navegación
+ * mediante guardias de ruta (Protected vs Public).
+ */
 export default function AppRouter() {
   return (
     <SidebarProvider>
@@ -25,15 +30,15 @@ export default function AppRouter() {
         <UnreadProvider>
           <CallProvider>
             <UserDetailProvider>
-            {/* Visible en CUALQUIER página */}
+            {/* Componentes globales de comunicación persistentes en toda la sesión */}
             <IncomingCallModal />
             <FloatingCall />
 
             <Routes>
-              {/* Ruta raíz redirige al home, que está protegido */}
+              {/* Redirección inicial: El usuario siempre intenta ir al Home al entrar en la raíz */}
               <Route path="/" element={<Navigate to="/home" replace />} />
               
-              {/* Rutas Protegidas (Requieren sesión válida) */}
+              {/* RUTAS PRIVADAS: Envueltas en ProtectedRoute para validar sesión activa */}
               <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
                 <Route path="/home"                                        element={<Home />} />
                 <Route path="/social"                                      element={<Social />} />
@@ -45,10 +50,10 @@ export default function AppRouter() {
                 <Route path="/chat/:chatRoomId"                            element={<ChatWrapper />} />
               </Route>
 
-              {/* Rutas Públicas (No accesibles si ya hay sesión válida) */}
+              {/* RUTAS PÚBLICAS: Envueltas en PublicRoute para evitar doble login */}
               <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
 
-              {/* Catch-all: cualquier otra ruta redirige al home */}
+              {/* Manejo de rutas inexistentes: Fallback al Home */}
               <Route path="*" element={<Navigate to="/home" replace />} />
             </Routes>
             </UserDetailProvider>

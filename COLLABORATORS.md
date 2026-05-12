@@ -1,160 +1,117 @@
-# Guía de Colaboradores - NexHive 🐝
+# Guía de Colaboración - NexHive 🐝
 
-Bienvenido al equipo de **NexHive**. Este documento detalla la estructura del proyecto, las tecnologías utilizadas y las pautas para colaborar de manera efectiva.
-
----
-
-## 🏛️ Arquitectura del Proyecto
-
-El proyecto sigue una arquitectura de **Cliente-Servidor (MERN Stack simplificado con MySQL)**.
-
-### Flujo de Renderizado (Frontend)
-1. **`index.js`**: Punto de entrada principal. Renderiza el componente raíz `<App />`.
-2. **`App.js`**: Contenedor principal que incluye el `<AppRouter />`.
-3. **`AppRouter.jsx`**: Gestiona todas las rutas de la aplicación.
-4. **`pages/`**: Contiene las vistas completas (ej. `Home.jsx`).
-5. **`components/`**: Piezas reutilizables de UI utilizadas dentro de las páginas.
+Bienvenido al equipo de desarrollo de **NexHive**. Este documento establece las normas y estándares necesarios para mantener la calidad, consistencia y escalabilidad de nuestro código.
 
 ---
 
-## 📁 Estructura de Carpetas
+## 🏛️ Contexto Técnico
+NexHive utiliza un stack **MERN (MySQL, Express, React, Node)**. Antes de empezar, familiarízate con la estructura actual:
 
-### Frontend (`/frontend`)
-- **`components/`**: Componentes atómicos y reutilizables (Botones, Inputs, Modales).
-- **`pages/`**: Páginas principales que integran múltiples componentes.
-- **`router/`**: Configuración centralizada de rutas.
-- **`hooks/`**: Custom hooks para lógica reutilizable (ej. manejo de estados globales).
-- **`utils/`**: Funciones auxiliares de procesamiento y formateo.
-- **`assets/`**: Imágenes, iconos y recursos estáticos.
-
-### Backend (`/backend`)
-- **`index.js`**: Servidor Express y configuración de Sockets.
-- **`routes/`**: Definición de endpoints de la API.
-- **`controllers/`**: Lógica de negocio y manejo de peticiones.
-- **`middleware/`**: Funciones de validación y seguridad (Auth, Multer).
-- **`config/`**: Conexiones a base de datos y variables de entorno.
+- **Frontend**: React 19, custom hooks para lógica, CSS modular por componente.
+- **Backend**: Express con arquitectura Controller-Route, WebSockets (Socket.io) para tiempo real.
+- **Base de Datos**: MySQL (utilizando `mysql2`).
 
 ---
 
-## 🛠️ Stack Tecnológico
-
-### Frontend (React)
-| Librería | Propósito |
-| :--- | :--- |
-| **React 19** | Biblioteca principal de UI. |
-| **React Router DOM** | Manejo de navegación y rutas. |
-| **Socket.io Client** | Comunicación en tiempo real (Chat/Notificaciones). |
-| **Simple-peer** | Implementación de WebRTC para videollamadas. |
-| **React Big Calendar** | Visualización y gestión de calendarios. |
-| **Date-fns** | Manipulación y formateo de fechas. |
-| **React Icons** | Librería de iconos vectoriales. |
-| **React Calendar** | Mini calendario para navegación rápida. |
-| **Fabric.js** | Manipulación de canvas interactivos. |
-| **Craco** | Configuración personalizada de Create React App. |
-
-### Backend (Node.js & Express)
-| Librería | Propósito |
-| :--- | :--- |
-| **Express** | Framework para el servidor web. |
-| **MySQL2** | Driver para conexión con la base de datos MySQL. |
-| **JSONWebToken (JWT)** | Autenticación basada en tokens. |
-| **Socket.io** | Servidor de WebSockets para tiempo real. |
-| **Bcryptjs** | Encriptación de contraseñas. |
-| **Nodemailer** | Envío de correos electrónicos (Verificación/Reset). |
-| **Multer** | Middleware para subida de archivos/imágenes. |
-| **Dotenv** | Gestión de variables de entorno sensibles. |
-| **CORS** | Configuración de intercambio de recursos entre orígenes. |
+## 🎯 Reglas Generales
+La calidad de NexHive depende de la disciplina individual.
+- **Código Limpio (Clean Code)**: Escribe código que se explique por sí solo. Si un bloque es difícil de entender, refactorízalo.
+- **Evitar la Sobreingeniería**: No implementes soluciones complejas para problemas simples (KISS - Keep It Simple, Stupid).
+- **Priorizar Legibilidad**: El código se lee muchas más veces de las que se escribe. Usa nombres descriptivos.
+- **Consistencia**: Sigue los patrones de diseño ya establecidos en el proyecto. No mezcles estilos de programación.
 
 ---
 
-## 🎨 Estándares de Estilo (CSS)
+## 🛠️ Convenciones de Código
 
-- **`index.css`**: Contiene el reset global, estilos de `html` y `body`. **No modificar sin previo aviso.**
-- **`App.css`**: Variables globales (colores, fuentes), temas y layout general.
-- **Componentes**: Cada página o componente debe tener su propio archivo CSS (ej. `Navbar.css`, `Home.css`) para mantener el encapsulamiento.
+### Naming Conventions
+- **Componentes React**: `PascalCase` (ej. `KanbanBoard.jsx`).
+- **Archivos de Estilo**: Deben coincidir con el componente (ej. `KanbanBoard.css`).
+- **Funciones y Variables**: `camelCase` (ej. `const fetchActivities = ...`).
+- **Constantes/Enums**: `UPPER_SNAKE_CASE` (ej. `const MAX_RETRY_ATTEMPTS = 3`).
 
----
+### Estructura y Responsabilidades
+- **Separación de Intereses**: La lógica de negocio pesada debe vivir en **Hooks Personalizados** o **Servicios**, no dentro del JSX del componente.
+- **Componentes Atómicos**: Divide componentes grandes en piezas pequeñas y reutilizables en `frontend/src/components`.
+- **Manejo de Imports**:
+    1. React y librerías externas.
+    2. Componentes internos.
+    3. Hooks y utilidades.
+    4. Estilos (siempre al final).
 
-## 🚀 Cómo Empezar
-
-1. **Clonar el repositorio**:
-   ```bash
-   git clone https://github.com/Jochemilano/NexHive.git
-   ```
-2. **Instalar dependencias**:
-   ```bash
-   # En /frontend
-   npm install
-   # En /backend
-   npm install
-   ```
-3. **Configurar variables de entorno**:
-   - Crear un archivo `.env` en `/backend` basado en el ejemplo proporcionado.
-4. **Ejecutar en desarrollo**:
-   ```bash
-   # Frontend
-   npm start
-   # Backend
-   npm start
-   ```
+### Documentación
+- Usa **JSDoc** para documentar funciones complejas, hooks y props de componentes.
+- Explica el "por qué", no el "qué" (el código ya dice qué hace).
 
 ---
 
-## 🤝 Reglas de Colaboración
-- **Ramas**: Crear ramas descriptivas (ej: `feat/login-system` o `fix/navbar-mobile`).
-- **Commits**: Mensajes claros y en español/inglés consistentes.
-- **Código**: Mantener el código limpio, comentado donde sea necesario y seguir la estructura de carpetas establecida.
+## 🌿 Branching Strategy
+Utilizamos un flujo basado en **GitFlow** simplificado:
+
+- **`main`**: Código en producción. Siempre estable.
+- **`develop`**: Rama de integración para nuevas funcionalidades.
+- **`feature/*`**: Ramas temporales para tareas específicas (ej. `feature/rtc-video-call`).
+- **`hotfix/*`**: Correcciones urgentes que van directo a `main`.
+
+> [!TIP]
+> Nunca trabajes directamente sobre `main` o `develop`. Crea siempre una rama desde `develop`.
 
 ---
 
-## 📦 Dependencias adicionales instaladas
+## 💾 Convención de Commits
+Usamos **Conventional Commits** para mantener un historial legible:
 
-### Frontend
+- `feat:` Nueva funcionalidad para el usuario.
+- `fix:` Corrección de un error.
+- `refactor:` Cambio en el código que no añade features ni arregla bugs.
+- `docs:` Cambios solo en la documentación.
+- `chore:` Tareas de mantenimiento, actualización de dependencias, etc.
+- `test:` Añadir o modificar pruebas.
 
-| Librería | Versión | Instalado | Propósito |
-|---|---|---|---|
-| **@hello-pangea/dnd** | última estable | 2026-04-29 | Drag & drop para el Kanban Board |
-
-**Comando de instalación:**
-```bash
-# En /frontend
-npm install @hello-pangea/dnd
-```
+*Ejemplo: `feat: implementar drag and drop en el tablero kanban`*
 
 ---
 
-## 🗂️ Kanban Board — Documentación de implementación
+## 🔄 Pull Requests (PRs)
+El proceso de integración es sagrado para evitar bugs en producción.
 
-### Descripción
-Vista alternativa a la tabla de actividades en la página de proyectos (`GroupPage`). Permite visualizar y gestionar actividades tipo Trello con 3 columnas y drag & drop.
+1. **Descripción Clara**: Explica qué cambia y por qué.
+2. **Screenshots/Videos**: Obligatorios si hay cambios visuales en el Frontend.
+3. **Tamaño del PR**: Evita "PRs Gigantes". Si tu cambio afecta a más de 20 archivos, considera dividirlo.
+4. **Testing Obligatorio**: Asegúrate de que el código corre localmente y no rompe funcionalidades existentes.
 
-### Archivos creados
-```
-frontend/src/components/kanban/
-├── KanbanBoard.jsx     → Contenedor principal con DragDropContext
-├── KanbanColumn.jsx    → Columna droppable (Pendiente / En progreso / Completada)
-├── KanbanCard.jsx      → Tarjeta draggable con menú de acciones via portal
-└── KanbanBoard.css     → Estilos del tablero, columnas, tarjetas y toggle
-```
+---
 
-### Archivos modificados
-| Archivo | Cambio |
-|---|---|
-| `components/groups/GroupPage.jsx` | Toggle Tabla/Kanban en header + renderizado condicional |
-| `components/groups/GroupPage.css` | Colores vivos en badges de estado de actividades |
+## 🔍 Code Review
+Al revisar el código de un compañero:
+- Sé amable y constructivo.
+- Enfócate en la lógica, seguridad y performance.
+- Si ves algo mejorable, sugiere una alternativa con un ejemplo de código.
+- No apruebes un PR que no entiendas completamente.
 
-### Cómo funciona
-1. Seleccionar un proyecto → aparece toggle **Tabla / Kanban** en el header
-2. En vista Kanban, las actividades se dividen en 3 columnas por `status`
-3. Arrastrar tarjeta a otra columna → llama `PUT /api/activities/:id` con el nuevo status
-4. Actualización **optimista**: UI cambia al instante, revierte si el backend falla
-5. Menú (⋯) en cada tarjeta: Ver detalles, Editar, Eliminar
-6. El menú usa `ReactDOM.createPortal` → nunca es cortado por `overflow` de los padres
+---
 
-### Colores de columnas y estados
-| Estado | Color |
-|---|---|
-| Pendiente 🟡 | `#f59e0b` (amarillo) |
-| En progreso 🔵 | `#3b82f6` (azul) |
-| Completada 🟢 | `#10b981` (verde) |
-| Cancelada 🔴 | `#ef4444` (rojo) |
+## 🧪 Testing
+- **Frontend**: Prueba tus componentes en diferentes tamaños de pantalla (Responsividad).
+- **Backend**: Verifica los casos de error (400, 401, 404, 500) en los nuevos endpoints.
+- **Manual**: Antes de enviar un PR, realiza el "Happy Path" completo de la funcionalidad.
+
+---
+
+## ⚡ Performance y Seguridad
+- **Performance**: Evita re-renders innecesarios en React (usa `useMemo` o `useCallback` solo cuando sea necesario).
+- **Seguridad**:
+    - Nunca subas secretos (`.env`) al repositorio.
+    - Valida siempre los datos de entrada en el Backend (evita inyecciones).
+    - Usa siempre el middleware de autenticación para rutas protegidas.
+
+---
+
+## 💬 Comunicación del Equipo
+- **Dudas Técnicas**: Usa los canales de Slack/Discord establecidos.
+- **Bloqueos**: Si estás bloqueado por más de 2 horas, pide ayuda. No sufras en silencio.
+- **Actualizaciones**: Notifica cuando una rama importante sea mergeada a `develop`.
+
+---
+
+*“Escribe código como si la persona que lo fuera a mantener fuera un psicópata violento que sabe dónde vives.”* — **Filosofía NexHive**

@@ -92,6 +92,8 @@ const UserPreferencesModal = ({ isOpen, handleClose, initialData, onSave }) => {
       let initialAccent = "blue";
       let initialFont = "system";
 
+      // El tema se almacena como un string compuesto "modo-acento-fuente" para optimizar el almacenamiento 
+      // y facilitar la reconstrucción del estado visual en un solo paso.
       if (initialData.theme && initialData.theme.includes("-")) {
         const parts = initialData.theme.split("-");
         initialThemeMode = parts[0];

@@ -4,6 +4,9 @@ const SidebarContext = createContext();
 
 export const useSidebar = () => useContext(SidebarContext);
 
+/**
+ * Controla el estado de expansión/contracción de la barra lateral principal.
+ */
 export const SidebarProvider = ({ children }) => {
   const [isMinimized, setIsMinimized] = useState(false);
 

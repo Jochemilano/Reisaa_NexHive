@@ -1,70 +1,139 @@
-# Getting Started with Create React App
+# NexHive 🐝
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+**NexHive** es una plataforma integral de gestión de proyectos y colaboración en tiempo real, diseñada para equipos que buscan centralizar su flujo de trabajo en una sola herramienta potente y fluida.
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## 🚀 Features
+- **Gestión de Proyectos**: Creación, edición y seguimiento de proyectos y grupos de trabajo.
+- **Tablero Kanban**: Visualización ágil de tareas con sistema Drag & Drop para cambios de estado.
+- **Comunicación en Tiempo Real**: Chat integrado y sistema de notificaciones vía WebSockets.
+- **Videollamadas**: Implementación de llamadas de video directamente en la plataforma mediante WebRTC.
+- **Calendario y Gantt**: Gestión visual de cronogramas y fechas límite.
+- **Pizarra Colaborativa**: Espacio interactivo utilizando Canvas para lluvia de ideas.
+- **Gestión de Archivos**: Subida y compartición de documentos relevantes por proyecto.
 
-### `npm start`
+---
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## 🛠️ Stack Tecnológico
+- **Frontend**: React 19, React Router DOM, Socket.io Client, Simple-peer (WebRTC), Fabric.js, CSS Modular.
+- **Backend**: Node.js, Express, MySQL (Driver mysql2).
+- **Autenticación**: JSON Web Tokens (JWT) y Bcryptjs para encriptación.
+- **Comunicación**: Socket.io para mensajería y eventos en tiempo real.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+---
 
-### `npm test`
+## 💻 Instalación
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Requisitos previos
+- Node.js (v18 o superior)
+- MySQL Server
 
-### `npm run build`
+### Pasos
+1. **Clonar el repositorio**:
+   ```bash
+   git clone https://github.com/Jochemilano/Reisaa_NexHive.git
+   ```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+2. **Configurar el Backend**:
+   ```bash
+   cd backend
+   npm install
+   # Configura el archivo .env (ver sección Variables de Entorno)
+   npm start
+   ```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+3. **Configurar el Frontend**:
+   ```bash
+   cd ../frontend
+   npm install
+   npm start
+   ```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+---
 
-### `npm run eject`
+## 🔑 Variables de Entorno
+Crea un archivo `.env` en la carpeta `/backend` con los siguientes campos:
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+```env
+PORT=5000
+DB_HOST=localhost
+DB_USER=tu_usuario
+DB_PASSWORD=tu_password
+DB_NAME=nexhive_db
+JWT_SECRET=tu_secreto_super_seguro
+```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+---
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## 📜 Scripts Disponibles
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+### Frontend
+- `npm start`: Inicia el servidor de desarrollo en `http://localhost:3000`.
+- `npm run build`: Crea la versión de producción optimizada.
 
-## Learn More
+### Backend
+- `npm start`: Inicia el servidor de la API en el puerto configurado.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+---
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## 📂 Estructura del Proyecto
+```text
+NexHive/
+├── frontend/           # Aplicación React
+│   ├── src/
+│   │   ├── components/ # Componentes reutilizables
+│   │   ├── pages/      # Vistas principales
+│   │   ├── hooks/      # Lógica compartida
+│   │   └── utils/      # Funciones auxiliares
+├── backend/            # Servidor Express
+│   ├── routes/         # Definición de Endpoints
+│   ├── controllers/    # Lógica de negocio
+│   ├── middleware/     # Validaciones y seguridad
+│   └── config/         # Conexión a DB
+└── COLLABORATORS.md    # Guía de estándares de código
+```
 
-### Code Splitting
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## 📡 API Endpoints (Principales)
+- `POST /api/auth/login`: Autenticación de usuarios.
+- `GET /api/projects`: Listado de proyectos del usuario.
+- `POST /api/activities`: Creación de nuevas tareas.
+- `PUT /api/activities/:id`: Actualización de estado (usado en Kanban).
 
-### Analyzing the Bundle Size
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## ⚙️ Flujo de la Aplicación
+1. El usuario se autentica y recibe un **JWT**.
+2. React mantiene el estado global y se comunica con la **API REST** para persistencia.
+3. **Socket.io** gestiona eventos transversales como mensajes de chat y alertas de actualización.
+4. Para videollamadas, se establece una conexión **P2P** directa entre navegadores.
 
-### Making a Progressive Web App
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+## ✅ Buenas Prácticas
+Para mantener la calidad del proyecto, es obligatorio seguir las pautas detalladas en el archivo [COLLABORATORS.md](./COLLABORATORS.md), que incluye:
+- Convenciones de nombres.
+- Estructura de commits (Conventional Commits).
+- Flujo de trabajo con ramas (GitFlow).
 
-### Advanced Configuration
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+## 🚢 Deployment
+- **Frontend**: Recomendado en Vercel o Netlify.
+- **Backend**: Puede desplegarse en Railway, Render o servicios tipo VPS (DigitalOcean/AWS).
+- **DB**: MySQL gestionado (Aiven, PlanetScale o AWS RDS).
 
-### Deployment
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+## 📝 TODO / Mejoras Futuras
+- [ ] Implementar Tests Unitarios y de Integración (Jest/React Testing Library).
+- [ ] Soporte para Modo Oscuro persistente.
+- [ ] App móvil nativa utilizando React Native.
+- [ ] Integración con servicios de almacenamiento en la nube (S3/Cloudinary).
 
-### `npm run build` fails to minify
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## 📄 Licencia
+Este proyecto está bajo la licencia [MIT](LICENSE).

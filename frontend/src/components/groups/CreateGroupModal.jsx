@@ -19,6 +19,7 @@ const CreateGroupModal = ({
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose}>
+      {/* Componente para la creación de nuevos espacios de trabajo colaborativo, manejando selección de colaboradores y avatar */}
       <Modal.Header onClose={handleClose}>Crea un grupo</Modal.Header>
 
       <Modal.Body>

@@ -21,6 +21,8 @@ import "./GroupPage.css";
 import "@/components/kanban/KanbanBoard.css";
 import "@/components/gantt/GanttChart.css";
 
+// Mapeo centralizado de estados para visualización en interfaz de usuario.
+// Soporta variantes de nomenclatura (snake_case vs kebab-case) para compatibilidad con diferentes respuestas de API.
 const STATUS_LABELS = {
   pending: "Pendiente",
   "in-progress": "En progreso",
@@ -120,6 +122,8 @@ const GroupPage = () => {
 
   const activities = selectedProject?.activities || [];
 
+  // Lógica de filtrado y ordenamiento de actividades.
+  // Se utiliza useMemo para evitar recalcular la lista filtrada en cada renderizado si los criterios no han cambiado.
   const filteredActivities = useMemo(() => {
     let result = activities.filter((a) => {
       const matchesSearch =
@@ -179,6 +183,8 @@ const GroupPage = () => {
     };
   }, [activities]);
 
+  // Manejo de eliminación de actividades con actualización de estado local y global.
+  // NOTE: Se dispara refreshEvents para mantener el calendario sincronizado tras la eliminación.
   const handleDelete = async (activity) => {
     const confirmed = window.confirm(`¿Eliminar la actividad "${activity.name}"? Esta acción no se puede deshacer.`);
     if (confirmed) {
@@ -263,6 +269,8 @@ const GroupPage = () => {
           {selectedProject && (
             <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
               {/* Toggle vista */}
+              {/* Selector de modo de vista: Permite alternar entre visualización estructurada (tabla), 
+                  ágil (kanban) y cronológica (gantt) */}
               <div className="view-toggle">
                 <button
                   className={`view-toggle__btn ${viewMode === "table" ? "view-toggle__btn--active" : ""}`}

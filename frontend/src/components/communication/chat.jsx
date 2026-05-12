@@ -27,7 +27,7 @@ const normalizeText = (str) =>
 const renderMessageContent = (text, search) => {
   if (!text) return "";
 
-  // 1. Detectar links
+  // 1. Detectar enlaces mediante Regex y convertirlos en componentes interactivos con target="_blank" por seguridad.
   const urlRegex = /(https?:\/\/[^\s]+)/gi;
   
   // Dividimos el texto primero por links
@@ -99,6 +99,7 @@ const renderReplyContent = (content, caption = null) => {
   return <div className="reply-text">{content}</div>;
 };
 
+// Componente de mensaje individual memorizado para optimizar el rendimiento del scroll y renderizado masivo.
 const MessageContent = React.memo(({ msg, onImageClick, onVideoClick, isMine, onReply, onEdit, onDelete, onReplyToOriginal, searchTerm }) => {
   const [favorite, setFavorite] = useState(msg.favorite === 1);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -481,6 +482,8 @@ const Chat = ({ roomId, userId, groupId, targetUserId, targetUserName, targetUse
     if (e.currentTarget.contains(e.relatedTarget)) return;
     setIsDragging(false);
   };
+  // Manejo de carga de archivos por arrastre.
+  // Soporta tanto archivos del sistema como imágenes copiadas/arrastradas desde el navegador (HTML/URL).
   const handleDrop = async (e) => {
     e.preventDefault(); e.stopPropagation(); setIsDragging(false);
     const files = Array.from(e.dataTransfer.files);
@@ -562,6 +565,8 @@ const Chat = ({ roomId, userId, groupId, targetUserId, targetUserName, targetUse
     return date.toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "short" });
   };
 
+  // Procesa la lista plana de mensajes para inyectar separadores de fecha, 
+  // indicadores de no leídos y agrupar imágenes consecutivas en álbumes para una interfaz más limpia.
   const getMessagesWithSeparators = () => {
     const items = [];
     let lastDateKey = null;

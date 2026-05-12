@@ -1,6 +1,12 @@
+/**
+ * Utilidades para la gestión de eventos personales en el calendario.
+ */
 import { apiFetch } from './apiClient';
 
-// Crear evento
+/**
+ * Crea un nuevo evento personal.
+ * @param {Object} eventData - Datos del evento (title, start, end, etc.)
+ */
 export const createPersonalEvent = async (eventData) => {
   const payload = {
     title: eventData.title,
@@ -15,23 +21,30 @@ export const createPersonalEvent = async (eventData) => {
   });
 };
 
-// Obtener eventos
+/**
+ * Obtiene todos los eventos asociados al usuario actual.
+ */
 export const getPersonalEvents = async () => {
   return await apiFetch('events');
 };
 
-// Eliminar evento
+/**
+ * Elimina un evento específico por su ID.
+ */
 export const deletePersonalEvent = async (eventId) => {
   return await apiFetch(`events/${eventId}`, { method: 'DELETE' });
 };
 
-// Actualizar evento
+/**
+ * Actualiza la información de un evento existente.
+ */
 export const updatePersonalEvent = async (eventId, eventData) => {
   const payload = {
     title: eventData.title,
     description: eventData.description || null,
     start: eventData.start,
     end: eventData.end,
+    // Solo incluir colaboradores si se proporcionan explícitamente
     ...(eventData.collaborators ? { collaborators: eventData.collaborators } : {}),
   };
   return await apiFetch(`events/${eventId}`, {

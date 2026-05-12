@@ -1,12 +1,18 @@
 import { CONFIG } from "./config";
 import { io } from "socket.io-client";
 
-// Inicializamos el socket sin conectar automáticamente si no hay token
+/**
+ * Cliente global de Socket.io.
+ * Centraliza la comunicación en tiempo real y el manejo de sesiones de socket.
+ */
+
+// Inicializamos el socket sin conectar automáticamente.
+// La conexión se gatilla manualmente en el SocketProvider tras validar el token.
 const socket = io(CONFIG.BASE_URL, {
   auth: {
     token: localStorage.getItem("token") || ""
   },
-  autoConnect: false, // Ahora lo manejamos manualmente en SocketContext tras validar
+  autoConnect: false,
   reconnection: true,
   reconnectionAttempts: Infinity,
   reconnectionDelay: 1000,
@@ -20,49 +26,59 @@ socket.on("connect", () => {
 
 socket.on("disconnect", (reason) => {
   console.log("❌ Socket desconectado:", reason);
+  // Regla de negocio: Intentar reconectar si el servidor forzó el cierre (ej: reinicio de servicio)
   if (reason === "io server disconnect") {
-    // El servidor nos desconectó (posiblemente token expirado), intentar reconectar manualmente
     socket.connect();
   }
 });
 
 socket.on("connect_error", (err) => {
   console.log("⚠️ Socket error de conexión:", err.message);
-  // Si el servidor nos desconecta por error de JWT
+  
+  // NOTE: Expulsión automática si el servidor de sockets rechaza el token (expiración o invalidez)
   if (err.message === "jwt expired" || err.message === "Not authorized") {
     localStorage.clear();
     window.location.href = "/login";
   }
 });
 
-// Función para forzar la reconexión con un nuevo token
+/**
+ * Fuerza la reconexión utilizando un nuevo token de autenticación.
+ */
 const connectWithToken = (token) => {
   if (token) {
     socket.auth.token = token;
     if (socket.disconnected) {
       socket.connect();
     } else {
-      // Si ya está conectado pero queremos asegurar el nuevo token
+      // Reiniciar conexión para asegurar que el nuevo token sea procesado por el middleware del servidor
       socket.disconnect().connect();
     }
   }
 };
 
-// Función para unirse a una sala
+/**
+ * Notifica al servidor que el usuario se une a una sala de chat específica.
+ */
 const joinRoom = (roomId) => {
   if (socket.connected) {
     socket.emit("join-room", roomId);
   } else {
-    // Si no está conectado, esperar a que conecte y unirse
+    // Si no hay conexión activa, encolar la acción para cuando se establezca
     socket.once("connect", () => socket.emit("join-room", roomId));
   }
 };
 
-// Función para enviar mensaje
+/**
+ * Envía un mensaje en tiempo real a través del socket.
+ */
 const sendMessage = (message) => {
   socket.emit("send-message", message);
 };
 
+/**
+ * Notifica que todos los mensajes de una sala han sido leídos.
+ */
 const markRoomRead = (roomId) => {
   if (socket.connected) {
     socket.emit("mark-room-read", { roomId });

@@ -5,6 +5,10 @@ import { playNotificationSound } from "@/utils/audio";
 
 const UnreadContext = createContext();
 
+/**
+ * Gestiona el estado de mensajes no leídos, notificaciones sonoras y preferencias de llamadas.
+ * Sincroniza el estado local con eventos de Socket.io en tiempo real.
+ */
 export function UnreadProvider({ children }) {
   const [unreadTotal, setUnreadTotal] = useState(0);
   const [unreadByRoom, setUnreadByRoom] = useState({}); // { roomId: count }
@@ -13,7 +17,7 @@ export function UnreadProvider({ children }) {
     const saved = localStorage.getItem("muted_rooms");
     return saved ? JSON.parse(saved) : [];
   });
-  const [allRooms, setAllRooms] = useState([]); // State para guardar la info unificada de los chats
+  const [allRooms, setAllRooms] = useState([]); // Información unificada de DMs y Grupos
   const [selectedSound, setSelectedSound] = useState(() => {
     return localStorage.getItem("notification_sound") || "crystal";
   });
@@ -26,6 +30,7 @@ export function UnreadProvider({ children }) {
   });
 
   const soundEnabledRef = useRef(true);
+  
   const setSoundEnabled = useCallback((enabled) => {
     soundEnabledRef.current = !!enabled;
   }, []);
@@ -45,6 +50,9 @@ export function UnreadProvider({ children }) {
     localStorage.setItem("call_sound_type", soundType);
   }, []);
 
+  /**
+   * Alterna el silencio de una sala. Persiste en localStorage para evitar ruido innecesario.
+   */
   const toggleMuteRoom = useCallback((roomId) => {
     setMutedRooms(prev => {
       const isMuted = prev.includes(roomId);
@@ -54,8 +62,12 @@ export function UnreadProvider({ children }) {
     });
   }, []);
 
+  /**
+   * Carga inicial de datos de no leídos y unificación de esquemas de salas/grupos.
+   */
   const fetchUnreadData = useCallback(async () => {
     try {
+      // Sincroniza flag de notificaciones desde el backend
       const prefs = await apiFetch("preferences").catch(() => null);
       if (prefs && prefs.notifications_enabled !== undefined) {
         soundEnabledRef.current = !!prefs.notifications_enabled;
@@ -67,7 +79,7 @@ export function UnreadProvider({ children }) {
       const rooms = await apiFetch("rooms");
       const groups = await apiFetch("groups");
       
-      // Unificar salas (DMs) y grupos para poder buscar nombres en preferencias
+      // Normalización de DMs y Grupos para consumo uniforme en la UI
       const unifiedRooms = [
         ...rooms.map(r => ({
           ...r,
@@ -81,8 +93,6 @@ export function UnreadProvider({ children }) {
       ];
       
       setAllRooms(unifiedRooms); 
-
-      // Usar los counts que vienen del nuevo endpoint unread/total
       setUnreadByRoom(totalData.byRoom || {});
     } catch (err) {
       console.error("Error fetching unread counts:", err);
@@ -92,9 +102,13 @@ export function UnreadProvider({ children }) {
   useEffect(() => {
     fetchUnreadData();
 
+    /**
+     * Procesa notificaciones entrantes.
+     * Regla de negocio: No notificar si el mensaje es propio o si la sala ya está abierta.
+     */
     const handleNotification = (data) => {
       const currentUserId = parseInt(localStorage.getItem("userId"));
-      // No contar si yo soy el remitente o si estoy en esa sala actualmente
+      
       if (data.sender_id && parseInt(data.sender_id) === currentUserId) return;
       if (activeRoomId && String(data.room_id) === String(activeRoomId)) return;
 
@@ -113,6 +127,9 @@ export function UnreadProvider({ children }) {
       setUnreadTotal(prev => Number(prev || 0) + 1);
     };
 
+    /**
+     * Sincroniza el estado cuando se lee una sala desde otro cliente/instancia.
+     */
     const handleRoomRead = ({ roomId, userId }) => {
       const currentUserId = parseInt(localStorage.getItem("userId"));
       if (parseInt(userId) !== currentUserId) return;
@@ -133,6 +150,9 @@ export function UnreadProvider({ children }) {
     };
   }, [fetchUnreadData, mutedRooms, selectedSound, activeRoomId]);
 
+  /**
+   * Limpieza manual del estado de no leídos para una sala específica.
+   */
   const markAsRead = useCallback((roomId) => {
     setUnreadByRoom(prev => {
       const oldCount = prev[roomId] || 0;

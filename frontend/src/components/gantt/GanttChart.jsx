@@ -8,6 +8,8 @@ const GanttChart = ({ activities, onView }) => {
   const ganttRef = useRef(null);
   const [isExporting, setIsExporting] = useState(false);
 
+  // Calcula el rango de fechas visible en el diagrama basándose en las actividades.
+  // Incluye un margen de seguridad para asegurar que las barras no queden pegadas a los bordes.
   const dateRange = useMemo(() => {
     const validActs = activities.filter(a => a.start_date && a.deadline);
     if (validActs.length === 0) return null;
@@ -86,6 +88,9 @@ const GanttChart = ({ activities, onView }) => {
     return [107, 114, 128]; // Gray
   };
 
+  // Generación de reporte PDF vectorial utilizando jsPDF.
+  // El diseño se construye manualmente coordenada a coordenada para garantizar precisión y un estilo premium 
+  // que no dependa de capturas de pantalla (rasterizado).
   const handleExportPDF = async () => {
     setIsExporting(true);
     const toastId = toast.loading("Generando diagrama vectorial...");

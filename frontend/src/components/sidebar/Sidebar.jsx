@@ -26,7 +26,8 @@ const NAV_ITEMS = [
   { path: "/favorites", icon: <FiStar />, label: "Favoritos" },
 ];
 
-// ─── SidebarItem ──────────────────────────────────────────────────────────────
+// Componente de ítem individual para la barra lateral.
+// Implementa lógica de "Long Press" para dispositivos táctiles y mouse para acciones secundarias (como editar grupos).
 const SidebarItem = ({
   label, tooltip, isActive, onClick, children, avatar,
   onLongPress, showDot, showLabel = true

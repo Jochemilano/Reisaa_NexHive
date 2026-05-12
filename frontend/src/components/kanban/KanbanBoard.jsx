@@ -5,7 +5,8 @@ import { updateActivity } from "@/utils/activities";
 import { FaSearch, FaTimes } from "react-icons/fa";
 import "./KanbanBoard.css";
 
-// Normaliza cualquier variante de status al key de columna
+// Normaliza cualquier variante de status al key de columna.
+// Esencial para manejar la consistencia entre el estado del frontend y los valores almacenados en DB.
 const normalizeStatus = (status) => {
   if (status === "in-progress" || status === "in_progress") return "in_progress";
   if (status === "completed") return "done";
@@ -44,6 +45,8 @@ const KanbanBoard = ({ activities, onView, onEdit, onDelete, onStatusChanged }) 
     );
   };
 
+  // Manejo de finalización de arrastre (Drag & Drop).
+  // Implementa "Optimistic UI": actualiza el estado local inmediatamente y revierte si la API falla para una respuesta instantánea al usuario.
   const handleDragEnd = async (result) => {
     const { source, destination, draggableId } = result;
     if (!destination) return;

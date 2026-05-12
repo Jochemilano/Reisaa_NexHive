@@ -8,8 +8,13 @@ const UserDetailContext = createContext();
 
 export const useUserDetail = () => useContext(UserDetailContext);
 
+/**
+ * Orquestador global de modales de perfiles (Usuarios, Grupos y Salas).
+ * Permite disparar la visualización de detalles desde cualquier parte de la app.
+ */
 export const UserDetailProvider = ({ children }) => {
   const location = useLocation();
+  
   // Perfil de usuario
   const [isUserOpen, setIsUserOpen] = useState(false);
   const [user, setUser] = useState(null);
@@ -20,6 +25,7 @@ export const UserDetailProvider = ({ children }) => {
   const [groupData, setGroupData] = useState(null);
   const [loadingGroup, setLoadingGroup] = useState(false);
 
+  // NOTE: Cerrar modales automáticamente al navegar para evitar estados inconsistentes
   useEffect(() => {
     setIsUserOpen(false);
     setIsGroupOpen(false);
@@ -83,6 +89,7 @@ export const UserDetailProvider = ({ children }) => {
     }}>
       {children}
       
+      {/* Modales globales renderizados una sola vez en el root del provider */}
       <GroupDetailModal
         isOpen={isGroupOpen}
         onClose={closeGroupProfile}

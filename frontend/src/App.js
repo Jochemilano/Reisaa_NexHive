@@ -9,6 +9,8 @@ function App() {
 
   useEffect(() => {
     const loadPreferences = async () => {
+      {/* Recupera y aplica las preferencias del usuario (tema, colores, fuentes) desde la API al iniciar la app.
+          Esta lógica garantiza que la UI se renderice con la identidad visual correcta antes del primer pintado significativo. */}
       const prefs = await preferencesApi.getPreferences();
       if (prefs) {
         setUserPreferences(prefs);
@@ -19,6 +21,8 @@ function App() {
         let fontFamily = "system";
 
         if (prefs.theme) {
+          {/* Lógica de parsing robusta para el string de tema. 
+              Soporta el formato nuevo "modo-color-fuente" y mantiene compatibilidad con el formato heredado "theme-X". */}
           if (prefs.theme.includes("-")) {
             const parts = prefs.theme.split("-");
             if (parts[0] === "theme") {

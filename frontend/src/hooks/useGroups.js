@@ -1,6 +1,10 @@
 import { useState, useEffect } from "react";
 import { fetchGroups, createGroup, fetchAllUsers } from "@/utils/groups";
 
+/**
+ * Hook para centralizar el listado de grupos del usuario.
+ * Proporciona un estado reactivo y una función para inyectar nuevos grupos localmente.
+ */
 export const useGroups = () => {
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);

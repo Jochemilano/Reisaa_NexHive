@@ -4,11 +4,15 @@ import { isTokenValid } from "@/utils/auth";
 
 const SocketContext = createContext();
 
+/**
+ * Proveedor global de la instancia de Socket.io.
+ * Centraliza la lógica de conexión/desconexión y estado de red.
+ */
 export const SocketProvider = ({ children }) => {
   const [isConnected, setIsConnected] = useState(socket.connected);
 
   useEffect(() => {
-    // Solo intentar conectar si el token existe y es válido
+    // Solo intentar conectar si el token existe y es válido (Lazy loading de la conexión)
     const token = localStorage.getItem("token");
     if (isTokenValid(token) && socket.disconnected) {
       connectWithToken(token);
@@ -26,7 +30,9 @@ export const SocketProvider = ({ children }) => {
     };
   }, []);
 
-  // Función para reconectar manualmente (útil tras login)
+  /**
+   * Fuerza la reconexión. Útil tras un login exitoso para vincular el socket al usuario.
+   */
   const reconnect = () => {
     const token = localStorage.getItem("token");
     if (isTokenValid(token)) {

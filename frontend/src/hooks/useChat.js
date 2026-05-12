@@ -5,6 +5,11 @@ import { uploadFile } from "@/utils/rooms";
 
 import { useUnread } from "@/context/UnreadContext";
 
+/**
+ * Hook principal para gestionar la lógica de una sala de chat.
+ * Maneja la carga de historial, recepción de mensajes en tiempo real, 
+ * indicadores de escritura y lectura de mensajes.
+ */
 export const useChat = (roomId, userId) => {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -12,11 +17,12 @@ export const useChat = (roomId, userId) => {
   const { markAsRead } = useUnread();
 
   useEffect(() => {
-    // Limpiar mensajes y estados del chat anterior
+    // Reset de estado al cambiar de sala
     setMessages([]);
     setLoading(true);
     setTypingUsers([]);
 
+    // Carga de historial de mensajes desde el servidor
     apiFetch(`rooms/${roomId}/messages`)
       .then((loadedMessages) => {
         setMessages(loadedMessages.map((msg) => ({ ...msg, read: !!msg.read })));
@@ -30,14 +36,20 @@ export const useChat = (roomId, userId) => {
     markRoomRead(roomId);
     markAsRead(roomId);
 
+    /**
+     * Listener para nuevos mensajes.
+     * Filtra por roomId para asegurar integridad si el socket recibe datos de salas previas.
+     */
     const handleReceiveMessage = (msg) => {
-      // FILTRAR: solo aceptar mensajes de ESTA sala
       if (String(msg.room_id) !== String(roomId)) return;
       setMessages(prev => [...prev, { ...msg, read: !!msg.read }]);
       markRoomRead(roomId);
       markAsRead(roomId);
     };
 
+    /**
+     * Actualiza el estado visual de "leído" cuando el otro usuario lee mis mensajes.
+     */
     const handleRoomReadEvent = ({ roomId: readRoomId, userId: readerId }) => {
       if (String(readRoomId) !== String(roomId)) return;
       if (Number(readerId) === Number(userId)) return;
@@ -81,12 +93,15 @@ export const useChat = (roomId, userId) => {
       socket.off("user-typing", handleUserTyping);
       socket.off("user-stop-typing", handleUserStopTyping);
       socket.off("connect", handleConnect);
-      // Salir de la sala al desmontar para no recibir mensajes de otras salas
+      // NOTE: Notificar al servidor que se sale de la sala para limpiar suscripciones de socket
       socket.emit("leave-room", roomId);
     };
 
   }, [roomId, userId, markAsRead]);
 
+  /**
+   * Envía un mensaje de texto plano.
+   */
   const send = (content, replyToId = null) => {
     sendMessage({
       roomId,
@@ -97,6 +112,9 @@ export const useChat = (roomId, userId) => {
     });
   };
 
+  /**
+   * Sube un archivo y luego envía el mensaje con el metadato del archivo.
+   */
   const sendFile = async (file, caption = null, replyToId = null) => {
     if (!file) return;
     const data = await uploadFile(file);
@@ -115,6 +133,7 @@ export const useChat = (roomId, userId) => {
       replyToId: replyToId || null,
     });
   };
+
   const editMessage = async (messageId, content) => {
     await apiFetch(`messages/${messageId}`, {
       method: "PUT",
@@ -130,6 +149,9 @@ export const useChat = (roomId, userId) => {
     setMessages((prev) => prev.filter((m) => m.id !== messageId));
   };
 
+  /**
+   * Emite eventos de escritura ("typing").
+   */
   const setTyping = (isTyping, userName) => {
     if (isTyping) {
       socket.emit("typing", { roomId, userId, userName });
@@ -139,4 +161,4 @@ export const useChat = (roomId, userId) => {
   };
   
   return { messages, typingUsers, send, sendFile, editMessage, deleteMessage, setTyping };
-};
+};

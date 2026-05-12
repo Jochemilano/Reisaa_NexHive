@@ -1,10 +1,20 @@
+/**
+ * Utilidades para la gestión de grupos (chats grupales).
+ * Maneja la creación, actualización y obtención de detalles de grupos, incluyendo carga de avatares.
+ */
 import { apiFetch } from "./apiClient";
 import { CONFIG } from "./config";
 
-// Traer grupos del usuario
+/**
+ * Recupera todos los grupos a los que pertenece el usuario.
+ */
 export const fetchGroups = () => apiFetch("groups");
 
-// Crear un grupo nuevo con avatar
+/**
+ * Crea un grupo nuevo.
+ * NOTE: Si se incluye un avatar, se realiza primero una subida directa al servidor
+ * de archivos y luego se vincula la URL resultante al grupo.
+ */
 export const createGroup = async (name, collaboratorIds = [], avatarFile = null) => {
   if (!name.trim()) throw new Error("Nombre vacío");
 
@@ -29,7 +39,10 @@ export const createGroup = async (name, collaboratorIds = [], avatarFile = null)
   });
 };
 
-//Editar gpo
+/**
+ * Actualiza la información de un grupo existente.
+ * Sigue el mismo patrón de subida de avatar que 'createGroup'.
+ */
 export const updateGroup = async (groupId, name, collaboratorIds = [], avatarFile = null) => {
   let avatarUrl = null;
 
@@ -52,15 +65,24 @@ export const updateGroup = async (groupId, name, collaboratorIds = [], avatarFil
   });
 };
 
-// Traer detalles de un grupo
+/**
+ * Obtiene la configuración detallada y metadatos de un grupo.
+ */
 export const fetchGroupDetails = (groupId) => apiFetch(`groups/${groupId}/details`);
 
-// Traer usuarios de un grupo
+/**
+ * Lista los miembros actuales de un grupo.
+ */
 export const fetchGroupUsers = (groupId) => apiFetch(`groups/${groupId}/users`);
 
+/**
+ * Helper para obtener todos los usuarios de la plataforma (útil para invitaciones).
+ */
 export const fetchAllUsers = () => apiFetch("allusers");
 
-// Eliminar grupo
+/**
+ * Elimina un grupo permanentemente.
+ */
 export const deleteGroup = (groupId) =>
   apiFetch(`groups/${groupId}`, {
     method: "DELETE",

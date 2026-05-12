@@ -1,5 +1,11 @@
+/**
+ * Utilidades para el registro de nuevos usuarios y verificación de identidad.
+ */
 import { apiFetch } from "@/utils/apiClient";
 
+/**
+ * Registra una solicitud de nueva cuenta en el servidor.
+ */
 export async function register(name, email, password, first_name, last_name, phone, bio, birthday) {
   try {
     const data = await apiFetch("register", {
@@ -13,6 +19,10 @@ export async function register(name, email, password, first_name, last_name, pho
   }
 }
 
+/**
+ * Verifica el código enviado por correo para activar la cuenta.
+ * NOTE: Al verificar con éxito, se establece la sesión automáticamente.
+ */
 export async function verifyCode(email, code) {
   try {
     const data = await apiFetch("verify-code", {

@@ -9,6 +9,7 @@ import "./Layout.css";
 export default function Layout() {
   return (
     <GroupProvider>
+      {/* CalendarProvider se anida dentro de GroupProvider para permitir que el calendario reaccione a cambios en el contexto de grupos si fuera necesario en el futuro */}
       <CalendarProvider>
         <div className="layout">
           <Sidebar />

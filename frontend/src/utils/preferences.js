@@ -1,6 +1,12 @@
+/**
+ * Utilidades para la persistencia de preferencias de usuario.
+ */
 import { apiFetch } from "./apiClient";
 
 export const preferencesApi = {
+  /**
+   * Obtiene la configuración de preferencias del usuario (notificaciones, sonidos, etc).
+   */
   getPreferences: async () => {
     try {
       const res = await apiFetch("preferences", { method: "GET" });
@@ -11,6 +17,9 @@ export const preferencesApi = {
     }
   },
 
+  /**
+   * Actualiza las preferencias del usuario en el servidor.
+   */
   savePreferences: async (data) => {
     try {
       const res = await apiFetch("preferences", {
