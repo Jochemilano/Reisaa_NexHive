@@ -168,6 +168,19 @@
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.owner-badge {
+  font-size: 0.8rem;
+  filter: drop-shadow(0 0 2px rgba(255, 215, 0, 0.5));
+}
+
+.collaborator-item.is-owner {
+  border-color: var(--primary);
+  background: rgba(var(--primary-rgb), 0.05);
 }
 
 /* Status Badges - already defined in GroupPage.css but ensuring they work here too */

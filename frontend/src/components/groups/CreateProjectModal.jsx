@@ -11,7 +11,7 @@ const CreateProjectModal = ({ isOpen, onClose, groupId, availableUsers = [], onC
   const [projectDescription, setProjectDescription] = useState("");
   const [startDate, setStartDate] = useState("");
   const [deadline, setDeadline] = useState("");
-  const [status, setStatus] = useState("pending");
+  const [status, setStatus] = useState("in_progress");
 
   const {
     availableUsers: filteredUsers,
@@ -35,7 +35,7 @@ const CreateProjectModal = ({ isOpen, onClose, groupId, availableUsers = [], onC
       setProjectDescription("");
       setStartDate("");
       setDeadline("");
-      setStatus("pending");
+      setStatus("in_progress");
       resetCollaborators();
       onClose();
     } catch (err) {

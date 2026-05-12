@@ -21,7 +21,7 @@ router.post("/projects", verifyToken, async (req, res) => {
 
     const result = await query(
       "INSERT INTO projects (name, description, group_id, start_date, deadline, status, owner_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
-      [name, description || "", groupId, start_date || null, deadline || null, status || 'pending', userId]
+      [name, description || "", groupId, start_date || null, deadline || null, status || 'in_progress', userId]
     );
     const projectId = result.insertId;
 
@@ -47,7 +47,7 @@ router.post("/projects", verifyToken, async (req, res) => {
       group_id: groupId,
       start_date: start_date || null,
       deadline: deadline || null,
-      status: status || 'pending',
+      status: status || 'in_progress',
       owner_id: userId,
       collaborators: collaborators || []
     });

@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { FaTimes, FaSearch } from "react-icons/fa";
 import "./CollaboratorPicker.css";
 
-const CollaboratorPicker = ({ availableUsers = [], selectedCollaborators = [], onSelect, onRemove, showAllByDefault = false }) => {
+const CollaboratorPicker = ({ availableUsers = [], selectedCollaborators = [], onSelect, onRemove, showAllByDefault = false, ownerId = null }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const wrapperRef = useRef(null);
@@ -99,25 +99,31 @@ const CollaboratorPicker = ({ availableUsers = [], selectedCollaborators = [], o
             Colaboradores seleccionados
           </p>
           <ul className="collaborator-picker__list">
-            {selectedCollaborators.map(c => (
-              <li
-                key={c.id}
-                className="collaborator-picker__item"
-                data-email={c.email || ''}
-              >
-                <span className="collaborator-picker__item-name">
-                  {c.name || c.username || `Usuario ${c.id}`}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => onRemove(c.id)}
-                  className="collaborator-picker__remove-btn"
-                  aria-label={`Quitar a ${c.name || c.username || 'usuario'}`}
+            {selectedCollaborators.map(c => {
+              const isOwner = Number(c.id) === Number(ownerId);
+              return (
+                <li
+                  key={c.id}
+                  className={`collaborator-picker__item ${isOwner ? 'is-owner' : ''}`}
+                  data-email={c.email || ''}
                 >
-                  <FaTimes />
-                </button>
-              </li>
-            ))}
+                  <span className="collaborator-picker__item-name">
+                    {c.name || c.username || `Usuario ${c.id}`}
+                    {isOwner && <span className="owner-badge" title="Responsable">👑</span>}
+                  </span>
+                  {!isOwner && (
+                    <button
+                      type="button"
+                      onClick={() => onRemove(c.id)}
+                      className="collaborator-picker__remove-btn"
+                      aria-label={`Quitar a ${c.name || c.username || 'usuario'}`}
+                    >
+                      <FaTimes />
+                    </button>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}

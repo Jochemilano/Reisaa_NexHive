@@ -3,7 +3,7 @@ import Modal from "@/components/modal/Modal";
 import Skeleton from "@/components/loading/Skeleton";
 import { Input, Textarea, Select } from "@/components/input/Input";
 import CollaboratorPicker from "@/components/input/CollaboratorPicker";
-import { getActivityDetails, updateActivity, deleteActivity } from "@/utils/activities";
+import { getActivityDetails, updateActivity, deleteActivity, fetchActivityUsers } from "@/utils/activities";
 import { fetchProjectUsers } from "@/utils/projects";
 import { toast } from "sonner";
 
@@ -38,12 +38,13 @@ const EditActivityModal = ({ isOpen, onClose, activityId, onUpdated, onDeleted }
           description: data.description,
           status: data.status,
           start_date: toLocalDateTimeInput(data.start_date),
-          deadline: toLocalDateTimeInput(data.deadline)
+          deadline: toLocalDateTimeInput(data.deadline),
+          owner_id: data.owner_id,
+          project_id: data.project_id
         });
         setIsOwner(data.owner_id === myId);
 
         // Traer usuarios de la actividad
-        const { fetchActivityUsers } = await import("@/utils/activities");
         const activityUsers = await fetchActivityUsers(activityId);
         setSelectedCollaborators(activityUsers);
 
@@ -188,6 +189,7 @@ const EditActivityModal = ({ isOpen, onClose, activityId, onUpdated, onDeleted }
               onSelect={selectCollaborator}
               onRemove={removeCollaborator}
               showAllByDefault={true}
+              ownerId={activityData.owner_id}
             />
           </>
         )}

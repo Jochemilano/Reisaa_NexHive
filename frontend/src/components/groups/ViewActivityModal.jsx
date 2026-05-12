@@ -150,25 +150,36 @@ const ViewActivityModal = ({ isOpen, onClose, activityId }) => {
               <div className="activity-detail__collaborators">
                 <span className="activity-detail__label">Colaboradores</span>
                 <div className="collaborators-list">
-                  {collaborators.map(user => (
-                    <div key={user.id} className="collaborator-item" title={user.name} onClick={() => showUserProfile(user.id)}>
-                      {user.avatar ? (
-                        <img 
-                          src={getAvatarUrl(user.avatar)} 
-                          alt={user.name} 
-                          className="collaborator-avatar"
-                          onError={(e) => {
-                            e.target.style.display = 'none';
-                            e.target.nextSibling.style.display = 'flex';
-                          }}
-                        />
-                      ) : null}
-                      <div className="avatar-letter-fallback mini" style={{ display: user.avatar ? 'none' : 'flex' }}>
-                        {user.name ? user.name[0].toUpperCase() : "?"}
+                  {collaborators.map(user => {
+                    const isOwner = user.id === activity.owner_id;
+                    return (
+                      <div 
+                        key={user.id} 
+                        className={`collaborator-item ${isOwner ? 'is-owner' : ''}`} 
+                        title={isOwner ? `${user.name} (Responsable)` : user.name} 
+                        onClick={() => showUserProfile(user.id)}
+                      >
+                        {user.avatar ? (
+                          <img 
+                            src={getAvatarUrl(user.avatar)} 
+                            alt={user.name} 
+                            className="collaborator-avatar"
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              e.target.nextSibling.style.display = 'flex';
+                            }}
+                          />
+                        ) : null}
+                        <div className="avatar-letter-fallback mini" style={{ display: user.avatar ? 'none' : 'flex' }}>
+                          {user.name ? user.name[0].toUpperCase() : "?"}
+                        </div>
+                        <span className="collaborator-name">
+                          {user.name}
+                          {isOwner && <span className="owner-badge">👑</span>}
+                        </span>
                       </div>
-                      <span className="collaborator-name">{user.name}</span>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}

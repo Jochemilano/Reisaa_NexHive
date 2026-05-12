@@ -240,13 +240,15 @@ router.put("/activities/:id", verifyToken, async (req, res) => {
 
     // Actualizar colaboradores
     if (Array.isArray(collaborators)) {
+      // Eliminar todos excepto al owner
       await db.query(
         "DELETE FROM user_activities WHERE activity_id=? AND user_id != ?",
-        [activityId, userId]
+        [activityId, activity.owner_id]
       );
 
       if (collaborators.length > 0) {
-        const filtered = collaborators.filter(id => id !== userId);
+        // Filtrar al owner de los nuevos colaboradores para no duplicar
+        const filtered = collaborators.filter(id => Number(id) !== Number(activity.owner_id));
         if (filtered.length > 0) {
           const values = filtered.map(id => [id, activityId]);
           await db.query(
