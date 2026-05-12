@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "@/utils/protected-route";
+import PublicRoute from "@/utils/public-route";
 import Layout from "@/components/layout/Layout";
 import Calendar from "@/components/calendar/Calendar";
 import Login from "@/pages/Login";
@@ -29,8 +30,10 @@ export default function AppRouter() {
             <FloatingCall />
 
             <Routes>
-              <Route path="/" element={<Navigate to="/home" />} />
+              {/* Ruta raíz redirige al home, que está protegido */}
+              <Route path="/" element={<Navigate to="/home" replace />} />
               
+              {/* Rutas Protegidas (Requieren sesión válida) */}
               <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
                 <Route path="/home"                                        element={<Home />} />
                 <Route path="/social"                                      element={<Social />} />
@@ -42,7 +45,11 @@ export default function AppRouter() {
                 <Route path="/chat/:chatRoomId"                            element={<ChatWrapper />} />
               </Route>
 
-              <Route path="/login" element={<Login />} />
+              {/* Rutas Públicas (No accesibles si ya hay sesión válida) */}
+              <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+
+              {/* Catch-all: cualquier otra ruta redirige al home */}
+              <Route path="*" element={<Navigate to="/home" replace />} />
             </Routes>
             </UserDetailProvider>
           </CallProvider>

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { socket, connectWithToken } from "@/utils/socket";
+import { isTokenValid } from "@/utils/auth";
 
 const SocketContext = createContext();
 
@@ -7,9 +8,9 @@ export const SocketProvider = ({ children }) => {
   const [isConnected, setIsConnected] = useState(socket.connected);
 
   useEffect(() => {
-    // Si hay un token al montar, intentar conectar
+    // Solo intentar conectar si el token existe y es válido
     const token = localStorage.getItem("token");
-    if (token && socket.disconnected) {
+    if (isTokenValid(token) && socket.disconnected) {
       connectWithToken(token);
     }
 
@@ -28,7 +29,7 @@ export const SocketProvider = ({ children }) => {
   // Función para reconectar manualmente (útil tras login)
   const reconnect = () => {
     const token = localStorage.getItem("token");
-    if (token) {
+    if (isTokenValid(token)) {
       connectWithToken(token);
     }
   };

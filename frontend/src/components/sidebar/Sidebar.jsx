@@ -163,7 +163,10 @@ const Sidebar = () => {
     }
   };
 
-  const logout = () => { localStorage.clear(); navigate("/login"); };
+  const logout = () => {
+    localStorage.clear();
+    window.location.replace("/login");
+  };
   const handleClose = () => { setIsOpen(false); reset(); };
 
   useEffect(() => {

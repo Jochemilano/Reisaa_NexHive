@@ -1,13 +1,18 @@
 import { Navigate } from "react-router-dom";
+import { isTokenValid } from "./auth";
 
 const RutaProtegida = ({ children }) => {
-  const sesionActiva = localStorage.getItem("token"); // ejemplo: tu token de sesión
+  const token = localStorage.getItem("token");
 
-  if (!sesionActiva) {
-    return <Navigate to="/login" replace />; // redirige al login si no hay sesión
+  // Validar si el token existe y no ha expirado
+  if (!isTokenValid(token)) {
+    // Si no es válido, limpiar por si acaso había basura y redirigir
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    return <Navigate to="/login" replace />;
   }
 
-  return children; // si hay sesión, deja entrar
+  return children;
 };
 
 export default RutaProtegida;

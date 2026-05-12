@@ -6,7 +6,7 @@ const socket = io(CONFIG.BASE_URL, {
   auth: {
     token: localStorage.getItem("token") || ""
   },
-  autoConnect: !!localStorage.getItem("token"), // Solo conecta si ya hay token
+  autoConnect: false, // Ahora lo manejamos manualmente en SocketContext tras validar
   reconnection: true,
   reconnectionAttempts: Infinity,
   reconnectionDelay: 1000,
@@ -28,7 +28,11 @@ socket.on("disconnect", (reason) => {
 
 socket.on("connect_error", (err) => {
   console.log("⚠️ Socket error de conexión:", err.message);
-  // Si el error es de autenticación, podríamos intentar refrescar el token aquí si tuviéramos lógica de refresh
+  // Si el servidor nos desconecta por error de JWT
+  if (err.message === "jwt expired" || err.message === "Not authorized") {
+    localStorage.clear();
+    window.location.href = "/login";
+  }
 });
 
 // Función para forzar la reconexión con un nuevo token

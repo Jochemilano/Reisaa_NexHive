@@ -14,6 +14,11 @@ export const apiFetch = async (endpoint, options = {}) => {
     });
 
     if (!res.ok) {
+      if (res.status === 401 && token) {
+        // Solo redirigir si había un token (evita bucles si la ruta ya es pública pero falla)
+        localStorage.clear();
+        window.location.href = "/login";
+      }
       let errorData = {};
       try { errorData = await res.json(); } catch (e) {}
       throw new Error(errorData.message || "Error en la API");
