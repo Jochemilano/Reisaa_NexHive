@@ -23,6 +23,7 @@
   flex-direction: column;
   transition: width 0.3s ease, padding 0.3s ease;
   margin: auto 0;
+  position: relative; /* Para posicionar el logo en la esquina */
 }
 
 .center-box.register-mode {
@@ -50,10 +51,29 @@
   text-decoration: underline;
 }
 
+/* LOGO */
+.login-logo {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 0px;
+  display: block;
+  object-fit: contain;
+  transition: all 0.3s ease;
+}
+
+/* Logo pequeño en la esquina para el modo registro */
+.register-mode .login-logo {
+  width: 40px;
+  height: 40px;
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  margin: 0;
+}
+
 /* TÍTULO */
 .center-box h2 {
   text-align: center;
-  margin-bottom: 30px;
   color: var(--text-primary);
 }
 

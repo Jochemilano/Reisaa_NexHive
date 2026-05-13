@@ -77,6 +77,7 @@ const LoginBox = ({
   return (
     <div className="login-container">
       <div className={`center-box ${activeTab === "register" ? "register-mode" : ""}`}>
+        <img src="/icon.png" alt="NexHive Logo" className="login-logo" />
         <h2>{title}</h2>
 
         <form onSubmit={onSubmit} noValidate>
