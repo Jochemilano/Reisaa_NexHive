@@ -13,7 +13,7 @@ import MediaModal from "@/components/communication/MediaModal";
 import { getFileUrl } from "@/utils/chat";
 import {
   FiMessageSquare, FiUsers, FiCalendar, FiActivity,
-  FiStar, FiArrowRight, FiCheckCircle, FiGrid,
+  FiStar, FiArrowRight, FiCheckCircle,
   FiFile, FiImage, FiChevronDown, FiChevronUp, FiPaperclip
 } from "react-icons/fi";
 import "./Home.css";
@@ -181,7 +181,7 @@ export default function Home() {
           </header>
 
           <div className="dash-search-container">
-            <FiGrid className="search-icon" />
+
             <input
               type="text"
               placeholder="Buscar en NexHive..."
