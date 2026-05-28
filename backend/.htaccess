@@ -1,0 +1,16 @@
+# Habilitar motor de reescritura
+RewriteEngine On
+
+# Conservar cabecera Authorization en entornos CGI/FastCGI
+RewriteCond %{HTTP:Authorization} .
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+# Si la petición es para un archivo real, servirlo directamente
+RewriteCond %{REQUEST_FILENAME} !-f
+# Si la petición es para un directorio real, servirlo directamente
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Redirigir todas las demás peticiones al Front Controller (index.php)
+# QSA conserva las variables GET (?param=value)
+# L detiene el procesamiento de reglas
+RewriteRule ^ index.php [QSA,L]

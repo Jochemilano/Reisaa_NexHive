@@ -10,7 +10,10 @@ const getBaseURL = () => {
   
   // NOTE: Fallback dinámico al host actual. Facilita el acceso desde red local (móviles).
   const host = window.location.hostname;
-  return `http://${host}:3001`;
+  if (host === 'localhost' || host === '127.0.0.1') {
+    return `http://${host}/Reisaa_NexHive/backend`;
+  }
+  return `http://${host}/backend`;
 };
 
 const BASE = getBaseURL();
