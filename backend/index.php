@@ -39,6 +39,7 @@ $router->get('/api/perfil',           'AuthController@perfil');
 // RUTAS DE PERFIL Y USUARIOS
 // ============================================================
 $router->get('/api/profile',          'ProfileController@getProfile');
+$router->get('/api/users/search',     'FriendsController@searchUsers');
 $router->get('/api/users',            'ProfileController@getUsers');
 $router->get('/api/users/:id',        'ProfileController@getUserById');
 $router->get('/api/allusers',         'ProfileController@getAllUsers');
@@ -50,7 +51,6 @@ $router->put('/api/profile/picture',  'ProfileController@updateProfilePicture');
 // ============================================================
 $router->get('/api/friends',                    'FriendsController@getFriends');
 $router->get('/api/friends/requests',           'FriendsController@getFriendRequests');
-$router->get('/api/users/search',               'FriendsController@searchUsers');
 $router->post('/api/friends',                   'FriendsController@sendFriendRequest');
 $router->post('/api/friends/accept',            'FriendsController@acceptFriendRequest');
 $router->delete('/api/friends/reject/:requestId', 'FriendsController@rejectFriendRequest');
